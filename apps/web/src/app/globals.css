@@ -164,7 +164,7 @@ button, input { font: inherit; }
 .lottery-card { position: relative; overflow: hidden; min-height: 174px; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; border: 1px solid #e5e3eb; border-radius: 20px; background: #fbfafc; transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
 .lottery-card::after { position: absolute; right: -28px; bottom: -28px; width: 82px; height: 82px; border: 18px dotted color-mix(in srgb,var(--lottery-color) 15%,transparent); border-radius: 50%; content: ""; }
 .lottery-card:hover { border-color: color-mix(in srgb,var(--lottery-color) 35%,white); box-shadow: 0 18px 35px color-mix(in srgb,var(--lottery-color) 13%,transparent); transform: translateY(-5px); }
-.lottery-icon { display: grid; width: 47px; height: 47px; place-items: center; border-radius: 14px; color: white; background: var(--lottery-color); font-family: "Fredoka Variable"; font-size: .82rem; font-weight: 650; box-shadow: 0 8px 18px color-mix(in srgb,var(--lottery-color) 27%,transparent); }
+.lottery-icon { display: grid; width: 47px; height: 47px; place-items: center; border-radius: 14px; color: var(--lottery-color); background: transparent; font-family: "Fredoka Variable"; font-size: .82rem; font-weight: 650; }
 .lottery-icon img, .dashboard-game-icon img { width: 27px; height: 27px; object-fit: contain; }
 .lottery-card strong, .lottery-card small { display: block; }
 .lottery-card strong { font-family: "Fredoka Variable"; font-size: 1.05rem; font-weight: 610; }
@@ -258,7 +258,7 @@ button, input { font: inherit; }
 .dashboard-game { --game:#777; position: relative; min-width: 0; min-height: 145px; display: flex; flex-direction: column; justify-content: space-between; padding: 17px; border: 1px solid #e1dfe7; border-radius: 17px; background: white; transition: transform 160ms,box-shadow 160ms; }
 .dashboard-game:hover { box-shadow: 0 14px 30px color-mix(in srgb,var(--game) 13%,transparent); transform: translateY(-4px); }
 .dashboard-game.purple { --game:var(--purple); }.dashboard-game.green { --game:var(--green); }.dashboard-game.violet { --game:var(--violet); }.dashboard-game.blue { --game:var(--blue); }.dashboard-game.amber { --game:var(--amber); }
-.dashboard-game-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 13px; color: white; background: var(--game); font-family: "Fredoka Variable"; font-size: .75rem; font-weight: 650; }
+.dashboard-game-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 13px; color: var(--game); background: transparent; font-family: "Fredoka Variable"; font-size: .75rem; font-weight: 650; }
 .dashboard-game strong, .dashboard-game small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dashboard-game strong { font-family: "Fredoka Variable"; font-size: .94rem; font-weight: 610; }
 .dashboard-game small { margin-top: 2px; color: var(--muted); font-size: .65rem; }
