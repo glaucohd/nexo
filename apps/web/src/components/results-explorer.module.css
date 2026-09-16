@@ -23,9 +23,18 @@
 .cardHeading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
 .cardHeading h2, .detailCard h2 { margin-top: 4px; font-size: 1.3rem; }
 .layoutTag { padding: 7px 10px; border-radius: 9px; color: var(--result-accent); background: color-mix(in srgb, var(--result-accent) 10%, var(--surface)); font-size: .72rem; font-weight: 900; white-space: nowrap; }
-.board { display: grid; width: min(100%, 520px); grid-template-columns: repeat(var(--result-columns), minmax(0, 1fr)); gap: clamp(3px, .6vw, 6px); margin: 24px auto; padding: clamp(7px, 1.3vw, 14px); border: 1px solid var(--line); border-radius: 17px; background: color-mix(in srgb, var(--result-accent) 5%, var(--paper)); }
-.cell { display: grid; aspect-ratio: 1; place-items: center; border: 1px solid color-mix(in srgb, var(--line) 75%, var(--surface)); border-radius: clamp(5px, .7vw, 9px); color: var(--muted); background: var(--surface); font-size: clamp(.57rem, 1vw, .84rem); font-weight: 850; font-variant-numeric: tabular-nums; }
+.board { position: relative; display: grid; width: min(100%, 520px); grid-template-columns: repeat(var(--result-columns), minmax(0, 1fr)); gap: clamp(3px, .6vw, 6px); margin: 24px auto; padding: clamp(7px, 1.3vw, 14px); border: 1px solid var(--line); border-radius: 17px; background: color-mix(in srgb, var(--result-accent) 5%, var(--paper)); }
+.narrowBoard { width: min(100%, 320px); }
+.quadrantBoard::before, .quadrantBoard::after, .halvesBoard::before { position: absolute; z-index: 0; border-radius: 99px; background: color-mix(in srgb, var(--result-accent) 65%, var(--ink)); content: ""; pointer-events: none; }
+.quadrantBoard::before, .halvesBoard::before { top: 50%; right: 8px; left: 8px; height: 3px; transform: translateY(-50%); }
+.quadrantBoard::after { top: 8px; bottom: 8px; left: 50%; width: 3px; transform: translateX(-50%); }
+.cell { position: relative; z-index: 1; display: grid; aspect-ratio: 1; place-items: center; border: 1px solid color-mix(in srgb, var(--line) 75%, var(--surface)); border-radius: clamp(5px, .7vw, 9px); color: var(--muted); background: var(--surface); font-size: clamp(.57rem, 1vw, .84rem); font-weight: 850; font-variant-numeric: tabular-nums; }
 .marked { border-color: transparent; color: white; background: var(--result-accent); box-shadow: 0 3px 8px color-mix(in srgb, var(--result-accent) 24%, transparent); }
+.partitionSummary { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 7px; width: min(100%, 520px); margin: -7px auto 20px; }
+.narrowSummary { width: min(100%, 320px); }
+.partitionSummary > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); }
+.partitionSummary span { color: var(--muted); font-size: .71rem; font-weight: 850; }
+.partitionSummary strong { color: var(--result-accent); font-family: "Fredoka Variable", sans-serif; font-size: 1rem; }
 .boardLegend { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--muted); font-size: .73rem; font-weight: 750; }
 .legendMark, .legendEmpty { width: 12px; height: 12px; border-radius: 4px; }
 .legendMark { background: var(--result-accent); }

@@ -14,11 +14,11 @@ export type LotteryHistory = {
 };
 
 const games = [
-  { slug: "lotofacil", name: "Lotofácil", total: 25, columns: 5, color: "#91278f", layout: "5 × 5" },
-  { slug: "mega-sena", name: "Mega-Sena", total: 60, columns: 10, color: "#00a651", layout: "6 × 10" },
-  { slug: "quina", name: "Quina", total: 80, columns: 10, color: "#2e3192", layout: "8 × 10" },
-  { slug: "mais-milionaria", name: "+Milionária", total: 50, columns: 5, color: "#2a3580", layout: "10 × 5" },
-  { slug: "dia-de-sorte", name: "Dia de Sorte", total: 31, columns: 7, color: "#7e6906", layout: "5 linhas" },
+  { slug: "lotofacil", name: "Lotofácil", total: 25, columns: 5, color: "#91278f", layout: "5 × 5", division: "none" },
+  { slug: "mega-sena", name: "Mega-Sena", total: 60, columns: 10, color: "#00a651", layout: "6 × 10", division: "quadrants" },
+  { slug: "quina", name: "Quina", total: 80, columns: 10, color: "#2e3192", layout: "8 × 10", division: "quadrants" },
+  { slug: "mais-milionaria", name: "+Milionária", total: 50, columns: 5, color: "#2a3580", layout: "10 × 5", division: "halves" },
+  { slug: "dia-de-sorte", name: "Dia de Sorte", total: 31, columns: 7, color: "#7e6906", layout: "5 linhas", division: "none" },
 ] as const;
 
 const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -36,6 +36,16 @@ export function ResultsExplorer({ histories }: { histories: Record<string, Lotte
   const draw = history[index];
   const selected = useMemo(() => new Set(draw?.numbers ?? []), [draw]);
   const rows = Math.ceil(game.total / game.columns);
+  const partitionCounts = game.division === "quadrants" ? [0, 0, 0, 0] : game.division === "halves" ? [0, 0] : [];
+  for (const number of draw?.numbers ?? []) {
+    const row = Math.floor((number - 1) / game.columns);
+    if (game.division === "quadrants") {
+      const column = (number - 1) % game.columns;
+      partitionCounts[(row < rows / 2 ? 0 : 2) + (column < game.columns / 2 ? 0 : 1)] += 1;
+    } else if (game.division === "halves") {
+      partitionCounts[row < rows / 2 ? 0 : 1] += 1;
+    }
+  }
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -82,12 +92,15 @@ export function ResultsExplorer({ histories }: { histories: Record<string, Lotte
           <div className={styles.mainGrid}>
             <article className={styles.boardCard}>
               <div className={styles.cardHeading}><div><span className="eyebrow">{game.name}</span><h2>Volante do concurso</h2></div><span className={styles.layoutTag}>{game.layout}</span></div>
-              <div className={styles.board} role="img" aria-label={`Volante do concurso ${draw.contest}: dezenas ${draw.numbers.join(", ")}`}>
+              <div className={`${styles.board} ${game.division === "quadrants" ? styles.quadrantBoard : ""} ${game.division === "halves" ? `${styles.halvesBoard} ${styles.narrowBoard}` : ""}`} role="img" aria-label={`Volante do concurso ${draw.contest}: dezenas ${draw.numbers.join(", ")}`}>
                 {Array.from({ length: game.total }, (_, position) => {
                   const number = position + 1;
                   return <span className={`${styles.cell} ${selected.has(number) ? styles.marked : ""}`} key={number} aria-hidden="true">{String(number).padStart(2, "0")}</span>;
                 })}
               </div>
+              {partitionCounts.length > 0 && <div className={`${styles.partitionSummary} ${game.division === "halves" ? styles.narrowSummary : ""}`} aria-label={game.division === "quadrants" ? "Dezenas sorteadas por quadrante" : "Dezenas sorteadas por metade"}>
+                {partitionCounts.map((count, position) => <div key={position}><span>{game.division === "quadrants" ? `Q${position + 1}` : position === 0 ? "Superior" : "Inferior"}</span><strong>{count}</strong></div>)}
+              </div>}
               <div className={styles.boardLegend}><span className={styles.legendMark} /> Dezena sorteada <span className={styles.legendEmpty} /> Não sorteada</div>
             </article>
 
