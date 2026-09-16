@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "db:migrate": "node scripts/migrate.mjs"
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:import-caixa": "node scripts/import-caixa.mjs"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.7.5",

@@ -18,3 +18,20 @@ npm run dev
 ```
 
 As migrações SQL são registradas em `_nexo_migrations` e não são reaplicadas.
+
+## Importar resultados da CAIXA
+
+O importador consulta o endpoint público usado pelo portal da CAIXA e grava concursos, dezenas, extras e premiações no PostgreSQL. Concursos já cadastrados são atualizados sem duplicação.
+
+```bash
+# Um concurso específico
+npm run db:import-caixa -- --game=megasena --from=3058 --to=3058
+
+# Toda a série histórica de uma modalidade
+npm run db:import-caixa -- --game=lotofacil --all
+
+# Todas as modalidades (carga inicial mais demorada)
+npm run db:import-caixa -- --all
+```
+
+Depois da carga inicial, informe apenas o intervalo dos concursos novos para a atualização manual.
