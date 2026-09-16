@@ -161,6 +161,7 @@ button, input { font: inherit; }
 .lottery-card::after { position: absolute; right: -28px; bottom: -28px; width: 82px; height: 82px; border: 18px dotted color-mix(in srgb,var(--lottery-color) 15%,transparent); border-radius: 50%; content: ""; }
 .lottery-card:hover { border-color: color-mix(in srgb,var(--lottery-color) 35%,white); box-shadow: 0 18px 35px color-mix(in srgb,var(--lottery-color) 13%,transparent); transform: translateY(-5px); }
 .lottery-icon { display: grid; width: 47px; height: 47px; place-items: center; border-radius: 14px; color: white; background: var(--lottery-color); font-family: "Fredoka Variable"; font-size: .82rem; font-weight: 650; box-shadow: 0 8px 18px color-mix(in srgb,var(--lottery-color) 27%,transparent); }
+.lottery-icon img, .dashboard-game-icon img { width: 27px; height: 27px; object-fit: contain; }
 .lottery-card strong, .lottery-card small { display: block; }
 .lottery-card strong { font-family: "Fredoka Variable"; font-size: 1.05rem; font-weight: 610; }
 .lottery-card small { margin-top: 4px; color: var(--muted); font-size: .7rem; }

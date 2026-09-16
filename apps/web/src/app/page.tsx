@@ -1,13 +1,14 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { Brand } from "@/components/brand";
 
 const lotteries = [
-  { slug: "lotofacil", short: "LF", name: "Lotofácil", detail: "15 a 20 números", color: "#8a2da5" },
-  { slug: "mega", short: "MS", name: "Mega-Sena", detail: "6 a 20 números", color: "#07966f" },
-  { slug: "quina", short: "QN", name: "Quina", detail: "5 a 15 números", color: "#5b2a86" },
-  { slug: "milionaria", short: "+M", name: "+Milionária", detail: "Números + trevos", color: "#2467ce" },
-  { slug: "dia", short: "DS", name: "Dia de Sorte", detail: "Números + mês", color: "#c77b12" },
+  { slug: "lotofacil", short: "LF", icon: "lotofacil", name: "Lotofácil", detail: "15 a 20 números", color: "#8a2da5" },
+  { slug: "mega", short: "MS", icon: "mega-sena", name: "Mega-Sena", detail: "6 a 20 números", color: "#07966f" },
+  { slug: "quina", short: "QN", icon: "quina", name: "Quina", detail: "5 a 15 números", color: "#5b2a86" },
+  { slug: "milionaria", short: "+M", icon: "mais-milionaria", name: "+Milionária", detail: "Números + trevos", color: "#2467ce" },
+  { slug: "dia", short: "DS", icon: "dia-de-sorte", name: "Dia de Sorte", detail: "Números + mês", color: "#c77b12" },
 ];
 
 const features = [
@@ -89,7 +90,7 @@ export default function Home() {
           <div className="lottery-grid">
             {lotteries.map((lottery) => (
               <Link className={`lottery-card ${lottery.slug}`} href="/entrar?modo=cadastro" key={lottery.slug} style={{ "--lottery-color": lottery.color } as React.CSSProperties}>
-                <span className="lottery-icon">{lottery.short}</span>
+                <span className="lottery-icon"><Image src={`/trevos-loterias/${lottery.icon}.svg`} alt="" width={27} height={27} /></span>
                 <div><strong>{lottery.name}</strong><small>{lottery.detail}</small></div>
                 <span className="lottery-arrow" aria-hidden="true">↗</span>
               </Link>

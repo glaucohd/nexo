@@ -1,11 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const games = [
-  { slug: "lotofacil", initials: "LF", name: "Lotofácil", subtitle: "15 a 20 números", color: "purple" },
-  { slug: "mega-sena", initials: "MS", name: "Mega-Sena", subtitle: "6 a 20 números", color: "green" },
-  { slug: "quina", initials: "QN", name: "Quina", subtitle: "5 a 15 números", color: "violet" },
-  { slug: "mais-milionaria", initials: "+M", name: "+Milionária", subtitle: "Números + trevos", color: "blue" },
-  { slug: "dia-de-sorte", initials: "DS", name: "Dia de Sorte", subtitle: "Números + mês", color: "amber" },
+  { slug: "lotofacil", initials: "LF", icon: "lotofacil", name: "Lotofácil", subtitle: "15 a 20 números", color: "purple" },
+  { slug: "mega-sena", initials: "MS", icon: "mega-sena", name: "Mega-Sena", subtitle: "6 a 20 números", color: "green" },
+  { slug: "quina", initials: "QN", icon: "quina", name: "Quina", subtitle: "5 a 15 números", color: "violet" },
+  { slug: "mais-milionaria", initials: "+M", icon: "mais-milionaria", name: "+Milionária", subtitle: "Números + trevos", color: "blue" },
+  { slug: "dia-de-sorte", initials: "DS", icon: "dia-de-sorte", name: "Dia de Sorte", subtitle: "Números + mês", color: "amber" },
 ];
 
 export default function DashboardPage() {
@@ -23,7 +24,7 @@ export default function DashboardPage() {
       <section className="dashboard-games" aria-label="Modalidades">
         {games.map((game) => (
           <Link className={`dashboard-game ${game.color}`} href={`/app/analises?modalidade=${game.slug}`} key={game.slug}>
-            <span className="dashboard-game-icon">{game.initials}</span>
+            <span className="dashboard-game-icon"><Image src={`/trevos-loterias/${game.icon}.svg`} alt="" width={27} height={27} /></span>
             <div><strong>{game.name}</strong><small>{game.subtitle}</small></div>
             <span className="dashboard-game-arrow" aria-hidden="true">→</span>
           </Link>
