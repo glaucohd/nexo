@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const links = [
   { href: "/app", label: "Visão geral", icon: "◈" },
   { href: "/app/analises", label: "Análises", icon: "∿" },
+  { href: "/app/gerador", label: "Gerar jogos", icon: "✦" },
   { href: "/app/apostas", label: "Minhas apostas", icon: "✓" },
   { href: "/app/resultados", label: "Resultados", icon: "#" },
 ];
