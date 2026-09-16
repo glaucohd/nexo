@@ -93,6 +93,13 @@ export function ResultsExplorer({ histories }: { histories: Record<string, Lotte
             <article className={styles.boardCard}>
               <div className={styles.cardHeading}><div><span className="eyebrow">{game.name}</span><h2>Volante do concurso</h2></div><span className={styles.layoutTag}>{game.layout}</span></div>
               <div className={`${styles.board} ${game.division === "quadrants" ? styles.quadrantBoard : ""} ${game.division === "halves" ? `${styles.halvesBoard} ${styles.narrowBoard}` : ""}`} role="img" aria-label={`Volante do concurso ${draw.contest}: dezenas ${draw.numbers.join(", ")}`}>
+                {game.division === "quadrants" && <div className={styles.boardMarkers} aria-hidden="true">
+                  <span className={styles.markerTopLeft}>Q1</span><span className={styles.markerTopRight}>Q2</span>
+                  <span className={styles.markerBottomLeft}>Q3</span><span className={styles.markerBottomRight}>Q4</span>
+                </div>}
+                {game.division === "halves" && <div className={styles.boardMarkers} aria-hidden="true">
+                  <span className={styles.markerTopLeft}>SUPERIOR</span><span className={styles.markerBottomLeft}>INFERIOR</span>
+                </div>}
                 {Array.from({ length: game.total }, (_, position) => {
                   const number = position + 1;
                   return <span className={`${styles.cell} ${selected.has(number) ? styles.marked : ""}`} key={number} aria-hidden="true">{String(number).padStart(2, "0")}</span>;
