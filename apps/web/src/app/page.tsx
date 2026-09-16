@@ -31,7 +31,7 @@ export default function Home() {
 
       <section className="hero container">
         <div className="hero-copy">
-          <div className="hero-badge"><span /> Dados para jogar com mais organização</div>
+          <div className="hero-badge"><span /> Dados para apostar com mais organização</div>
           <h1>Seus jogos.<br /><em>Suas estratégias.</em><br />Tudo no Nexo.</h1>
           <p>
             Analise concursos, gere combinações, salve suas apostas e confira
@@ -51,9 +51,6 @@ export default function Home() {
         </div>
 
         <div className="hero-visual" aria-label="Prévia do painel Nexo">
-          <div className="floating-ball ball-one">07</div>
-          <div className="floating-ball ball-two">15</div>
-          <div className="floating-ball ball-three">23</div>
           <div className="preview-window">
             <div className="preview-topbar">
               <span className="preview-brand"><i /> nexo</span>
@@ -61,7 +58,7 @@ export default function Home() {
             </div>
             <div className="preview-heading">
               <div><small>Análise da vez</small><strong>Lotofácil</strong></div>
-              <span className="contest-chip">200 concursos</span>
+              <span className="contest-chip">Base histórica</span>
             </div>
             <div className="preview-content">
               <article className="preview-card number-panel">
@@ -135,7 +132,7 @@ export default function Home() {
       </section>
 
       <section className="responsible-note container">
-        <b>Jogue com consciência.</b>
+        <b>Aposte com consciência.</b>
         <p>Análises históricas ajudam a organizar escolhas, mas não alteram a probabilidade matemática dos sorteios.</p>
       </section>
 

@@ -67,7 +67,7 @@ export default function DashboardPage() {
         </article>
         <article className="dashboard-card responsible-card">
           <span className="responsible-icon">!</span>
-          <h2>Jogue com consciência</h2>
+          <h2>Aposte com consciência</h2>
           <p>Dados históricos ajudam na organização, mas não preveem o próximo sorteio.</p>
         </article>
       </section>

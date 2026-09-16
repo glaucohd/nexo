@@ -152,10 +152,6 @@ button, input { font: inherit; }
 .mini-metric small { color: #918aa6; font-size: .62rem; }
 .mini-chart > div { height: 95px; display: flex; align-items: end; gap: 6px; margin-top: 18px; }
 .mini-chart i { flex: 1; min-width: 5px; border-radius: 5px 5px 2px 2px; background: linear-gradient(#a987ff,#6840d5); }
-.floating-ball { position: absolute; z-index: 3; display: grid; place-items: center; border: 5px solid white; border-radius: 50%; font-family: "Fredoka Variable"; font-weight: 650; box-shadow: 0 12px 25px rgba(47,31,91,.2); }
-.ball-one { top: -25px; right: 42px; width: 68px; height: 68px; color: white; background: var(--purple); transform: rotate(8deg); }
-.ball-two { right: -34px; bottom: 82px; width: 60px; height: 60px; color: white; background: var(--green); transform: rotate(-8deg); }
-.ball-three { bottom: -26px; left: 58px; width: 52px; height: 52px; color: #493108; background: #ffd76a; transform: rotate(9deg); }
 
 .eyebrow { display: inline-flex; color: var(--brand); font-size: .7rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
 .section-intro { max-width: 740px; margin-bottom: 54px; }
@@ -340,7 +336,6 @@ button, input { font: inherit; }
   .preview-side { grid-template-columns: 1fr 1fr; }
   .number-panel { min-height: auto; }
   .number-cloud { gap: 7px; margin: 24px 0; }
-  .floating-ball { display: none; }
   .lotteries-section, .process-section, .resource-section { padding-block: 76px; }
   .lottery-grid { grid-template-columns: 1fr; }
   .lottery-card { min-height: 110px; display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 12px; }
