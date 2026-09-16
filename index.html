@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Nexo reúne análise estatística, históricos e geração organizada de combinações.">
+<meta name="theme-color" content="#146c94">
+<meta property="og:title" content="Nexo">
+<meta property="og:description" content="Análise estatística e geração organizada de combinações.">
+<meta property="og:type" content="website">
+<title>Nexo — Análise e combinações</title>
+<link rel="stylesheet" href="css/style.css?v=120">
+</head>
+<body>
+<div class="app" id="app" data-jogo="geral">
+  <header class="topbar">
+    <div class="topleft">
+      <button class="iconbtn" id="menuBtn" type="button" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="brand">
+        <span class="brandmark" id="brandMark"></span>
+        <span class="brandtxt"><b id="brandTitle">Nexo</b><small id="brandSub">Análise e combinações</small></span>
+      </div>
+    </div>
+    <div class="topright"><span class="pill" id="topPill"></span></div>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar" id="sidebar">
+      <nav id="nav"></nav>
+      <p class="sidefoot">Seus jogos e análises ficam somente neste navegador.</p>
+    </aside>
+    <div class="backdrop" id="backdrop" hidden></div>
+
+    <main class="content" id="content">
+
+      <div class="fatal" id="fatal" hidden></div>
+
+      <div class="pageintro">
+        <h1 id="pageTitle">Visão geral</h1>
+        <p id="subtitulo"></p>
+      </div>
+      <nav class="pagetabs" id="pageTabs" aria-label="Seções da loteria" hidden></nav>
+
+      <section class="card home-card" id="homeCard">
+        <div class="home-hero">
+          <div><span class="eyebrow">Nexo</span><h2>Escolha uma modalidade para começar</h2>
+          <p>Gere combinações, consulte análises do histórico e acompanhe os concursos em um só lugar.</p></div>
+          <button class="btn primary" type="button" data-home-page="lf-gerador">Começar pela Lotofácil</button>
+        </div>
+        <div class="home-games">
+          <button class="home-game lotofacil" type="button" data-home-page="lf-gerador"><span>LF</span><b>Lotofácil</b><small id="homeLatest-lotofacil">Carregando…</small></button>
+          <button class="home-game megasena" type="button" data-home-page="mega-gerar"><span>MS</span><b>Mega-Sena</b><small id="homeLatest-megasena">Carregando…</small></button>
+          <button class="home-game maismilionaria" type="button" data-home-page="mm-gerar"><span>+M</span><b>+Milionária</b><small id="homeLatest-maismilionaria">Carregando…</small></button>
+          <button class="home-game quina" type="button" data-home-page="quina-gerar"><span>QN</span><b>Quina</b><small id="homeLatest-quina">Carregando…</small></button>
+          <button class="home-game diadesorte" type="button" data-home-page="ds-gerar"><span>DS</span><b>Dia de Sorte</b><small id="homeLatest-diadesorte">Carregando…</small></button>
+        </div>
+        <div class="home-shortcuts">
+          <button class="btn" type="button" data-home-page="apostas"><b>Minhas apostas</b><small>Veja os jogos que você salvou</small></button>
+          <button class="btn" type="button" data-home-page="quina-analise"><b>Análise da Quina</b><small>Compare frequência, atraso e repetição</small></button>
+        </div>
+      </section>
+
+  <section class="card" id="lfDrawCard">
+    <h2>Sorteio a sorteio<span class="modeTag" id="lfTag"></span></h2>
+    <p class="hint" style="margin-top:0">
+      A cartela preenchida com um concurso de cada vez. Use as setas (ou as do teclado)
+      para navegar e ver como as 15 dezenas se espalham pelas linhas.
+    </p>
+    <div class="navsorteio">
+      <button class="btn navseta" id="lfPrev" type="button" aria-label="Concurso anterior">‹</button>
+      <div class="navmid"><b id="lfConc">—</b><small id="lfData"></small></div>
+      <button class="btn navseta" id="lfNext" type="button" aria-label="Próximo concurso">›</button>
+    </div>
+    <div class="volantewrap">
+      <div class="volante lotofacil div-linhas" id="lfGrid"></div>
+    </div>
+    <div id="lfStats" class="quadinfo"></div>
+  </section>
+
+  <section class="card" id="lfAggCard">
+    <h2>Acumulado<span class="modeTag" id="lfAggTag"></span></h2>
+    <p class="hint" style="margin-top:0" id="lfAggNota"></p>
+    <div class="sizes" id="lfRange"></div>
+    <div id="lfAgg"></div>
+  </section>
+
+  <section class="card" id="lfGenCard">
+    <h2>Gerador de jogos<span class="modeTag" id="lfGenTag">15 dezenas</span></h2>
+    <p class="hint" style="margin-top:0">
+      Os jogos saem no formato dos sorteios reais da Lotofácil: distribuição pelas 5 linhas
+      do volante, pares/ímpares, faixa 1–13 contra 14–25 e soma dentro do intervalo comum.
+      Você pode comparar sorteio puro, perfil, frequência, atraso e combinação dos sinais.
+      Os critérios organizam a escolha das dezenas, mas não alteram a chance matemática.
+    </p>
+    <h3 class="subhead">Modalidade de geração</h3>
+    <div class="crits generator-mode" id="lfGeneratorMode">
+      <button class="btn critbtn on" type="button" data-lf-mode="normal"><b>Jogos independentes</b><small>usa análises, filtros e diversidade</small></button>
+      <button class="btn critbtn" type="button" data-lf-mode="espelho"><b>Jogada espelho</b><small>cada par tem suas próprias 5 fixas</small></button>
+    </div>
+    <section class="mirror-builder" id="lfMirrorBuilder" hidden>
+      <div class="mirror-head"><div><span class="eyebrow">Jogada espelho</span><h3>Defina 5 fixas para cada par</h3></div><span class="modeTag" id="lfMirrorFixedCount">Par 1 · 0 de 5</span></div>
+      <p class="hint">Cada par possui suas próprias 5 fixas, presentes nas cartelas A e B. As outras 20 dezenas
+        são divididas em dois grupos de 10; assim, cada par cobre todo o volante.</p>
+      <div class="mirror-pair-tabs" id="lfMirrorPairTabs" aria-label="Par que está sendo configurado"></div>
+      <div class="mirror-number-grid" id="lfMirrorFixedGrid"></div>
+      <div class="mirror-tools">
+        <button class="btn small" id="lfMirrorAuto" type="button">Escolher 5 deste par</button>
+        <button class="btn small" id="lfMirrorAutoAll" type="button">Distribuir em todos os pares</button>
+        <button class="btn small" id="lfMirrorClear" type="button">Limpar este par</button>
+      </div>
+      <h3 class="subhead">Quantidade de pares</h3>
+      <div class="sizes mirror-pairs" id="lfMirrorPairs"></div>
+      <div class="mirror-cost" id="lfMirrorCost" aria-live="polite"></div>
+    </section>
+    <div id="lfStandardSettings">
+    <section class="budget-plan" aria-labelledby="lfPlanTitle">
+      <div class="budget-plan-copy">
+        <span class="eyebrow">Plano de orçamento</span>
+        <h3 id="lfPlanTitle">R$ 60 em jogos simples</h3>
+        <p>Gera 17 combinações diferentes de 15 dezenas por <b>R$ 59,50</b>. A sobra é de
+          R$ 0,50 e a chance conjunta de 15 acertos fica próxima de <b>1 em 192.280</b>.</p>
+        <div class="budget-plan-tags">
+          <span>17 jogos</span><span>Perfil comum</span><span>Repetição livre</span><span>Diversificado</span>
+        </div>
+      </div>
+      <button class="btn primary budget-plan-action" id="lfPlano60" type="button">Aplicar plano recomendado</button>
+      <div class="budget-plan-status" id="lfPlanStatus" aria-live="polite"></div>
+    </section>
+    <h3 class="subhead">Critério</h3>
+      <div class="crits" id="lfCrits"></div>
+      <h3 class="subhead">Repetição do último concurso</h3>
+      <p class="hint" style="margin-top:0">Escolha quantas dezenas do último resultado cada jogo deve repetir. “Livre” não impõe quantidade.</p>
+      <div class="crits" id="lfRepetir"></div>
+    <h3 class="subhead">Dezenas por jogo</h3>
+    <p class="hint" style="margin-top:0">O volante oficial aceita de 15 a 20 dezenas. Mais dezenas = aposta múltipla: o preço multiplica pelas combinações de 15.</p>
+    <div class="sizes" id="lfDez"></div>
+    <h3 class="subhead">Quantidade</h3>
+    <div class="sizes" id="lfQtd"></div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="lfGerar" type="button">Gerar jogos</button>
+      <button class="btn" id="lfCopiar" type="button">Copiar todos</button>
+      <button class="btn" id="salvarLf2" type="button">Salvar aposta</button>
+    </div>
+    <div id="lfJogos" class="games"></div>
+    <h3 class="subhead">Conferir estes jogos nos concursos passados</h3>
+    <p class="hint" style="margin-top:0">Compara os jogos gerados acima com todos os sorteios guardados: acertos, faixas e o que teriam pago.</p>
+    <div class="actions"><button class="btn" id="lfConferir" type="button">Conferir estes jogos</button></div>
+    <div id="lfConfOut"></div>
+    <p class="hint" id="lfGenNota"></p>
+  </section>
+
+  <section class="card analysis-card" id="lfAnalysisCard"></section>
+
+  <section class="card" id="drawCard">
+    <h2>Último resultado</h2>
+    <p class="hint" style="margin-top:0">
+      Clique nas 15 dezenas sorteadas para conferir seus jogos. Fica guardado neste navegador,
+      então continua valendo nas próximas vezes que você abrir a página — e funciona sem internet.
+      O resultado oficial está em
+      <a href="https://loterias.caixa.gov.br/paginas/lotofacil.aspx" target="_blank" rel="noopener">loterias.caixa.gov.br</a>
+      ou no app Loterias CAIXA. Sem esperar o concurso sair, dá pra clicar em
+      <b>"Sortear resultado"</b> e testar seus jogos contra um sorteio aleatório de mentira.
+    </p>
+    <div class="drawpick" id="drawPick"></div>
+    <div class="drawstatus" id="drawStatus"></div>
+    <div class="drawlegend">
+      <span><i class="só"></i>dezena sorteada no concurso</span>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btnSortearDraw" type="button">Sortear resultado (simular)</button>
+      <button class="btn" id="btnClearDraw" type="button">Limpar resultado</button>
+    </div>
+  </section>
+
+  <section class="card" id="heatCard">
+    <h2>Mapa de calor<span class="modeTag" id="heatTag">últimos 10</span></h2>
+    <p class="hint" style="margin-top:0" id="heatNote"></p>
+    <div class="sizes" id="heatRange"></div>
+    <div id="heatGrid"></div>
+    <h3 class="subhead">Gerar jogos a partir do mapa</h3>
+    <p class="hint" style="margin-top:0" id="heatHint"></p>
+    <div class="crits" id="heatActions"></div>
+    <p class="hint" id="heatWarn"></p>
+  </section>
+
+  <!-- área de preparação: os cards ficam ocultos aqui até o app movê-los
+       para as páginas do menu na inicialização (montarPaginas) -->
+  <section id="results" hidden>
+
+    <div class="card" id="balanceCard" hidden>
+      <h2>Balanço do concurso</h2>
+      <div id="balanceBox"></div>
+      <p class="hint">
+        As faixas de 11, 12 e 13 acertos são <b>prêmios fixos</b>: valem 2×, 4× e 10× o preço da
+        aposta de 15 dezenas (R$ 3,50), então são calculadas sozinhas.
+        Só 14 e 15 saem de rateio e mudam a cada concurso — esses dois são editáveis, vêm preenchidos
+        com o concurso 3779 como referência, e o que você digitar fica guardado.
+      </p>
+    </div>
+
+    <div class="card" id="megaDrawCard">
+      <h2>Sorteio a sorteio<span class="modeTag" id="megaTag"></span></h2>
+      <p class="hint" style="margin-top:0">
+        O mesmo volante, preenchido com um concurso de cada vez. Use as setas para navegar
+        e observar onde as dezenas costumam cair.
+      </p>
+      <div class="navsorteio">
+        <button class="btn navseta" id="megaPrev" type="button" aria-label="Concurso anterior">‹</button>
+        <div class="navmid"><b id="megaConc">—</b><small id="megaData"></small></div>
+        <button class="btn navseta" id="megaNext" type="button" aria-label="Próximo concurso">›</button>
+      </div>
+      <div class="volantewrap">
+        <div class="volante megasena div-quadrantes" id="megaGrid"></div>
+      </div>
+      <div id="megaStats" class="quadinfo"></div>
+    </div>
+
+    <div class="card" id="megaAggCard">
+      <h2>Acumulado<span class="modeTag" id="megaAggTag"></span></h2>
+      <p class="hint" style="margin-top:0" id="megaAggNota"></p>
+      <div class="sizes" id="megaRange"></div>
+      <div id="megaAgg"></div>
+    </div>
+
+    <div class="card" id="apostasCard">
+      <h2>Minhas apostas<span class="modeTag" id="apostasTag"></span></h2>
+      <p class="hint" style="margin-top:0">
+        Cada lote de jogos fica guardado como uma carteira nomeada — Aposta 1, Aposta 2 ou o nome que
+        você preferir. Quando o concurso sair e você atualizar os dados
+        (<code>python3 atualizar.py</code>), o sistema destaca o melhor jogo e todas as faixas premiadas.
+      </p>
+      <div id="apostasResumo"></div>
+      <div id="apostasLista"></div>
+      <div class="actions" id="apostasAcoes" hidden>
+        <button class="btn" id="apostasLimparConf" type="button">Apagar as já conferidas</button>
+      </div>
+    </div>
+
+    <div class="card" id="megaGenCard">
+      <h2>Gerador de jogos<span class="modeTag" id="megaGenTag">6 dezenas</span></h2>
+      <p class="hint" style="margin-top:0">
+        Os jogos são montados com o formato dos sorteios reais: distribuição pelos quadrantes,
+        pares/ímpares, faixa 1–30 contra 31–60 e soma dentro do intervalo comum. Depois disso,
+        o critério abaixo decide <i>quais</i> dezenas entram.
+      </p>
+      <h3 class="subhead">Critério</h3>
+      <div class="crits" id="megaCrits"></div>
+      <h3 class="subhead">Repetição do último concurso</h3>
+      <p class="hint" style="margin-top:0">Escolha de 0 a 3 dezenas do último resultado, ou deixe livre.</p>
+      <div class="crits" id="megaEvitar"></div>
+      <details class="advanced-filter"><summary>Exclusões do volante <small>opcional · filtros avançados</small></summary>
+        <p class="hint">Use “Todos os jogos” para uma regra geral ou “Personalizar” para excluir partes diferentes em cada jogo. As duas regras podem ser combinadas.</p>
+        <div class="excgrupos" id="megaExc"></div><p class="hint" id="megaExcInfo"></p>
+      </details>
+      <h3 class="subhead">Dezenas por jogo</h3>
+      <p class="hint" style="margin-top:0">O volante oficial aceita de 6 a 20 dezenas. Mais dezenas = aposta múltipla: o preço multiplica pelas combinações de 6 — e sobe rápido.</p>
+      <div class="sizes" id="megaDez"></div>
+      <h3 class="subhead">Quantidade</h3>
+      <div class="sizes" id="megaQtd"></div>
+      <div class="actions">
+        <button class="btn primary" id="megaGerar" type="button">Gerar jogos</button>
+        <button class="btn" id="megaCopiar" type="button">Copiar todos</button>
+        <button class="btn" id="salvarMega" type="button">Salvar aposta</button>
+      </div>
+      <div id="megaJogos" class="games"></div>
+      <h3 class="subhead">Conferir estes jogos nos concursos passados</h3>
+      <p class="hint" style="margin-top:0">Compara os jogos gerados acima com todos os sorteios guardados: acertos, faixas e o que teriam pago.</p>
+      <div class="actions"><button class="btn" id="megaConferir" type="button">Conferir estes jogos</button></div>
+      <div id="megaConfOut"></div>
+      <p class="hint" id="megaGenNota"></p>
+    </div>
+
+    <section class="card analysis-card" id="megaAnalysisCard"></section>
+
+    <div class="card" id="mmGenCard">
+      <h2>Gerador de jogos<span class="modeTag" id="mmGenTag">6 + 2 trevos</span></h2>
+      <p class="hint" style="margin-top:0">
+        Mesmo motor da Mega, com os números da +Milionária: metade de cima contra metade de baixo,
+        pares/ímpares e faixa de soma medidos nos concursos guardados. Os 2 trevos seguem o mesmo
+        critério escolhido para as dezenas; no Sorteio puro, continuam uniformes.
+      </p>
+      <h3 class="subhead">Critério</h3>
+      <div class="crits" id="mmCrits"></div>
+      <h3 class="subhead">Repetição do último concurso</h3>
+      <p class="hint" style="margin-top:0">Escolha de 0 a 3 dezenas do último resultado, ou deixe livre.</p>
+      <div class="crits" id="mmEvitar"></div>
+      <details class="advanced-filter"><summary>Exclusões do volante <small>opcional · filtros avançados</small></summary>
+        <p class="hint">Use “Todos os jogos” para uma regra geral ou “Personalizar” para excluir partes diferentes em cada jogo. As duas regras podem ser combinadas.</p>
+        <div class="excgrupos" id="mmExc"></div><p class="hint" id="mmExcInfo"></p>
+      </details>
+      <h3 class="subhead">Dezenas por jogo</h3>
+      <p class="hint" style="margin-top:0">O volante oficial aceita de 6 a 12 dezenas (os trevos aqui ficam sempre em 2). O preço multiplica pelas combinações de 6.</p>
+      <div class="sizes" id="mmDez"></div>
+      <h3 class="subhead">Quantidade</h3>
+      <div class="sizes" id="mmQtd"></div>
+      <div class="actions">
+        <button class="btn primary" id="mmGerar" type="button">Gerar jogos</button>
+        <button class="btn" id="mmCopiar" type="button">Copiar todos</button>
+        <button class="btn" id="salvarMm" type="button">Salvar aposta</button>
+      </div>
+      <div id="mmJogos" class="games"></div>
+      <h3 class="subhead">Conferir estes jogos nos concursos passados</h3>
+      <p class="hint" style="margin-top:0">Compara os jogos gerados acima com todos os sorteios guardados — incluindo os seus trevos.</p>
+      <div class="actions"><button class="btn" id="mmConferir" type="button">Conferir estes jogos</button></div>
+      <div id="mmConfOut"></div>
+      <p class="hint" id="mmGenNota"></p>
+    </div>
+
+    <section class="card analysis-card" id="mmAnalysisCard"></section>
+
+    <div class="card" id="mmDrawCard">
+      <h2>Sorteio a sorteio<span class="modeTag" id="mmTag"></span></h2>
+      <p class="hint" style="margin-top:0">
+        O mesmo volante, preenchido com um concurso de cada vez — incluindo os trevos.
+      </p>
+      <div class="navsorteio">
+        <button class="btn navseta" id="mmPrev" type="button" aria-label="Concurso anterior">‹</button>
+        <div class="navmid"><b id="mmConc">—</b><small id="mmData"></small></div>
+        <button class="btn navseta" id="mmNext" type="button" aria-label="Próximo concurso">›</button>
+      </div>
+      <div class="volantewrap">
+        <div class="volante maismilionaria div-metades" id="mmGrid"></div>
+      </div>
+      <div id="mmStats" class="quadinfo"></div>
+    </div>
+
+    <div class="card" id="mmAggCard">
+      <h2>Acumulado<span class="modeTag" id="mmAggTag"></span></h2>
+      <p class="hint" style="margin-top:0" id="mmAggNota"></p>
+      <div class="sizes" id="mmRange"></div>
+      <div id="mmAgg"></div>
+    </div>
+
+    <div class="card" id="quinaGenCard">
+      <h2>Gerador de jogos<span class="modeTag" id="quinaGenTag">5 dezenas</span></h2>
+      <p class="hint" style="margin-top:0">
+        Os jogos são montados com o formato dos sorteios reais: distribuição pelos quadrantes,
+        pares/ímpares, faixa 1–40 contra 41–80 e soma dentro do intervalo comum. Depois disso,
+        o critério abaixo decide <i>quais</i> dezenas entram.
+      </p>
+      <h3 class="subhead">Critério</h3>
+      <div class="crits" id="quinaCrits"></div>
+      <h3 class="subhead">Repetição do último concurso</h3>
+      <p class="hint" style="margin-top:0">Escolha quantas dezenas do resultado mais recente cada jogo deve repetir. “Livre” não impõe quantidade.</p>
+      <div class="crits" id="quinaEvitar"></div>
+      <details class="advanced-filter"><summary>Exclusões do volante <small>opcional · filtros avançados</small></summary>
+        <p class="hint">Use “Todos os jogos” para uma regra geral ou “Personalizar” para excluir partes diferentes em cada jogo. As duas regras podem ser combinadas.</p>
+        <div class="excgrupos" id="quinaExc"></div><p class="hint" id="quinaExcInfo"></p>
+      </details>
+      <h3 class="subhead">Dezenas por jogo</h3>
+      <p class="hint" style="margin-top:0">O volante oficial aceita de 5 a 15 dezenas. Mais dezenas = aposta múltipla: o preço multiplica pelas combinações de 5.</p>
+      <div class="sizes" id="quinaDez"></div>
+      <h3 class="subhead">Quantidade</h3>
+      <div class="sizes" id="quinaQtd"></div>
+      <div class="actions">
+        <button class="btn primary" id="quinaGerar" type="button">Gerar jogos</button>
+        <button class="btn" id="quinaCopiar" type="button">Copiar todos</button>
+        <button class="btn" id="salvarQuina" type="button">Salvar aposta</button>
+      </div>
+      <div id="quinaJogos" class="games"></div>
+      <h3 class="subhead">Conferir estes jogos nos concursos passados</h3>
+      <p class="hint" style="margin-top:0">Compara os jogos gerados acima com todos os sorteios guardados: acertos, faixas e o que teriam pago.</p>
+      <div class="actions"><button class="btn" id="quinaConferir" type="button">Conferir estes jogos</button></div>
+      <div id="quinaConfOut"></div>
+      <p class="hint" id="quinaGenNota"></p>
+    </div>
+
+    <section class="card analysis-card" id="quinaAnalysisCard"></section>
+
+    <div class="card" id="quinaDrawCard">
+      <h2>Sorteio a sorteio<span class="modeTag" id="quinaTag"></span></h2>
+      <p class="hint" style="margin-top:0">
+        O mesmo volante, preenchido com um concurso de cada vez. Use as setas para navegar
+        e observar onde as dezenas costumam cair.
+      </p>
+      <div class="navsorteio">
+        <button class="btn navseta" id="quinaPrev" type="button" aria-label="Concurso anterior">‹</button>
+        <div class="navmid"><b id="quinaConc">—</b><small id="quinaData"></small></div>
+        <button class="btn navseta" id="quinaNext" type="button" aria-label="Próximo concurso">›</button>
+      </div>
+      <div class="volantewrap">
+        <div class="volante quina div-quadrantes" id="quinaGrid"></div>
+      </div>
+      <div id="quinaStats" class="quadinfo"></div>
+    </div>
+
+    <div class="card" id="quinaAggCard">
+      <h2>Acumulado<span class="modeTag" id="quinaAggTag"></span></h2>
+      <p class="hint" style="margin-top:0" id="quinaAggNota"></p>
+      <div class="sizes" id="quinaRange"></div>
+      <div id="quinaAgg"></div>
+    </div>
+
+    <div class="card" id="dsGenCard">
+      <h2>Gerador de jogos<span class="modeTag" id="dsGenTag">7 dezenas</span></h2>
+      <p class="hint" style="margin-top:0">
+        No Sorteio puro, as combinações são uniformes. Nos critérios históricos, os jogos também
+        consideram distribuição pelas 5 semanas, pares/ímpares, faixa 1–15 contra 16–31 e soma.
+        O critério decide <i>quais</i> dezenas e meses favorecer; no Sorteio puro, o mês permanece
+        uniforme entre as 12 opções.
+      </p>
+      <h3 class="subhead">Critério</h3>
+      <div class="crits" id="dsCrits"></div>
+      <h3 class="subhead">Repetição do último concurso</h3>
+      <p class="hint" style="margin-top:0">Escolha quantas dezenas do resultado mais recente cada jogo deve repetir. “Livre” não impõe quantidade.</p>
+      <div class="crits" id="dsEvitar"></div>
+      <h3 class="subhead">Dezenas por jogo</h3>
+      <p class="hint" style="margin-top:0">O volante oficial aceita de 7 a 15 dezenas. Mais dezenas = aposta múltipla: o preço multiplica pelas combinações de 7. O mês continua sendo só 1, mesmo assim.</p>
+      <div class="sizes" id="dsDez"></div>
+      <h3 class="subhead">Quantidade</h3>
+      <div class="sizes" id="dsQtd"></div>
+      <div class="actions">
+        <button class="btn primary" id="dsGerar" type="button">Gerar jogos</button>
+        <button class="btn" id="dsCopiar" type="button">Copiar todos</button>
+        <button class="btn" id="salvarDs" type="button">Salvar aposta</button>
+      </div>
+      <div id="dsJogos" class="games"></div>
+      <h3 class="subhead">Conferir estes jogos nos concursos passados</h3>
+      <p class="hint" style="margin-top:0">Compara os jogos gerados acima com todos os sorteios guardados — incluindo o mês da sorte.</p>
+      <div class="actions"><button class="btn" id="dsConferir" type="button">Conferir estes jogos</button></div>
+      <div id="dsConfOut"></div>
+      <p class="hint" id="dsGenNota"></p>
+    </div>
+
+    <div class="card" id="dsResultCard">
+      <h2>Resultado do concurso</h2>
+      <p class="hint" style="margin-top:0">
+        Marque as 7 dezenas e o mês de um concurso real pra conferir contra os jogos acima, ou
+        clique em <b>"Sortear resultado"</b> pra testar contra um sorteio aleatório de mentira —
+        sem esperar o concurso sair. O resultado oficial está em
+        <a href="https://loterias.caixa.gov.br/paginas/dia-de-sorte.aspx" target="_blank" rel="noopener">loterias.caixa.gov.br</a>.
+      </p>
+      <div class="drawpick ds31" id="dsDrawPick"></div>
+      <h3 class="subhead">Mês da sorte</h3>
+      <div class="trevos" id="dsDrawMes"></div>
+      <div class="drawstatus" id="dsDrawStatus"></div>
+      <div class="actions">
+        <button class="btn" id="btnSortearDs" type="button">Sortear resultado (simular)</button>
+        <button class="btn" id="btnClearDs" type="button">Limpar resultado</button>
+      </div>
+    </div>
+
+    <div class="card" id="dsBalanceCard" hidden>
+      <h2>Balanço do concurso</h2>
+      <div id="dsBalanceBox"></div>
+      <p class="hint">
+        As faixas de 4 e 5 acertos e o Mês certo são <b>prêmios fixos</b>: valem 2×, 10× e 1× o preço
+        da aposta de 7 dezenas (R$ 2,50), então são calculadas sozinhas. Só 6 e 7 acertos saem de
+        rateio e mudam a cada concurso — esses dois são editáveis, vêm preenchidos com o concurso
+        1291 como referência, e o que você digitar fica guardado.
+      </p>
+    </div>
+
+    <section class="card analysis-card" id="dsAnalysisCard">
+      <div class="analysis-hero">
+        <div>
+          <span class="eyebrow">Leitura estatística</span>
+          <h2>Raio-X do Dia de Sorte</h2>
+          <p>Compare frequência, atraso e repetição sem transformar histórico em promessa. Os sinais
+            abaixo servem para montar uma estratégia e conferir como ela teria se comportado.</p>
+        </div>
+        <span class="analysis-stamp" id="dsAnalysisStamp">—</span>
+      </div>
+
+      <h3 class="subhead">Janela de análise</h3>
+      <div class="sizes analysis-range" id="dsAnalysisRange"></div>
+      <div class="insight-grid" id="dsAnalysisSummary"></div>
+
+      <div class="analysis-columns">
+        <section class="analysis-panel">
+          <div class="panel-head">
+            <div><span class="eyebrow">Concurso a concurso</span><h3>Repetição de dezenas</h3></div>
+            <span class="panel-metric" id="dsRepeatMean">—</span>
+          </div>
+          <div id="dsRepeatChart"></div>
+        </section>
+        <section class="analysis-panel">
+          <div class="panel-head">
+            <div><span class="eyebrow">Combinações</span><h3>Pares mais recorrentes</h3></div>
+          </div>
+          <div class="pair-grid" id="dsPairGrid"></div>
+        </section>
+      </div>
+
+      <section class="analysis-panel analysis-ranking">
+        <div class="panel-head">
+          <div><span class="eyebrow">31 dezenas</span><h3>Frequência e atraso</h3></div>
+          <span class="legend-inline"><i class="signal hot"></i>acima do esperado <i class="signal cold"></i>abaixo</span>
+        </div>
+        <p class="hint" id="dsRankingNote"></p>
+        <div class="tablewrap" id="dsRanking"></div>
+      </section>
+
+      <section class="analysis-panel">
+        <div class="panel-head">
+          <div><span class="eyebrow">12 opções</span><h3>Mês da Sorte</h3></div>
+        </div>
+        <div class="month-analysis" id="dsMonthAnalysis"></div>
+      </section>
+
+      <section class="analysis-panel backtest-panel">
+        <div class="panel-head">
+          <div><span class="eyebrow">Teste sem olhar o futuro</span><h3>Backtest de estratégia</h3></div>
+        </div>
+        <p class="hint" style="margin-top:0">Em cada concurso, o sistema escolhe 7 dezenas e um mês usando
+          somente os resultados que já existiam antes dele. Compare o resultado com a média matemática.</p>
+        <div class="crits" id="dsBacktestStrategies"></div>
+        <div id="dsBacktestResult"></div>
+      </section>
+
+      <section class="recommendation-box">
+        <div>
+          <span class="eyebrow">Sugestão automática</span>
+          <h3>Gerar com a recomendação da análise</h3>
+          <p>O sistema compara as estratégias no backtest da janela escolhida, seleciona a mais
+            consistente e combina com a repetição mais observada entre concursos.</p>
+        </div>
+        <button class="btn primary recommendation-btn" id="dsRecommendation" type="button">Gerar jogos recomendados</button>
+        <div class="recommendation-result" id="dsRecommendationResult" hidden></div>
+      </section>
+
+      <p class="analysis-disclaimer">Histórico descreve o que aconteceu; não altera a chance do próximo
+        sorteio. “Atrasado” significa apenas que não apareceu recentemente, e “frequente” que apareceu
+        mais vezes dentro da janela selecionada.</p>
+    </section>
+
+    <div class="card" id="dsDrawCard">
+      <h2>Sorteio a sorteio<span class="modeTag" id="dsTag"></span></h2>
+      <p class="hint" style="margin-top:0">
+        O mesmo volante, preenchido com um concurso de cada vez — incluindo o mês da sorte.
+      </p>
+      <div class="navsorteio">
+        <button class="btn navseta" id="dsPrev" type="button" aria-label="Concurso anterior">‹</button>
+        <div class="navmid"><b id="dsConc">—</b><small id="dsData"></small></div>
+        <button class="btn navseta" id="dsNext" type="button" aria-label="Próximo concurso">›</button>
+      </div>
+      <div class="volantewrap">
+        <div class="volante diadesorte div-linhas" id="dsGrid"></div>
+      </div>
+      <div id="dsStats" class="quadinfo"></div>
+    </div>
+
+    <div class="card" id="dsAggCard">
+      <h2>Acumulado<span class="modeTag" id="dsAggTag"></span></h2>
+      <p class="hint" style="margin-top:0" id="dsAggNota"></p>
+      <div class="sizes" id="dsRange"></div>
+      <div id="dsAgg"></div>
+    </div>
+
+    <div class="card" id="outrasCard">
+      <h2><span id="loteriaTitulo">Volante</span><span class="modeTag" id="loteriaTag"></span></h2>
+      <div class="modos" id="loteriaBox">
+        <button class="btn modobtn on" type="button" data-lot="megasena">
+          <b>Mega-Sena</b><small>6 linhas × 10 colunas</small>
+        </button>
+        <button class="btn modobtn" type="button" data-lot="maismilionaria">
+          <b>+Milionária</b><small>10 linhas × 5 colunas</small>
+        </button>
+        <button class="btn modobtn" type="button" data-lot="quina">
+          <b>Quina</b><small>8 linhas × 10 colunas</small>
+        </button>
+        <button class="btn modobtn" type="button" data-lot="diadesorte">
+          <b>Dia de Sorte</b><small>31 dias + mês da sorte</small>
+        </button>
+      </div>
+      <p class="hint" id="loteriaNota"></p>
+      <div class="volantewrap">
+        <div class="volante" id="loteriaGrid"></div>
+      </div>
+      <div id="trevoBox" hidden>
+        <p class="subhead" id="trevoTitulo">Trevos</p>
+        <div class="trevos" id="trevoGrid"></div>
+      </div>
+      <div id="quadInfo" class="quadinfo"></div>
+      <div class="actions">
+        <button class="btn" id="btnLotRandom" type="button">Surpresinha</button>
+        <button class="btn" id="btnLotClear" type="button">Limpar</button>
+      </div>
+    </div>
+
+    <div id="notesCard">
+    <p class="note">
+      <b>Como os jogos são montados:</b> o app mede nos concursos guardados como os sorteios
+      realmente se comportam — quantas dezenas caem em cada linha do volante, quantos ímpares,
+      quantas de 1 a 13 e em que faixa a soma costuma ficar. Cada jogo gerado recebe um desses
+      perfis, sorteado com a frequência em que ele aparece de verdade. É isso que faz a cartela
+      parecer um sorteio plausível em vez de algo como 01-02-03-04-05.
+    </p>
+    <p class="note">
+      <b>O que isso não é:</b> previsão. Escolher dezenas por frequência, atraso ou sequência muda
+      <i>quais</i> números entram no seu jogo, nunca a chance de eles saírem — cada dezena tem a
+      mesma probabilidade em todo concurso, tenha saído dez vezes seguidas ou nenhuma. Rodei o teste
+      nos concursos passados com todos os critérios e o resultado é sempre o mesmo: 9 acertos por
+      jogo na Lotofácil, 0,6 na Mega, que é exatamente o que a matemática prevê. O botão
+      <b>“Conferir estes jogos”</b> em cada gerador compara os seus jogos com os concursos
+      passados para você ver isso sozinho.
+    </p>
+    <p class="note">
+      A única escolha com efeito real é <b>fugir dos padrões que muita gente marca</b> — sequências,
+      datas de aniversário, desenhos no volante. Isso não aumenta a chance de ganhar, mas reduz a de
+      dividir o prêmio se você ganhar.
+    </p>
+    </div>
+</section>
+    </main>
+  </div>
+</div>
+
+<div class="modal-layer" id="saveBetModal" hidden>
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="saveBetTitle">
+    <span class="eyebrow">Carteira de jogos</span>
+    <h2 id="saveBetTitle">Nomear aposta</h2>
+    <p class="hint" id="saveBetContext">Dê um nome para encontrar e conferir estes jogos depois.</p>
+    <label class="field-label" for="saveBetName">Nome da aposta</label>
+    <input class="text-field" id="saveBetName" type="text" maxlength="40" autocomplete="off" placeholder="Ex.: Aposta 1">
+    <div class="modal-actions">
+      <button class="btn" id="saveBetCancel" type="button">Cancelar</button>
+      <button class="btn primary" id="saveBetConfirm" type="button">Salvar carteira</button>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="dados/historico.js?v=94"></script>
+<script src="dados/megasena.js?v=94"></script>
+<script src="dados/maismilionaria.js?v=94"></script>
+<script src="dados/quina.js?v=1"></script>
+<script src="dados/diadesorte.js?v=1"></script>
+<script src="js/app.js?v=132"></script>
+</body>
+</html>

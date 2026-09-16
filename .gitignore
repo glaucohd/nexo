@@ -1,0 +1,27 @@
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editores
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Arquivos locais e temporários
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+backup/
+
+# Ferramentas locais
+.codex/
+.agents/
