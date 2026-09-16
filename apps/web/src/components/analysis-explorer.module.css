@@ -1,0 +1,94 @@
+.page { display: grid; gap: 22px; padding-bottom: 54px; }
+.header { display: flex; align-items: end; justify-content: space-between; gap: 28px; padding: 8px 0 2px; }
+.header h1 { max-width: 720px; margin: 8px 0; font-family: "Fredoka Variable", sans-serif; font-size: clamp(2rem, 3.5vw, 3.1rem); font-weight: 580; letter-spacing: -.04em; line-height: 1.08; }
+.header p, .sectionLead p, .cycleHeading p { max-width: 680px; color: var(--muted); line-height: 1.5; }
+.selector { display: grid; flex: 0 0 200px; gap: 7px; color: var(--muted); font-size: .74rem; font-weight: 850; }
+.selector select { width: 100%; min-height: 46px; padding: 0 36px 0 14px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: var(--surface); font: inherit; font-size: .9rem; cursor: pointer; }
+.selector select:focus-visible, .tabBar button:focus-visible, .rangeBar button:focus-visible, .tableScroll:focus-visible { outline: 3px solid color-mix(in srgb, var(--analysis-accent) 45%, transparent); outline-offset: 2px; }
+.summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.summary > div { display: grid; gap: 4px; min-width: 0; padding: 17px 20px; border: 1px solid var(--line); border-radius: 17px; background: var(--surface); }
+.summary span { color: var(--muted); font-size: .76rem; font-weight: 800; }
+.summary strong { color: var(--analysis-accent); font-family: "Fredoka Variable", sans-serif; font-size: 1.9rem; font-weight: 620; line-height: 1.1; }
+.summary small { overflow: hidden; color: var(--muted); font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
+.tabBar { display: flex; gap: 5px; overflow-x: auto; padding: 5px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.tabBar button { flex: 1; min-width: max-content; min-height: 42px; padding: 8px 16px; border: 0; border-radius: 10px; color: var(--muted); background: transparent; font-size: .86rem; font-weight: 850; cursor: pointer; }
+.tabBar button:hover { color: var(--ink); background: var(--paper); }
+.tabBar .activeTab { color: var(--analysis-accent); background: color-mix(in srgb, var(--analysis-accent) 11%, var(--surface)); }
+.panel, .cycleCard, .parameterCard, .empty { min-width: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); }
+.panel { padding: 22px; }
+.sectionStack { display: grid; gap: 17px; }
+.sectionLead { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.sectionLead h2 { margin: 5px 0; font-family: "Fredoka Variable", sans-serif; font-size: 1.55rem; font-weight: 600; letter-spacing: -.02em; }
+.sectionLead p { font-size: .88rem; }
+.latestChip { flex: none; padding: 8px 12px; border-radius: 999px; color: var(--analysis-accent); background: color-mix(in srgb, var(--analysis-accent) 10%, var(--surface)); font-size: .73rem; font-weight: 900; }
+.rangeBar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 20px 0 14px; }
+.rangeBar > span { margin-right: 6px; color: var(--muted); font-size: .76rem; font-weight: 850; }
+.rangeBar button { min-height: 32px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: var(--surface); font-size: .73rem; font-weight: 850; cursor: pointer; }
+.rangeBar button:hover { border-color: var(--analysis-accent); color: var(--analysis-accent); }
+.rangeBar .rangeActive { border-color: var(--analysis-accent); color: white; background: var(--analysis-accent); }
+.tableScroll { max-width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); scrollbar-color: color-mix(in srgb, var(--analysis-accent) 36%, var(--line)) transparent; }
+.matrix { width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-variant-numeric: tabular-nums; }
+.matrix th, .matrix td { width: 35px; height: 32px; min-width: 35px; padding: 3px 2px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: center; font-size: .69rem; line-height: 1; white-space: nowrap; }
+.matrix thead th { position: sticky; z-index: 2; top: 0; height: 34px; color: var(--ink); background: color-mix(in srgb, var(--analysis-accent) 8%, var(--surface)); font-weight: 900; }
+.matrix thead tr:nth-child(2) th { top: 34px; }
+.matrix thead tr:nth-child(3) th { top: 66px; }
+.matrix .stickyColumn { position: sticky; z-index: 3; left: 0; width: 85px; min-width: 85px; padding-inline: 8px; border-right: 2px solid var(--line); background: var(--surface); text-align: left; font-weight: 900; }
+.matrix thead .stickyColumn { z-index: 4; background: color-mix(in srgb, var(--analysis-accent) 8%, var(--surface)); }
+.matrix tbody tr:hover td, .matrix tbody tr:hover .stickyColumn { box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--analysis-accent) 6%, transparent); }
+.matrix tbody tr:last-child td, .matrix tbody tr:last-child th { border-bottom: 0; }
+.matrix .frequencyRow th { height: 32px; color: var(--analysis-accent); background: color-mix(in srgb, var(--analysis-accent) var(--heat, 8%), var(--surface)); }
+.matrix .frequencyRow .stickyColumn { background: color-mix(in srgb, var(--analysis-accent) 8%, var(--surface)); }
+.matrix .percentageRow th { height: 30px; color: var(--muted); background: color-mix(in srgb, var(--analysis-accent) 4%, var(--surface)); font-size: .6rem; }
+.matrix .matrixHit { color: white; background: var(--analysis-accent); font-weight: 900; }
+.matrix .absentHit { color: white; background: #6650b9; font-weight: 900; }
+.matrix .matrixMiss { background: var(--surface); }
+.matrix .statCell { min-width: 48px; padding-inline: 7px; color: var(--ink); background: var(--paper); font-weight: 800; }
+.matrix .latestRow .stickyColumn { color: var(--analysis-accent); }
+.matrix .cycleClosed .stickyColumn, .matrix .cycleClosed .statCell { color: #177e5a; background: #eaf7f1; }
+.matrixFooter { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 13px; color: var(--muted); font-size: .72rem; font-weight: 750; }
+.matrixFooter span { display: inline-flex; align-items: center; gap: 6px; }
+.legendHit { width: 13px; height: 13px; border-radius: 3px; background: var(--analysis-accent); }
+.methodNote, .matrixCaption { color: var(--muted); font-size: .76rem; line-height: 1.55; }
+.panel .methodNote { margin-top: 17px; }
+.parameterGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.parameterCard { min-height: 185px; padding: 18px; }
+.parameterCard h3 { margin-bottom: 2px; font-size: .96rem; font-weight: 900; }
+.parameterCard small { color: var(--muted); font-size: .69rem; }
+.distribution { display: grid; gap: 7px; margin-top: 17px; }
+.distributionRow { display: grid; grid-template-columns: 22px minmax(0, 1fr) 20px; align-items: center; gap: 8px; font-size: .76rem; font-variant-numeric: tabular-nums; }
+.distributionRow > span { color: var(--ink); font-weight: 900; }
+.distributionRow > div { height: 11px; overflow: hidden; border-radius: 4px; background: var(--paper); }
+.distributionRow i { display: block; height: 100%; border-radius: inherit; background: var(--analysis-accent); }
+.distributionRow strong { text-align: right; }
+.sumCard > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 23px; }
+.sumCard > div > span { display: grid; gap: 6px; padding: 11px; border-radius: 10px; color: var(--muted); background: var(--paper); font-size: .68rem; font-weight: 800; }
+.sumCard strong { color: var(--analysis-accent); font-family: "Fredoka Variable", sans-serif; font-size: 1.45rem; font-weight: 650; }
+.cycleCard { display: grid; gap: 14px; padding: 20px; }
+.cycleHeading { display: flex; justify-content: space-between; gap: 20px; }
+.cycleHeading h3 { margin: 5px 0; font-family: "Fredoka Variable", sans-serif; font-size: 1.36rem; font-weight: 600; }
+.cycleHeading p { font-size: .82rem; }
+.cycleCounters { display: flex; flex: none; gap: 8px; align-self: center; }
+.cycleCounters span { display: grid; min-width: 98px; padding: 10px; border-radius: 10px; color: var(--muted); background: var(--paper); font-size: .67rem; font-weight: 800; }
+.cycleCounters strong { color: var(--analysis-accent); font-family: "Fredoka Variable", sans-serif; font-size: 1.35rem; font-weight: 650; }
+.missingLine { padding: 11px 13px; border-radius: 10px; color: var(--ink); background: color-mix(in srgb, var(--analysis-accent) 7%, var(--surface)); font-size: .76rem; line-height: 1.5; }
+.empty { padding: 32px; }
+.empty h2 { margin-bottom: 8px; }
+.empty p { color: var(--muted); }
+@media (max-width: 900px) {
+  .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .parameterGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .page { gap: 15px; }
+  .header, .cycleHeading { display: grid; }
+  .selector { width: 100%; }
+  .summary { gap: 8px; }
+  .summary > div { padding: 13px; }
+  .summary strong { font-size: 1.55rem; }
+  .tabBar button { flex: none; font-size: .75rem; }
+  .panel, .cycleCard { padding: 14px; }
+  .sectionLead { align-items: start; }
+  .latestChip { display: none; }
+  .parameterGrid { grid-template-columns: 1fr; }
+  .cycleCounters { flex-wrap: wrap; }
+}
