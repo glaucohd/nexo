@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AppNav } from "@/components/app-nav";
 import { Brand } from "@/components/brand";
 import { SignOutButton } from "@/components/sign-out-button";
 import { auth } from "@/lib/auth";
@@ -17,12 +17,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="app-shell">
       <aside className="sidebar">
         <Brand />
-        <nav aria-label="Navegação da plataforma">
-          <Link href="/app">Visão geral</Link>
-          <Link href="/app/analises">Análises</Link>
-          <Link href="/app/apostas">Minhas apostas</Link>
-          <Link href="/app/resultados">Resultados</Link>
-        </nav>
+        <p className="sidebar-label">Meu Nexo</p>
+        <AppNav />
+        <div className="sidebar-games" aria-label="Modalidades disponíveis">
+          <span className="game-dot lotofacil" title="Lotofácil" />
+          <span className="game-dot mega" title="Mega-Sena" />
+          <span className="game-dot quina" title="Quina" />
+          <span className="game-dot milionaria" title="+Milionária" />
+          <span className="game-dot dia" title="Dia de Sorte" />
+        </div>
         <div className="sidebar-user">
           <strong>{session.user.name}</strong>
           <span>{session.user.email}</span>

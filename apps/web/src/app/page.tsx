@@ -2,22 +2,18 @@ import Link from "next/link";
 
 import { Brand } from "@/components/brand";
 
+const lotteries = [
+  { slug: "lotofacil", short: "LF", name: "Lotofácil", detail: "15 a 20 números", color: "#8a2da5" },
+  { slug: "mega", short: "MS", name: "Mega-Sena", detail: "6 a 20 números", color: "#07966f" },
+  { slug: "quina", short: "QN", name: "Quina", detail: "5 a 15 números", color: "#5b2a86" },
+  { slug: "milionaria", short: "+M", name: "+Milionária", detail: "Números + trevos", color: "#2467ce" },
+  { slug: "dia", short: "DS", name: "Dia de Sorte", detail: "Números + mês", color: "#c77b12" },
+];
+
 const features = [
-  {
-    number: "01",
-    title: "Leia o histórico",
-    text: "Frequência, atrasos, repetições e distribuição reunidos em uma leitura direta.",
-  },
-  {
-    number: "02",
-    title: "Monte com critério",
-    text: "Gere combinações com filtros gerais, ajustes por jogo e estratégias salvas.",
-  },
-  {
-    number: "03",
-    title: "Acompanhe depois",
-    text: "Agrupe apostas, confira pontos automaticamente e compare o desempenho histórico.",
-  },
+  { number: "01", title: "Entenda o histórico", text: "Veja frequências, atrasos, repetições e distribuições sem se perder em planilhas." },
+  { number: "02", title: "Monte seus jogos", text: "Use recomendações, filtros gerais, ajustes por cartela e modos especiais de geração." },
+  { number: "03", title: "Salve e confira", text: "Organize apostas por concurso e descubra automaticamente quantos pontos cada jogo fez." },
 ];
 
 export default function Home() {
@@ -26,6 +22,7 @@ export default function Home() {
       <header className="site-header container">
         <Brand />
         <nav aria-label="Navegação principal">
+          <a href="#loterias">Loterias</a>
           <a href="#como-funciona">Como funciona</a>
           <a href="#recursos">Recursos</a>
           <Link className="button button-ghost" href="/entrar">Entrar</Link>
@@ -34,70 +31,89 @@ export default function Home() {
 
       <section className="hero container">
         <div className="hero-copy">
-          <span className="eyebrow">Análise, organização e acompanhamento</span>
-          <h1>Seus jogos fazem mais sentido quando os dados têm contexto.</h1>
+          <div className="hero-badge"><span /> Dados para jogar com mais organização</div>
+          <h1>Seus jogos.<br /><em>Suas estratégias.</em><br />Tudo no Nexo.</h1>
           <p>
-            O Nexo transforma resultados anteriores em uma visão simples para
-            você analisar, montar, salvar e conferir seus jogos em um só lugar.
+            Analise concursos, gere combinações, salve suas apostas e confira
+            resultados das principais loterias em um só lugar.
           </p>
           <div className="hero-actions">
             <Link className="button button-primary" href="/entrar?modo=cadastro">
-              Criar minha conta <span aria-hidden="true">↗</span>
+              Começar agora <span aria-hidden="true">→</span>
             </Link>
-            <a className="text-link" href="#como-funciona">
-              Conhecer a plataforma <span aria-hidden="true">↓</span>
-            </a>
+            <a className="text-link" href="#loterias">Ver modalidades <span aria-hidden="true">↓</span></a>
           </div>
-          <small>
-            Análises históricas não alteram a probabilidade matemática de um
-            sorteio. Use a plataforma como apoio de organização.
-          </small>
+          <div className="trust-row" aria-label="Recursos principais">
+            <span><b>✓</b> Análises históricas</span>
+            <span><b>✓</b> Jogos salvos</span>
+            <span><b>✓</b> Conferência automática</span>
+          </div>
         </div>
 
-        <div className="hero-visual" aria-label="Exemplo do painel Nexo">
-          <div className="preview-bar">
-            <span>Painel de análise</span>
-            <span className="live-dot">Base atualizada</span>
+        <div className="hero-visual" aria-label="Prévia do painel Nexo">
+          <div className="floating-ball ball-one">07</div>
+          <div className="floating-ball ball-two">15</div>
+          <div className="floating-ball ball-three">23</div>
+          <div className="preview-window">
+            <div className="preview-topbar">
+              <span className="preview-brand"><i /> nexo</span>
+              <span className="live-dot">Base atualizada</span>
+            </div>
+            <div className="preview-heading">
+              <div><small>Análise da vez</small><strong>Lotofácil</strong></div>
+              <span className="contest-chip">200 concursos</span>
+            </div>
+            <div className="preview-content">
+              <article className="preview-card number-panel">
+                <div className="card-title"><span>Jogo recomendado</span><b>15 números</b></div>
+                <div className="number-cloud">
+                  {[1, 3, 4, 6, 7, 9, 10, 12, 13, 15, 17, 19, 21, 23, 25].map((number) => (
+                    <span key={number}>{String(number).padStart(2, "0")}</span>
+                  ))}
+                </div>
+                <div className="ticket-summary"><span>8 pares</span><span>7 ímpares</span><span>Soma 185</span></div>
+              </article>
+              <div className="preview-side">
+                <article className="preview-card mini-metric"><span>Repetições</span><strong>9</strong><small>faixa mais comum</small></article>
+                <article className="preview-card mini-chart"><span>Equilíbrio</span><div>{[45,70,58,85,64,77].map((height,i)=><i key={i} style={{height:`${height}%`}} />)}</div></article>
+              </div>
+            </div>
           </div>
-          <div className="preview-grid">
-            <article className="preview-card preview-card-main">
-              <span className="preview-label">Distribuição recente</span>
-              <strong>Equilíbrio do conjunto</strong>
-              <div className="bars" aria-hidden="true">
-                {[54, 76, 42, 88, 63, 71, 48, 82, 57, 67].map((height, i) => (
-                  <span key={i} style={{ height: `${height}%` }} />
-                ))}
-              </div>
-              <div className="preview-legend">
-                <span>200 concursos</span><span>Leitura consolidada</span>
-              </div>
-            </article>
-            <article className="preview-card metric-card">
-              <span className="preview-label">Repetições</span>
-              <strong>9</strong><span>faixa mais comum</span>
-            </article>
-            <article className="preview-card ticket-card">
-              <span className="preview-label">Aposta salva</span>
-              <div className="number-cloud">
-                {[1, 3, 4, 6, 7, 9, 10, 12, 13, 15, 17, 19, 21, 23, 25].map(
-                  (number) => <span key={number}>{number}</span>,
-                )}
-              </div>
-            </article>
+        </div>
+      </section>
+
+      <section className="lotteries-section" id="loterias">
+        <div className="container">
+          <div className="section-intro centered">
+            <span className="eyebrow">Suas modalidades favoritas</span>
+            <h2>Escolha a loteria. O Nexo organiza o resto.</h2>
+            <p>Cada modalidade tem seus próprios filtros, análises e formas de montar jogos.</p>
+          </div>
+          <div className="lottery-grid">
+            {lotteries.map((lottery) => (
+              <Link className={`lottery-card ${lottery.slug}`} href="/entrar?modo=cadastro" key={lottery.slug} style={{ "--lottery-color": lottery.color } as React.CSSProperties}>
+                <span className="lottery-icon">{lottery.short}</span>
+                <div><strong>{lottery.name}</strong><small>{lottery.detail}</small></div>
+                <span className="lottery-arrow" aria-hidden="true">↗</span>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
       <section className="process-section" id="como-funciona">
         <div className="container">
-          <div className="section-heading">
-            <span className="eyebrow">Do dado à conferência</span>
-            <h2>Um fluxo simples para não perder o fio da análise.</h2>
+          <div className="section-intro">
+            <span className="eyebrow">Do resultado à conferência</span>
+            <h2>Menos improviso.<br />Mais clareza em cada jogo.</h2>
           </div>
           <div className="feature-grid">
             {features.map((feature) => (
               <article className="feature" key={feature.number}>
-                <span>{feature.number}</span><h3>{feature.title}</h3><p>{feature.text}</p>
+                <span>{feature.number}</span>
+                <div className="feature-icon" aria-hidden="true">{feature.number === "01" ? "∿" : feature.number === "02" ? "#" : "✓"}</div>
+                <h3>{feature.title}</h3>
+                <p>{feature.text}</p>
               </article>
             ))}
           </div>
@@ -105,20 +121,28 @@ export default function Home() {
       </section>
 
       <section className="resource-section container" id="recursos">
-        <div>
+        <div className="resource-copy">
           <span className="eyebrow">Tudo conectado</span>
           <h2>Da primeira combinação ao resultado final.</h2>
+          <p>Seu histórico fica organizado por modalidade e concurso para você voltar quando quiser.</p>
+          <Link className="button button-dark" href="/entrar?modo=cadastro">Criar conta gratuita <span>→</span></Link>
         </div>
-        <ul className="resource-list">
-          <li><span>01</span>Análises estatísticas por modalidade</li>
-          <li><span>02</span>Filtros globais e personalizados por cartela</li>
-          <li><span>03</span>Geradores guiados e jogos espelho</li>
-          <li><span>04</span>Carteiras salvas e conferência automática</li>
-        </ul>
+        <div className="resource-board">
+          <div className="resource-ticket ticket-purple"><span>LF</span><b>17 jogos salvos</b><small>Lotofácil · concurso 0000</small></div>
+          <div className="resource-ticket ticket-green"><span>MS</span><b>Carteira equilibrada</b><small>Mega-Sena · 8 jogos</small></div>
+          <div className="resource-result"><span>✓</span><div><b>Conferência automática</b><small>Veja pontos e melhores cartelas</small></div></div>
+        </div>
+      </section>
+
+      <section className="responsible-note container">
+        <b>Jogue com consciência.</b>
+        <p>Análises históricas ajudam a organizar escolhas, mas não alteram a probabilidade matemática dos sorteios.</p>
       </section>
 
       <footer className="site-footer container">
-        <Brand /><p>Dados para organizar. Critério para decidir.</p>
+        <Brand />
+        <p>Organize seus jogos. Acompanhe seus resultados.</p>
+        <Link href="/entrar">Acessar minha conta →</Link>
       </footer>
     </main>
   );

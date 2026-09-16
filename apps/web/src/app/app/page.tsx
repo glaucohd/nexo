@@ -1,37 +1,74 @@
+import Link from "next/link";
+
+const games = [
+  { slug: "lotofacil", initials: "LF", name: "Lotofácil", subtitle: "15 a 20 números", color: "purple" },
+  { slug: "mega-sena", initials: "MS", name: "Mega-Sena", subtitle: "6 a 20 números", color: "green" },
+  { slug: "quina", initials: "QN", name: "Quina", subtitle: "5 a 15 números", color: "violet" },
+  { slug: "mais-milionaria", initials: "+M", name: "+Milionária", subtitle: "Números + trevos", color: "blue" },
+  { slug: "dia-de-sorte", initials: "DS", name: "Dia de Sorte", subtitle: "Números + mês", color: "amber" },
+];
+
 export default function DashboardPage() {
   return (
     <>
       <header className="dashboard-header">
         <div>
-          <span className="eyebrow">Visão geral</span>
-          <h1>Seu espaço no Nexo</h1>
-          <p>A base para reunir suas análises e acompanhar seus jogos.</p>
+          <span className="eyebrow">Seu painel de jogos</span>
+          <h1>Qual jogo vamos analisar hoje?</h1>
+          <p>Escolha uma modalidade para consultar dados ou montar uma nova carteira.</p>
         </div>
-        <span className="status-pill">Estrutura inicial ativa</span>
+        <span className="status-pill"><i /> Base conectada</span>
       </header>
+
+      <section className="dashboard-games" aria-label="Modalidades">
+        {games.map((game) => (
+          <Link className={`dashboard-game ${game.color}`} href={`/app/analises?modalidade=${game.slug}`} key={game.slug}>
+            <span className="dashboard-game-icon">{game.initials}</span>
+            <div><strong>{game.name}</strong><small>{game.subtitle}</small></div>
+            <span className="dashboard-game-arrow" aria-hidden="true">→</span>
+          </Link>
+        ))}
+      </section>
+
+      <section className="dashboard-section-heading">
+        <div><span className="eyebrow">Resumo</span><h2>Seu Nexo em um relance</h2></div>
+        <Link href="/app/apostas">Ver minhas apostas →</Link>
+      </section>
+
       <section className="dashboard-grid">
-        <article className="dashboard-card">
-          <h2>Apostas salvas</h2>
-          <p>Suas carteiras passarão a ficar vinculadas à conta.</p>
+        <article className="dashboard-card stat-card">
+          <div className="dashboard-card-icon purple">✓</div>
+          <span>Apostas salvas</span>
           <strong className="metric">0</strong>
+          <small>Suas primeiras apostas aparecerão aqui</small>
         </article>
-        <article className="dashboard-card">
-          <h2>Modalidades</h2>
-          <p>As cinco modalidades atuais serão migradas por etapas.</p>
+        <article className="dashboard-card stat-card">
+          <div className="dashboard-card-icon green">#</div>
+          <span>Modalidades</span>
           <strong className="metric">5</strong>
+          <small>Com análises e geradores dedicados</small>
         </article>
-        <article className="dashboard-card">
-          <h2>Base própria</h2>
-          <p>Resultados com origem, integridade e status de confirmação.</p>
-          <strong className="metric">SQL</strong>
+        <article className="dashboard-card stat-card">
+          <div className="dashboard-card-icon blue">∿</div>
+          <span>Concursos na base</span>
+          <strong className="metric">1.010+</strong>
+          <small>Históricos reunidos para análise</small>
         </article>
-        <article className="dashboard-card wide">
-          <h2>Próxima etapa</h2>
-          <p>Importar as apostas salvas no navegador e migrar o primeiro fluxo completo da Lotofácil para esta nova área.</p>
+        <article className="dashboard-card action-card wide">
+          <div>
+            <span className="eyebrow">Comece pela Lotofácil</span>
+            <h2>Monte sua primeira carteira no novo Nexo</h2>
+            <p>Use frequências, repetições e filtros para gerar jogos diversificados.</p>
+            <Link className="button button-primary" href="/app/analises?modalidade=lotofacil">Explorar análises <span>→</span></Link>
+          </div>
+          <div className="action-balls" aria-hidden="true">
+            {[3, 7, 10, 15, 21].map((number) => <span key={number}>{String(number).padStart(2,"0")}</span>)}
+          </div>
         </article>
-        <article className="dashboard-card">
-          <h2>Princípio do Nexo</h2>
-          <p>Estatística histórica ajuda a organizar escolhas; não prevê resultados futuros.</p>
+        <article className="dashboard-card responsible-card">
+          <span className="responsible-icon">!</span>
+          <h2>Jogue com consciência</h2>
+          <p>Dados históricos ajudam na organização, mas não preveem o próximo sorteio.</p>
         </article>
       </section>
     </>

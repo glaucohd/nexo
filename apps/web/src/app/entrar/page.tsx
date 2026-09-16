@@ -17,8 +17,8 @@ export default async function SignInPage({
     <main className="auth-shell">
       <aside className="auth-aside">
         <Brand />
-        <p className="auth-quote">Organização transforma dados soltos em decisões claras.</p>
-        <p className="auth-note">Nexo · análise responsável e sem promessa de resultado</p>
+        <p className="auth-quote">Do primeiro número à conferência, seus jogos ficam no Nexo.</p>
+        <p className="auth-note">Lotofácil · Mega-Sena · Quina · +Milionária · Dia de Sorte</p>
       </aside>
       <section className="auth-panel">
         <div>

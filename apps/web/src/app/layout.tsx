@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import "@fontsource-variable/fredoka/wght.css";
+import "@fontsource-variable/nunito-sans/wght.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
