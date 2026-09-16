@@ -56,6 +56,12 @@
 .coverageGrid strong { flex: none; color: var(--accent); font-size: .81rem; }
 .disclaimer { margin-top: 14px; color: var(--muted); font-size: .69rem; line-height: 1.5; }
 .actionBox { padding: 17px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.rulesTitle { display: block; margin-bottom: 8px; font-size: .8rem; }
+.rulesList { display: grid; gap: 5px; max-height: 250px; overflow: auto; margin-bottom: 13px; }
+.rulesList > div { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 7px; align-items: center; padding: 8px; border-radius: 8px; background: var(--paper); font-size: .67rem; }
+.rulesList b { white-space: nowrap; }
+.rulesList span { overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
+.rulesList small { color: var(--accent); font-size: .64rem; font-weight: 850; white-space: nowrap; }
 .generateButton { width: 100%; min-height: 49px; border: 0; border-radius: 11px; color: white; background: var(--accent); font-size: .87rem; font-weight: 950; cursor: pointer; }
 .generateButton:hover { filter: brightness(1.1); }
 .actionBox p { margin-top: 9px; color: var(--muted); font-size: .68rem; line-height: 1.4; }
@@ -72,7 +78,9 @@
 .ticketBoard { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; width: min(100%, 230px); margin: 11px auto; }
 .ticketBoard span { display: grid; aspect-ratio: 1; place-items: center; border-radius: 5px; color: var(--muted); background: var(--surface); font-size: .61rem; font-weight: 800; }
 .ticketBoard .ticketHit { color: white; background: var(--accent); }
+.ticketBoard .ticketExcluded { color: var(--muted); background: color-mix(in srgb, var(--muted) 17%, var(--paper)); text-decoration: line-through; opacity: .6; }
 .ticket > p { padding-top: 9px; border-top: 1px solid var(--line); color: var(--muted); font-size: .73rem; }
+.ticket .ticketRules { padding: 7px 0 0; border: 0; color: var(--accent); font-size: .67rem; font-weight: 850; }
 .ticket > p b { margin-left: 7px; color: var(--accent); }
 .source { color: var(--muted); font-size: .72rem; }
 .source a { color: var(--accent); font-weight: 900; text-decoration: underline; }

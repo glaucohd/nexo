@@ -19,6 +19,13 @@ type Scope = "general" | "personal";
 const numberLabel = (number: number) => String(number).padStart(2, "0");
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const percentageLabel = (value: number) => value > 0 && value < 0.01 ? "< 0,01%" : `${value.toFixed(2).replace(".", ",")}%`;
+const ruleLabel = (key: string) => {
+  if (key === "half:1") return "Metade superior";
+  if (key === "half:2") return "Metade inferior";
+  if (key.startsWith("row:")) return `Linha ${key.slice(4)}`;
+  if (key.startsWith("column:")) return `Coluna ${key.slice(7)}`;
+  return key;
+};
 
 const groups = [
   { title: "Metades", description: "25 dezenas em cada metade", options: [
@@ -33,10 +40,10 @@ const groups = [
   })) },
 ];
 
-function TicketBoard({ ticket }: { ticket: MilionariaTicket }) {
+function TicketBoard({ ticket, general, personal }: { ticket: MilionariaTicket; general: ReadonlySet<string>; personal: ReadonlySet<string> }) {
   const selected = new Set(ticket.numbers);
   return <div className={styles.ticketBoard} role="img" aria-label={`Dezenas ${ticket.numbers.map(numberLabel).join(", ")}; trevos ${ticket.trevos.join(" e ")}`}>
-    {Array.from({ length: 50 }, (_, index) => <span key={index} className={selected.has(index + 1) ? styles.ticketHit : ""} aria-hidden="true">{numberLabel(index + 1)}</span>)}
+    {Array.from({ length: 50 }, (_, index) => <span key={index} className={selected.has(index + 1) ? styles.ticketHit : isExcluded(index + 1, general, personal) ? styles.ticketExcluded : ""} aria-hidden="true">{numberLabel(index + 1)}</span>)}
   </div>;
 }
 
@@ -45,12 +52,12 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
   const [size, setSize] = useState(6);
   const [scope, setScope] = useState<Scope>("general");
   const [selectedGame, setSelectedGame] = useState(0);
-  const [general, setGeneral] = useState<string[]>([]);
-  const [personal, setPersonal] = useState<Record<number, string[]>>({});
+  const [rules, setRules] = useState<{ general: string[]; personal: Record<number, string[]> }>({ general: [], personal: {} });
   const [tickets, setTickets] = useState<MilionariaTicket[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const { general, personal } = rules;
   const generalSet = new Set(general);
   const personalSet = new Set(personal[selectedGame] ?? []);
   const activePersonal = scope === "personal" ? personalSet : new Set<string>();
@@ -76,8 +83,7 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
       setError(`Essa exclusão deixaria menos de ${size} dezenas disponíveis no jogo ${tooFew + 1}.`);
       return;
     }
-    setGeneral([...nextGeneral]);
-    setPersonal(nextPersonal);
+    setRules({ general: [...nextGeneral], personal: nextPersonal });
     setTickets([]);
     setError(null);
     setCopied(false);
@@ -95,10 +101,16 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
 
   function generate() {
     try {
-      setTickets(generateMilionariaTickets({ quantity, size, general: generalSet, personal: Array.from({ length: quantity }, (_, index) => new Set(personal[index] ?? [])) }));
+      const perGameRules = Array.from({ length: quantity }, (_, index) => new Set(personal[index] ?? []));
+      const generated = generateMilionariaTickets({ quantity, size, general: generalSet, personal: perGameRules });
+      if (generated.some((ticket, index) => ticket.numbers.some((number) => isExcluded(number, generalSet, perGameRules[index])))) {
+        throw new Error("Uma cartela não respeitou as exclusões. Nenhum jogo foi exibido; tente gerar novamente.");
+      }
+      setTickets(generated);
       setError(null);
       setCopied(false);
     } catch (cause) {
+      setTickets([]);
       setError(cause instanceof Error ? cause.message : "Não foi possível gerar os jogos.");
     }
   }
@@ -148,7 +160,7 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
               return <button key={option.key} type="button" className={`${styles.option} ${active || inherited ? styles.excludedOption : ""}`} disabled={inherited} aria-pressed={active || inherited} onClick={() => toggle(option.key)}><strong>{option.label}</strong><small>{inherited ? "Excluída para todos" : option.detail}</small></button>;
             })}</div>
           </div>)}</div>
-          <button className={styles.clearButton} type="button" onClick={() => { if (scope === "general") setGeneral([]); else setPersonal((current) => ({ ...current, [selectedGame]: [] })); setTickets([]); setError(null); }}>Limpar {scope === "general" ? "regras gerais" : `jogo ${selectedGame + 1}`}</button>
+          <button className={styles.clearButton} type="button" onClick={() => { setRules((current) => scope === "general" ? { ...current, general: [] } : { ...current, personal: { ...current.personal, [selectedGame]: [] } }); setTickets([]); setError(null); }}>Limpar {scope === "general" ? "regras gerais" : `jogo ${selectedGame + 1}`}</button>
         </section>
       </div>
 
@@ -167,12 +179,24 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
           </div>
           <p className={styles.disclaimer}>A porcentagem é combinatória: todas as 6 dezenas sorteadas teriam de estar entre as disponíveis. Não é a chance de ganhar com uma cartela e não inclui os trevos. O histórico é apenas uma comparação passada.</p>
         </section>
-        <div className={styles.actionBox}><button type="button" className={styles.generateButton} onClick={generate}>Gerar {quantity} {quantity === 1 ? "jogo" : "jogos"} ↗</button><p>Geração aleatória dentro das áreas permitidas. A escolha dos filtros não aumenta a chance de cada combinação.</p></div>
+        <div className={styles.actionBox}>
+          <strong className={styles.rulesTitle}>Regras que serão aplicadas</strong>
+          <div className={styles.rulesList}>{Array.from({ length: quantity }, (_, index) => {
+            const keys = [...new Set([...general, ...(personal[index] ?? [])])];
+            const count = availableNumbers(generalSet, new Set(personal[index] ?? [])).length;
+            return <div key={index}><b>Jogo {index + 1}</b><span>{keys.length ? keys.map(ruleLabel).join(" · ") : "Sem exclusões"}</span><small>{count} dezenas livres</small></div>;
+          })}</div>
+          <button type="button" className={styles.generateButton} onClick={generate}>Gerar {quantity} {quantity === 1 ? "jogo" : "jogos"} ↗</button><p>Geração aleatória dentro das áreas permitidas. A escolha dos filtros não aumenta a chance de cada combinação.</p>
+        </div>
       </aside>
     </div>
 
     {error && <p className={styles.error} role="alert">{error}</p>}
-    {tickets.length > 0 && <section className={styles.results} aria-live="polite"><div className={styles.resultsHeading}><div><span className="eyebrow">Jogos gerados</span><h2>{tickets.length} cartelas prontas para conferir</h2><p>Copie ou anote antes de sair: estes jogos ainda não são salvos automaticamente no Nexo.</p></div><button type="button" onClick={copyAll}>{copied ? "Copiados ✓" : "Copiar todos"}</button></div><div className={styles.ticketGrid}>{tickets.map((ticket, index) => <article className={styles.ticket} key={`${ticket.numbers.join("-")}-${ticket.trevos.join("-")}`}><div><strong>Jogo {index + 1}</strong><small>{ticket.numbers.length} dezenas · 2 trevos</small></div><TicketBoard ticket={ticket} /><p>Trevos <b>{ticket.trevos.map(numberLabel).join(" · ")}</b></p></article>)}</div></section>}
+    {tickets.length > 0 && <section className={styles.results} aria-live="polite"><div className={styles.resultsHeading}><div><span className="eyebrow">Jogos gerados</span><h2>{tickets.length} cartelas prontas para conferir</h2><p>Copie ou anote antes de sair: estes jogos ainda não são salvos automaticamente no Nexo.</p></div><button type="button" onClick={copyAll}>{copied ? "Copiados ✓" : "Copiar todos"}</button></div><div className={styles.ticketGrid}>{tickets.map((ticket, index) => {
+      const gameRules = new Set(personal[index] ?? []);
+      const appliedRules = [...new Set([...general, ...gameRules])];
+      return <article className={styles.ticket} key={`${ticket.numbers.join("-")}-${ticket.trevos.join("-")}`}><div><strong>Jogo {index + 1}</strong><small>{ticket.numbers.length} dezenas · 2 trevos</small></div><p className={styles.ticketRules}>{appliedRules.length ? `Excluídas: ${appliedRules.map(ruleLabel).join(" · ")}` : "Sem exclusões"}</p><TicketBoard ticket={ticket} general={generalSet} personal={gameRules} /><p>Trevos <b>{ticket.trevos.map(numberLabel).join(" · ")}</b></p></article>;
+    })}</div></section>}
     <p className={styles.source}>Regras e preço da aposta simples: <a href="https://loterias.caixa.gov.br/Paginas/mais-milionaria.aspx" target="_blank" rel="noreferrer">CAIXA · +Milionária ↗</a>. Confira o valor no canal de aposta antes de registrar seus jogos.</p>
   </main>;
 }

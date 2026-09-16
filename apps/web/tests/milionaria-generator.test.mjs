@@ -52,6 +52,20 @@ test("general and per-game exclusions both apply to generated numbers", () => {
   });
 });
 
+test("two personalized games never include numbers from their own excluded rows", () => {
+  let seed = 41871;
+  const random = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 2 ** 32;
+  };
+  const personal = [new Set(["row:1", "row:2"]), new Set(["row:9", "row:10"])];
+  const tickets = generateMilionariaTickets({ quantity: 2, size: 6, general: new Set(), personal, random });
+  assert.equal(tickets.length, 2);
+  assert.ok(tickets[0].numbers.every((number) => number > 10));
+  assert.ok(tickets[1].numbers.every((number) => number < 41));
+  assert.ok(tickets.every((ticket, index) => ticket.numbers.every((number) => !isExcluded(number, new Set(), personal[index]))));
+});
+
 test("impossible exclusions are rejected", () => {
   assert.throws(() => generateMilionariaTickets({
     quantity: 1,
