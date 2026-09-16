@@ -22,6 +22,13 @@ venv/
 *.tmp
 backup/
 
+# Node / Next.js
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
 # Ferramentas locais
 .codex/
 .agents/
