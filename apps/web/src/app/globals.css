@@ -19,11 +19,12 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overscroll-behavior-y: none; }
 body {
   min-height: 100vh;
   color: var(--ink);
   background: var(--paper);
+  overscroll-behavior-y: none;
   font-family: "Nunito Sans Variable", ui-sans-serif, system-ui, sans-serif;
   font-weight: 520;
   -webkit-font-smoothing: antialiased;
@@ -85,7 +86,7 @@ button, input { font: inherit; }
 .button-dark { color: white; background: var(--navy); }
 
 /* Landing */
-.landing { overflow: hidden; background: #fbfafc; }
+.landing { overflow: hidden; overscroll-behavior-y: none; background: #fbfafc; }
 .hero {
   min-height: 690px;
   display: grid;
