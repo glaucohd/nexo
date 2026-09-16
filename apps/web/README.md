@@ -32,6 +32,11 @@ npm run db:import-caixa -- --game=lotofacil --all
 
 # Todas as modalidades (carga inicial mais demorada)
 npm run db:import-caixa -- --all
+
+# Atualizar os últimos 205 concursos das modalidades exibidas em Resultados
+npm run db:import-caixa -- --game=lotofacil,megasena,quina,maismilionaria,diadesorte --recent=205
 ```
 
 Depois da carga inicial, informe apenas o intervalo dos concursos novos para a atualização manual.
+
+O comando `npm run db:seed-history` importa as séries históricas já presentes em `dados/` como ponto de partida. A importação da CAIXA substitui esses registros pelo dado oficial do mesmo concurso e preserva sua origem no banco.

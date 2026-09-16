@@ -1,0 +1,70 @@
+.page { display: grid; gap: 24px; color: var(--ink); }
+.header { display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+.header h1 { margin: 7px 0 8px; font-family: "Fredoka Variable", sans-serif; font-size: clamp(2rem, 3vw, 2.7rem); font-weight: 650; letter-spacing: -.035em; }
+.header p { max-width: 650px; color: var(--muted); line-height: 1.55; }
+.selector { display: grid; min-width: 205px; gap: 7px; color: var(--muted); font-size: .73rem; font-weight: 850; }
+.selector select { width: 100%; min-height: 46px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: var(--surface); font: inherit; font-size: .87rem; }
+.content { display: grid; gap: 16px; }
+.navigator { display: grid; grid-template-columns: 150px minmax(0, 1fr) 150px; align-items: center; gap: 20px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 8px 25px rgba(37, 30, 76, .04); }
+.navigator button { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 54px; padding: 0 13px; border: 1px solid var(--line); border-radius: 13px; color: var(--ink); background: var(--paper); cursor: pointer; font: inherit; font-weight: 850; transition: border-color .15s, background .15s, transform .15s; }
+.navigator button:hover:not(:disabled) { border-color: var(--result-accent); background: color-mix(in srgb, var(--result-accent) 7%, var(--surface)); transform: translateY(-1px); }
+.navigator button:disabled { opacity: .4; cursor: not-allowed; }
+.navigator button:last-child { justify-content: end; }
+.navigator button > span { color: var(--result-accent); font-size: 1.8rem; line-height: 1; }
+.navigator button small { font-size: .82rem; }
+.contest { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.counter { color: var(--result-accent); font-size: .7rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.contest strong { font-family: "Fredoka Variable", sans-serif; font-size: 1.55rem; font-weight: 650; }
+.contest > span:last-child { color: var(--muted); font-size: .78rem; font-weight: 700; }
+.contest i { padding: 0 3px; font-style: normal; }
+.mainGrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(285px, .75fr); align-items: start; gap: 16px; }
+.boardCard, .detailCard, .empty { border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 8px 25px rgba(37, 30, 76, .035); }
+.boardCard { min-width: 0; padding: 26px; }
+.cardHeading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+.cardHeading h2, .detailCard h2 { margin-top: 4px; font-size: 1.3rem; }
+.layoutTag { padding: 7px 10px; border-radius: 9px; color: var(--result-accent); background: color-mix(in srgb, var(--result-accent) 10%, var(--surface)); font-size: .72rem; font-weight: 900; white-space: nowrap; }
+.board { display: grid; width: min(100%, 520px); grid-template-columns: repeat(var(--result-columns), minmax(0, 1fr)); gap: clamp(3px, .6vw, 6px); margin: 24px auto; padding: clamp(7px, 1.3vw, 14px); border: 1px solid var(--line); border-radius: 17px; background: color-mix(in srgb, var(--result-accent) 5%, var(--paper)); }
+.cell { display: grid; aspect-ratio: 1; place-items: center; border: 1px solid color-mix(in srgb, var(--line) 75%, var(--surface)); border-radius: clamp(5px, .7vw, 9px); color: var(--muted); background: var(--surface); font-size: clamp(.57rem, 1vw, .84rem); font-weight: 850; font-variant-numeric: tabular-nums; }
+.marked { border-color: transparent; color: white; background: var(--result-accent); box-shadow: 0 3px 8px color-mix(in srgb, var(--result-accent) 24%, transparent); }
+.boardLegend { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--muted); font-size: .73rem; font-weight: 750; }
+.legendMark, .legendEmpty { width: 12px; height: 12px; border-radius: 4px; }
+.legendMark { background: var(--result-accent); }
+.legendEmpty { margin-left: 11px; border: 1px solid var(--line); background: var(--surface); }
+.details { display: grid; gap: 16px; }
+.detailCard { min-width: 0; padding: 24px; }
+.numberList { display: flex; flex-wrap: wrap; gap: 7px; margin: 21px 0 16px; }
+.numberList span { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 9px; color: var(--result-accent); background: color-mix(in srgb, var(--result-accent) 10%, var(--surface)); font-size: .73rem; font-weight: 900; }
+.source { color: var(--muted); font-size: .71rem; font-weight: 750; }
+.extra { margin: 10px 0; color: var(--muted); font-size: .78rem; }
+.extra strong { color: var(--ink); }
+.metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.metrics div { display: grid; gap: 3px; }
+.metrics span { color: var(--muted); font-size: .72rem; font-weight: 750; }
+.metrics strong { font-family: "Fredoka Variable", sans-serif; font-size: 1.3rem; }
+.rowList { display: grid; gap: 11px; margin-top: 20px; }
+.row { display: grid; grid-template-columns: 28px minmax(0, 1fr) 19px; align-items: center; gap: 10px; font-size: .78rem; font-weight: 850; }
+.row > span { color: var(--muted); }
+.row > strong { text-align: right; }
+.rowTrack { height: 9px; overflow: hidden; border-radius: 99px; background: color-mix(in srgb, var(--result-accent) 10%, var(--paper)); }
+.rowTrack i { display: block; height: 100%; border-radius: inherit; background: var(--result-accent); }
+.empty { padding: 48px 26px; text-align: center; }
+.empty p { margin-top: 8px; color: var(--muted); }
+
+@media (max-width: 960px) {
+  .mainGrid { grid-template-columns: 1fr; }
+  .details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 650px) {
+  .header { align-items: stretch; flex-direction: column; gap: 18px; }
+  .selector { width: 100%; }
+  .navigator { grid-template-columns: 60px minmax(0, 1fr) 60px; gap: 8px; padding: 12px; }
+  .navigator button { justify-content: center; min-height: 48px; padding: 0; }
+  .navigator button:last-child { justify-content: center; }
+  .navigator button small { display: none; }
+  .contest strong { font-size: 1.24rem; }
+  .contest > span:last-child { font-size: .68rem; }
+  .boardCard, .detailCard { padding: 18px; }
+  .board { gap: 3px; margin-block: 20px; padding: 7px; }
+  .details { grid-template-columns: 1fr; }
+}
