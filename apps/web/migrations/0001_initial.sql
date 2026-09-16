@@ -1,5 +1,10 @@
 create extension if not exists pgcrypto;
 
+create table if not exists _nexo_migrations (
+  name text primary key,
+  applied_at timestamptz not null default now()
+);
+
 create type draw_status as enum ('provisional', 'confirmed', 'corrected');
 create type ingestion_status as enum ('running', 'succeeded', 'failed');
 
@@ -137,3 +142,21 @@ create table source_payloads (
 );
 create unique index source_payload_hash_unique on source_payloads (source, hash);
 create index source_payload_draw_idx on source_payloads (draw_id);
+
+-- O Nexo acessa estas tabelas pelo backend. Sem políticas, a Data API pública
+-- permanece bloqueada mesmo quando recebe a chave publishable do projeto.
+alter table "user" enable row level security;
+alter table session enable row level security;
+alter table account enable row level security;
+alter table verification enable row level security;
+alter table lotteries enable row level security;
+alter table draws enable row level security;
+alter table prize_tiers enable row level security;
+alter table portfolios enable row level security;
+alter table tickets enable row level security;
+alter table ingestion_runs enable row level security;
+alter table source_payloads enable row level security;
+
+insert into _nexo_migrations (name)
+values ('0001_initial.sql')
+on conflict (name) do nothing;

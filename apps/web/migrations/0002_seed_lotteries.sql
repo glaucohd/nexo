@@ -10,3 +10,7 @@ on conflict (slug) do update set
   total_numbers = excluded.total_numbers,
   draw_size = excluded.draw_size,
   updated_at = now();
+
+insert into _nexo_migrations (name)
+values ('0002_seed_lotteries.sql')
+on conflict (name) do nothing;
