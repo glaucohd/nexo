@@ -4,11 +4,11 @@ import Image from "next/image";
 import { Brand } from "@/components/brand";
 
 const lotteries = [
-  { slug: "lotofacil", short: "LF", icon: "lotofacil", name: "Lotofácil", detail: "15 a 20 números", color: "#8a2da5" },
-  { slug: "mega", short: "MS", icon: "mega-sena", name: "Mega-Sena", detail: "6 a 20 números", color: "#07966f" },
-  { slug: "quina", short: "QN", icon: "quina", name: "Quina", detail: "5 a 15 números", color: "#5b2a86" },
-  { slug: "milionaria", short: "+M", icon: "mais-milionaria", name: "+Milionária", detail: "Números + trevos", color: "#2467ce" },
-  { slug: "dia", short: "DS", icon: "dia-de-sorte", name: "Dia de Sorte", detail: "Números + mês", color: "#c77b12" },
+  { slug: "lotofacil", short: "LF", icon: "lotofacil", name: "Lotofácil", detail: "15 a 20 números", color: "#91278f" },
+  { slug: "mega", short: "MS", icon: "mega-sena", name: "Mega-Sena", detail: "6 a 20 números", color: "#00a651" },
+  { slug: "quina", short: "QN", icon: "quina", name: "Quina", detail: "5 a 15 números", color: "#2e3192" },
+  { slug: "milionaria", short: "+M", icon: "mais-milionaria", name: "+Milionária", detail: "Números + trevos", color: "#2a3580" },
+  { slug: "dia", short: "DS", icon: "dia-de-sorte", name: "Dia de Sorte", detail: "Números + mês", color: "#7e6906" },
 ];
 
 const features = [

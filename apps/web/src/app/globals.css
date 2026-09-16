@@ -9,11 +9,15 @@
   --brand-soft: #eee8ff;
   --lime: #c8f45b;
   --navy: #17162b;
-  --purple: #8a2da5;
-  --green: #07966f;
-  --violet: #5b2a86;
-  --blue: #2467ce;
-  --amber: #c77b12;
+  --purple: #91278f;
+  --green: #00a651;
+  --violet: #2e3192;
+  --blue: #2a3580;
+  --amber: #7e6906;
+  --purple-soft: #f4e1f3;
+  --violet-soft: #e2dff1;
+  --blue-soft: #18205e;
+  --amber-soft: #e3c021;
   --danger: #b33a48;
   --shadow: 0 22px 60px rgba(49, 36, 92, 0.13);
 }
@@ -238,7 +242,7 @@ button, input { font: inherit; }
 .sidebar nav a.active > span { color: #402971; background: #cbb8ff; }
 .sidebar-games { display: flex; gap: 7px; margin: 28px 12px 0; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.07); }
 .game-dot { width: 9px; height: 9px; border-radius: 50%; }
-.game-dot.lotofacil { background: var(--purple); }.game-dot.mega { background: var(--green); }.game-dot.quina { background: #a76adb; }.game-dot.milionaria { background: #4a8df3; }.game-dot.dia { background: #e4a23e; }
+.game-dot.lotofacil { background: var(--purple); }.game-dot.mega { background: var(--green); }.game-dot.quina { background: var(--violet); }.game-dot.milionaria { background: var(--blue); }.game-dot.dia { background: var(--amber); }
 .sidebar-user { margin-top: auto; padding: 18px 10px 0; border-top: 1px solid rgba(255,255,255,.09); }
 .sidebar-user strong, .sidebar-user span { display: block; overflow: hidden; text-overflow: ellipsis; }
 .sidebar-user strong { font-size: .82rem; }
@@ -268,7 +272,7 @@ button, input { font: inherit; }
 .dashboard-card h2 { font-family: "Fredoka Variable"; font-size: 1.2rem; font-weight: 600; }
 .dashboard-card p { color: var(--muted); font-size: .84rem; line-height: 1.55; }
 .dashboard-card-icon { display: grid; width: 39px; height: 39px; place-items: center; margin-bottom: 22px; border-radius: 12px; font-family: "Fredoka Variable"; font-weight: 700; }
-.dashboard-card-icon.purple { color: var(--purple); background: #f3e6f6; }.dashboard-card-icon.green { color: var(--green); background: #def5ec; }.dashboard-card-icon.blue { color: var(--blue); background: #e4edfc; }
+.dashboard-card-icon.purple { color: var(--purple); background: var(--purple-soft); }.dashboard-card-icon.green { color: var(--green); background: #e1f5e9; }.dashboard-card-icon.blue { color: var(--blue); background: #e6e8f5; }
 .stat-card > span { color: var(--muted); font-size: .72rem; font-weight: 800; }
 .stat-card strong.metric { display: block; margin: 4px 0; color: var(--ink); font-family: "Fredoka Variable"; font-size: 2.25rem; font-weight: 590; }
 .stat-card small { color: #9298a6; font-size: .66rem; }
