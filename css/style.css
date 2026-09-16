@@ -868,6 +868,8 @@
   .apostatopo b{font-size:16px;display:block}.bet-lottery{display:block;margin-bottom:2px;color:var(--accent);font-size:9.5px;font-weight:850;letter-spacing:.09em;text-transform:uppercase}
   .apostatopo small{font-size:11.5px;color:var(--muted);font-weight:600}
   .apostaacoes{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .bet-transfer{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}
+  .bet-transfer > div:first-child{display:flex;flex:1 1 260px;min-width:0;flex-direction:column}.bet-transfer > div:first-child b{font-size:13px}.bet-transfer > div:first-child small{margin-top:3px;color:var(--muted);font-size:10.5px;line-height:1.45}.bet-transfer .actions{margin:0}.bet-transfer .btn[hidden]{display:none}
   .apostajogos{display:grid;gap:6px;margin-top:10px}
   .apostajogo{
     display:flex;align-items:center;gap:10px;flex-wrap:wrap;
@@ -1220,6 +1222,6 @@ table.balance td:first-child{padding-left:10px}
   .generator-mode{grid-template-columns:1fr}.mirror-builder{padding:14px}.mirror-number-grid{max-width:none}.mirror-tools{display:grid;grid-template-columns:1fr}.mirror-tools .btn{width:100%;min-height:42px}.mirror-cost > div{flex-basis:100%}
   .history-overview{padding:14px}.history-dist-grid{grid-template-columns:1fr}.history-dist > p{min-height:0}.history-bar-row{grid-template-columns:52px minmax(45px,1fr) 32px 38px;gap:5px}
   .portfolio-summary{align-items:flex-start;padding:11px}.portfolio-summary > div{flex-basis:100%}
-  .apostaacoes{width:100%}.apostaacoes .stat{margin-right:auto}.apostajogo{align-items:flex-start}.game-index{flex-basis:100%}.saved-game-picks{flex-basis:100%}.apostajogo .res{flex-basis:100%;margin-left:0}.saved-mini{flex-basis:100%}.saved-draw-result{align-items:flex-start;flex-wrap:wrap}.saved-draw-copy,.saved-draw-mini{flex-basis:100%}
+  .apostaacoes{width:100%}.apostaacoes .stat{margin-right:auto}.bet-transfer .actions{width:100%;grid-template-columns:1fr}.apostajogo{align-items:flex-start}.game-index{flex-basis:100%}.saved-game-picks{flex-basis:100%}.apostajogo .res{flex-basis:100%;margin-left:0}.saved-mini{flex-basis:100%}.saved-draw-result{align-items:flex-start;flex-wrap:wrap}.saved-draw-copy,.saved-draw-mini{flex-basis:100%}
   .saved-result-summary > div:not(.saved-result-dist){flex:1 1 130px}.modal-card{padding:18px}.modal-actions{display:grid;grid-template-columns:1fr 1fr}.modal-actions .btn{width:100%;min-height:44px}
 }

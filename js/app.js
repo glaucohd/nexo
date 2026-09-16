@@ -3088,6 +3088,63 @@
   }
   function salvarApostas(lista){ store(STORE_APOSTAS, JSON.stringify(lista)); }
 
+  function normalizarApostaImportada(ap,indice){
+    if(!ap||typeof ap!=="object"||!LOTERIAS[ap.loteria]||!Array.isArray(ap.jogos)||!ap.jogos.length||ap.jogos.length>1000)return null;
+    var cfg=LOTERIAS[ap.loteria],jogos=[];
+    for(var i=0;i<ap.jogos.length;i++){
+      var jogo=ap.jogos[i];if(!Array.isArray(jogo)||jogo.length<cfg.escolher||jogo.length>cfg.maxDezenas)return null;
+      var vistos={},limpo=[];
+      for(var j=0;j<jogo.length;j++){
+        var n=Number(jogo[j]);if(!Number.isInteger(n)||n<1||n>cfg.total||vistos[n])return null;
+        vistos[n]=1;limpo.push(n);
+      }
+      jogos.push(limpo.sort(asc));
+    }
+    var trevos=null;
+    if(cfg.trevos){
+      if(!Array.isArray(ap.trevos)||ap.trevos.length!==jogos.length)return null;trevos=[];
+      for(i=0;i<ap.trevos.length;i++){
+        var lista=ap.trevos[i];if(!Array.isArray(lista)||lista.length!==cfg.escolherTrevos)return null;
+        vistos={};limpo=[];for(j=0;j<lista.length;j++){
+          n=Number(lista[j]);if(!Number.isInteger(n)||n<1||n>cfg.trevos||vistos[n])return null;
+          vistos[n]=1;limpo.push(n);
+        }
+        trevos.push(limpo.sort(asc));
+      }
+    }
+    var id=typeof ap.id==="string"&&/^[a-zA-Z0-9_-]{1,80}$/.test(ap.id)?ap.id:"importada_"+Date.now()+"_"+indice;
+    var alvo=Number(ap.alvo),preco=Number(ap.preco);
+    if(!Number.isInteger(alvo)||alvo<1)return null;
+    if(!Number.isFinite(preco)||preco<=0)preco=custoJogo(ap.loteria,jogos[0].length);
+    return{id:id,nome:String(ap.nome||"Aposta importada").slice(0,40),loteria:ap.loteria,
+      criado:String(ap.criado||hojeBR()).slice(0,20),alvo:alvo,preco:preco,jogos:jogos,trevos:trevos,
+      modalidade:ap.modalidade==="espelho"?"espelho":"normal",
+      espelhoFixasPorPar:Array.isArray(ap.espelhoFixasPorPar)?ap.espelhoFixasPorPar.map(function(x){return Array.isArray(x)?x.map(Number):[];}):null};
+  }
+
+  function exportarApostas(){
+    var lista=lerApostas();if(!lista.length){toast("Não há apostas para exportar");return;}
+    var pacote={formato:"nexo-apostas",versao:1,exportadoEm:new Date().toISOString(),apostas:lista};
+    var blob=new Blob([JSON.stringify(pacote,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="nexo-apostas-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},0);toast(lista.length+" carteira(s) exportada(s)");
+  }
+
+  function importarApostasArquivo(arquivo){
+    if(!arquivo)return;var leitor=new FileReader();
+    leitor.onload=function(){
+      try{
+        var bruto=JSON.parse(String(leitor.result||"")),entrada=Array.isArray(bruto)?bruto:bruto&&bruto.apostas;
+        if(!Array.isArray(entrada))throw new Error("formato");
+        var atuais=lerApostas(),ids={};atuais.forEach(function(a){ids[a.id]=1;});var novas=[],invalidas=0,repetidas=0;
+        entrada.forEach(function(a,i){var limpa=normalizarApostaImportada(a,i);if(!limpa){invalidas++;return;}if(ids[limpa.id]){repetidas++;return;}ids[limpa.id]=1;novas.push(limpa);});
+        if(!novas.length){toast(repetidas?"Essas apostas já estavam salvas":"Arquivo sem apostas válidas");return;}
+        salvarApostas(novas.concat(atuais));renderApostas();toast(novas.length+" carteira(s) importada(s)"+(invalidas?" · "+invalidas+" ignorada(s)":""));
+      }catch(e){toast("Não foi possível importar esse arquivo");}
+    };
+    leitor.onerror=function(){toast("Não foi possível ler o arquivo");};leitor.readAsText(arquivo);
+  }
+
   function hojeBR(){
     var d = new Date();
     return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear();
@@ -3237,7 +3294,8 @@
       resumo.innerHTML = "";
       box.innerHTML = '<p class="resumoCob">Nenhuma carteira salva ainda. Gere jogos em qualquer loteria ' +
                       'e use o botão <b>“Salvar aposta”</b>.</p>';
-      if (acoes) acoes.hidden = true;
+      var exportarVazio=document.getElementById("apostasExportar"),limparVazio=document.getElementById("apostasLimparConf");
+      if(exportarVazio)exportarVazio.hidden=true;if(limparVazio)limparVazio.hidden=true;
       return;
     }
 
@@ -3327,7 +3385,8 @@
       '<div class="saldo"><span>Saldo</span><b class="' + (saldo >= 0 ? "pos" : "neg") + '">' +
       (saldo >= 0 ? "+" : "\u2212") + brl(Math.abs(saldo)) + '</b></div></div>' +
       '<p class="hint">' + conferidas + ' de ' + lista.length + ' carteira(s) já conferida(s).</p>';
-    if (acoes) acoes.hidden = !conferidas;
+    var exportar=document.getElementById("apostasExportar"),limpar=document.getElementById("apostasLimparConf");
+    if(acoes)acoes.hidden=false;if(exportar)exportar.hidden=false;if(limpar)limpar.hidden=!conferidas;
   }
 
   function apagarAposta(id){
@@ -3660,6 +3719,10 @@
     renderApostas();
     toast("Apostas conferidas apagadas");
   });
+  onClick("apostasExportar",exportarApostas);
+  onClick("apostasImportar",function(){var input=document.getElementById("apostasArquivo");if(input){input.value="";input.click();}});
+  var apostasArquivo=document.getElementById("apostasArquivo");
+  if(apostasArquivo)apostasArquivo.addEventListener("change",function(){importarApostasArquivo(this.files&&this.files[0]);});
 
   onClick("salvarMega", function(){ salvarAposta("megasena", GERADORES.megasena.jogos, null); });
 
@@ -3802,6 +3865,9 @@
   // sumir do HTML, a verificação acusa na subida.
   var ELEMENTOS_ESPERADOS = [
     "apostasAcoes",
+    "apostasArquivo",
+    "apostasExportar",
+    "apostasImportar",
     "apostasCard",
     "apostasLimparConf",
     "apostasLista",

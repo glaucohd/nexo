@@ -232,11 +232,17 @@
         você preferir. Quando o concurso sair e você atualizar os dados
         (<code>python3 atualizar.py</code>), o sistema destaca o melhor jogo e todas as faixas premiadas.
       </p>
+      <div class="bet-transfer">
+        <div><b>Levar apostas para outro dispositivo</b><small>Exporte neste navegador e importe o arquivo no outro. Nada é enviado para um servidor.</small></div>
+        <div class="actions" id="apostasAcoes">
+          <button class="btn" id="apostasExportar" type="button">Exportar apostas</button>
+          <button class="btn primary" id="apostasImportar" type="button">Importar apostas</button>
+          <button class="btn" id="apostasLimparConf" type="button">Apagar as já conferidas</button>
+        </div>
+        <input id="apostasArquivo" type="file" accept="application/json,.json" hidden>
+      </div>
       <div id="apostasResumo"></div>
       <div id="apostasLista"></div>
-      <div class="actions" id="apostasAcoes" hidden>
-        <button class="btn" id="apostasLimparConf" type="button">Apagar as já conferidas</button>
-      </div>
     </div>
 
     <div class="card" id="megaGenCard">
@@ -630,6 +636,6 @@
 <script src="dados/maismilionaria.js?v=94"></script>
 <script src="dados/quina.js?v=1"></script>
 <script src="dados/diadesorte.js?v=1"></script>
-<script src="js/app.js?v=132"></script>
+<script src="js/app.js?v=133"></script>
 </body>
 </html>
