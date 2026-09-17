@@ -9,7 +9,7 @@ export type Metric = {
   values: number[];
 };
 
-const primeNumbers = new Set([2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79]);
+const primeNumbers = new Set([2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]);
 
 function fibonacciNumbers(limit: number) {
   const values = new Set<number>([1, 2]);
@@ -81,8 +81,8 @@ export function metricDistribution(values: number[]) {
   return [...counts].sort((a, b) => b[1] - a[1] || a[0] - b[0]);
 }
 
-export function analyzeCycles(drawsNewestFirst: AnalysisDraw[], totalNumbers: number, mode: "presence" | "absence") {
-  const universe = Array.from({ length: totalNumbers }, (_, index) => index + 1);
+export function analyzeCycles(drawsNewestFirst: AnalysisDraw[], totalNumbers: number, mode: "presence" | "absence", start = 1) {
+  const universe = Array.from({ length: totalNumbers }, (_, index) => index + start);
   const seen = new Set<number>();
   const byContest = new Map<number, { cycle: number; closed: boolean; coverage: number }>();
   let completed = 0;

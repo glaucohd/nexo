@@ -26,6 +26,7 @@ const fromArg = Number(args.find((arg) => arg.startsWith("--from="))?.split("=")
 const toArg = Number(args.find((arg) => arg.startsWith("--to="))?.split("=")[1] ?? 0);
 const recentArg = Number(args.find((arg) => arg.startsWith("--recent="))?.split("=")[1] ?? 0);
 const all = args.includes("--all");
+const missingOnly = args.includes("--missing");
 const selected = requested === "all" ? Object.keys(games) : requested.split(",");
 
 if (!process.env.DATABASE_URL) throw new Error("Defina DATABASE_URL no apps/web/.env");
@@ -56,7 +57,8 @@ async function importDraw(apiSlug, contest) {
   const [slug, name, total, drawSize] = games[apiSlug];
   if (payload.numero !== contest) throw new Error(`Concurso ${contest}: API retornou ${payload.numero}`);
   const numbers = payload.listaDezenas.map(Number).sort((a, b) => a - b);
-  if (numbers.length !== drawSize || new Set(numbers).size !== drawSize || numbers.some((number) => !Number.isInteger(number) || number < 1 || number > total)) throw new Error(`Dezenas inválidas no concurso ${contest}`);
+  const firstNumber = apiSlug === "lotomania" ? 0 : 1;
+  if (numbers.length !== drawSize || new Set(numbers).size !== drawSize || numbers.some((number) => !Number.isInteger(number) || number < firstNumber || number >= firstNumber + total)) throw new Error(`Dezenas inválidas no concurso ${contest}`);
   const extras = {};
   if (Array.isArray(payload.trevosSorteados)) extras.trevos = payload.trevosSorteados.map(Number);
   if (payload.nomeTimeCoracaoMesSorte && apiSlug === "diadesorte") extras.mesSorte = payload.nomeTimeCoracaoMesSorte.trim();
@@ -90,11 +92,15 @@ try {
     const latest = await fetchJson(`${API}/${apiSlug}`);
     const first = all ? 1 : (fromArg || (recentArg ? Math.max(1, latest.numero - recentArg + 1) : latest.numero));
     const last = toArg || latest.numero;
-    console.log(`${games[apiSlug][1]}: concursos ${first}–${last}`);
+    const existing = missingOnly
+      ? new Set((await pool.query("select draws.contest_number from draws join lotteries on lotteries.id=draws.lottery_id where lotteries.slug=$1 and draws.contest_number between $2 and $3", [games[apiSlug][0], first, last])).rows.map((row) => row.contest_number))
+      : new Set();
+    console.log(`${games[apiSlug][1]}: concursos ${first}–${last}${missingOnly ? ` (${last - first + 1 - existing.size} faltantes)` : ""}`);
     let cursor = first;
     const workers = Array.from({ length: Math.min(4, last - first + 1) }, async () => {
       while (cursor <= last) {
         const contest = cursor++;
+        if (existing.has(contest)) continue;
         try { if (await importDraw(apiSlug, contest)) totalImported += 1; }
         catch (error) { failures += 1; console.warn(`  ${contest}: ${error.message}`); }
         await sleep(100);

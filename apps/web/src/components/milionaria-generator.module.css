@@ -6,6 +6,7 @@
 .layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(310px, .9fr); align-items: start; gap: 16px; }
 .controls, .preview { display: grid; min-width: 0; gap: 16px; }
 .card, .results { min-width: 0; padding: 22px; border: 1px solid var(--line); border-radius: 19px; background: var(--surface); }
+.results { scroll-margin-top: 24px; }
 .stepHeading { display: flex; align-items: start; gap: 12px; }
 .stepHeading > span { display: grid; flex: none; width: 31px; height: 31px; place-items: center; border-radius: 9px; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); font-size: .74rem; font-weight: 950; }
 .stepHeading h2 { font-family: "Fredoka Variable", sans-serif; font-size: 1.35rem; font-weight: 620; line-height: 1.12; }
@@ -20,6 +21,7 @@
 .scopeSwitch { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 21px 0 12px; padding: 4px; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); }
 .scopeSwitch button { min-height: 38px; padding: 6px 9px; border: 0; border-radius: 8px; color: var(--muted); background: transparent; font-size: .77rem; font-weight: 850; cursor: pointer; }
 .scopeSwitch .active { color: var(--accent); background: var(--surface); box-shadow: 0 2px 8px color-mix(in srgb, var(--ink) 8%, transparent); }
+.scopeSwitch button:disabled { opacity: .5; cursor: not-allowed; }
 .gameTabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .gameTabs button { min-height: 31px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: var(--surface); font-size: .72rem; font-weight: 850; cursor: pointer; }
 .gameTabs .currentGame { border-color: var(--accent); color: white; background: var(--accent); }
@@ -41,6 +43,7 @@
 .board::before { position: absolute; top: 50%; right: 5px; left: 5px; height: 3px; border-radius: 99px; background: color-mix(in srgb, var(--accent) 55%, var(--ink)); content: ""; transform: translateY(-50%); }
 .board > span:not(.topMarker):not(.bottomMarker) { position: relative; z-index: 1; display: grid; aspect-ratio: 1; place-items: center; border-radius: 8px; font-size: .7rem; font-weight: 900; font-variant-numeric: tabular-nums; }
 .board .free { border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--line)); color: var(--accent); background: var(--surface); }
+.board .boardFixed { border: 1px solid #187653; color: white; background: #187653; }
 .board .blocked { color: var(--muted); background: color-mix(in srgb, var(--muted) 13%, var(--paper)); text-decoration: line-through; opacity: .55; }
 .topMarker, .bottomMarker { position: absolute; left: 11px; z-index: 2; color: var(--muted); font-size: .56rem; font-weight: 950; letter-spacing: .08em; }
 .topMarker { top: 5px; }
@@ -64,6 +67,7 @@
 .rulesList small { color: var(--accent); font-size: .64rem; font-weight: 850; white-space: nowrap; }
 .generateButton { width: 100%; min-height: 49px; border: 0; border-radius: 11px; color: white; background: var(--accent); font-size: .87rem; font-weight: 950; cursor: pointer; }
 .generateButton:hover { filter: brightness(1.1); }
+.suggestionButton { width: 100%; min-height: 41px; margin-top: 8px; border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); background: var(--surface); font-size: .75rem; font-weight: 900; cursor: pointer; }
 .actionBox p { margin-top: 9px; color: var(--muted); font-size: .68rem; line-height: 1.4; }
 .error { padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--line)); border-radius: 10px; color: var(--danger); background: color-mix(in srgb, var(--danger) 7%, var(--surface)); font-size: .78rem; font-weight: 800; }
 .resultsHeading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
@@ -78,6 +82,7 @@
 .ticketBoard { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; width: min(100%, 230px); margin: 11px auto; }
 .ticketBoard span { display: grid; aspect-ratio: 1; place-items: center; border-radius: 5px; color: var(--muted); background: var(--surface); font-size: .61rem; font-weight: 800; }
 .ticketBoard .ticketHit { color: white; background: var(--accent); }
+.ticketBoard .ticketFixed { outline: 2px solid #187653; outline-offset: -3px; }
 .ticketBoard .ticketExcluded { color: var(--muted); background: color-mix(in srgb, var(--muted) 17%, var(--paper)); text-decoration: line-through; opacity: .6; }
 .ticket > p { padding-top: 9px; border-top: 1px solid var(--line); color: var(--muted); font-size: .73rem; }
 .ticket .ticketRules { padding: 7px 0 0; border: 0; color: var(--accent); font-size: .67rem; font-weight: 850; }

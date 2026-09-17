@@ -9,6 +9,7 @@ const lotteries = [
   { slug: "quina", short: "QN", icon: "quina", name: "Quina", detail: "5 a 15 números", color: "#2e3192" },
   { slug: "milionaria", short: "+M", icon: "mais-milionaria", name: "+Milionária", detail: "Números + trevos", color: "#2a3580" },
   { slug: "dia", short: "DS", icon: "dia-de-sorte", name: "Dia de Sorte", detail: "Números + mês", color: "#7e6906" },
+  { slug: "lotomania", short: "LM", icon: "lotomania", name: "Lotomania", detail: "50 números · espelho", color: "#b55727" },
 ];
 
 const features = [

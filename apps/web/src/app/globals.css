@@ -242,7 +242,7 @@ button, input { font: inherit; }
 .sidebar nav a.active > span { color: #402971; background: #cbb8ff; }
 .sidebar-games { display: flex; gap: 7px; margin: 28px 12px 0; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.07); }
 .game-dot { width: 9px; height: 9px; border-radius: 50%; }
-.game-dot.lotofacil { background: var(--purple); }.game-dot.mega { background: var(--green); }.game-dot.quina { background: var(--violet); }.game-dot.milionaria { background: var(--blue); }.game-dot.dia { background: var(--amber); }
+.game-dot.lotofacil { background: var(--purple); }.game-dot.mega { background: var(--green); }.game-dot.quina { background: var(--violet); }.game-dot.milionaria { background: var(--blue); }.game-dot.dia { background: var(--amber); }.game-dot.lotomania { background: #d16b2d; }
 .sidebar-user { margin-top: auto; padding: 18px 10px 0; border-top: 1px solid rgba(255,255,255,.09); }
 .sidebar-user strong, .sidebar-user span { display: block; overflow: hidden; text-overflow: ellipsis; }
 .sidebar-user strong { font-size: .82rem; }
@@ -254,10 +254,10 @@ button, input { font: inherit; }
 .dashboard-header p { color: var(--muted); }
 .status-pill { display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 999px; color: #17634e; background: #dff5ed; font-size: .7rem; font-weight: 850; white-space: nowrap; }
 .status-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
-.dashboard-games { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 54px; }
+.dashboard-games { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 54px; }
 .dashboard-game { --game:#777; position: relative; min-width: 0; min-height: 145px; display: flex; flex-direction: column; justify-content: space-between; padding: 17px; border: 1px solid #e1dfe7; border-radius: 17px; background: white; transition: transform 160ms,box-shadow 160ms; }
 .dashboard-game:hover { box-shadow: 0 14px 30px color-mix(in srgb,var(--game) 13%,transparent); transform: translateY(-4px); }
-.dashboard-game.purple { --game:var(--purple); }.dashboard-game.green { --game:var(--green); }.dashboard-game.violet { --game:var(--violet); }.dashboard-game.blue { --game:var(--blue); }.dashboard-game.amber { --game:var(--amber); }
+.dashboard-game.purple { --game:var(--purple); }.dashboard-game.green { --game:var(--green); }.dashboard-game.violet { --game:var(--violet); }.dashboard-game.blue { --game:var(--blue); }.dashboard-game.amber { --game:var(--amber); }.dashboard-game.orange { --game:#b55727; }
 .dashboard-game-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 13px; color: var(--game); background: transparent; font-family: "Fredoka Variable"; font-size: .75rem; font-weight: 650; }
 .dashboard-game strong, .dashboard-game small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dashboard-game strong { font-family: "Fredoka Variable"; font-size: .94rem; font-weight: 610; }

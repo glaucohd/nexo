@@ -13,6 +13,7 @@ export const pool =
   globalForDatabase.nexoPool ??
   new Pool({
     connectionString: databaseUrl,
+    connectionTimeoutMillis: 5000,
     max: process.env.NODE_ENV === "production" ? 10 : 3,
   });
 

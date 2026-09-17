@@ -14,11 +14,12 @@ import {
 import styles from "./analysis-explorer.module.css";
 
 const games = [
-  { slug: "lotofacil", name: "Lotofácil", total: 25, color: "#91278f" },
-  { slug: "mega-sena", name: "Mega-Sena", total: 60, color: "#00a651" },
-  { slug: "quina", name: "Quina", total: 80, color: "#2e3192" },
-  { slug: "mais-milionaria", name: "+Milionária", total: 50, color: "#2a3580" },
-  { slug: "dia-de-sorte", name: "Dia de Sorte", total: 31, color: "#7e6906" },
+  { slug: "lotofacil", name: "Lotofácil", total: 25, start: 1, color: "#91278f" },
+  { slug: "mega-sena", name: "Mega-Sena", total: 60, start: 1, color: "#00a651" },
+  { slug: "quina", name: "Quina", total: 80, start: 1, color: "#2e3192" },
+  { slug: "mais-milionaria", name: "+Milionária", total: 50, start: 1, color: "#2a3580" },
+  { slug: "dia-de-sorte", name: "Dia de Sorte", total: 31, start: 1, color: "#7e6906" },
+  { slug: "lotomania", name: "Lotomania", total: 100, start: 0, color: "#b55727" },
 ] as const;
 
 type View = "matrix" | "parameters" | "cycles";
@@ -26,10 +27,10 @@ type WindowSize = 15 | 30 | 50 | 100 | "all";
 
 const numberLabel = (number: number) => String(number).padStart(2, "0");
 
-function Matrix({ draws, allDraws, total, frequencies }: { draws: AnalysisDraw[]; allDraws: AnalysisDraw[]; total: number; frequencies: number[] }) {
+function Matrix({ draws, allDraws, total, start, frequencies }: { draws: AnalysisDraw[]; allDraws: AnalysisDraw[]; total: number; start: number; frequencies: number[] }) {
   const sample = [...draws].reverse();
   const previous = new Map(allDraws.map((draw, index) => [draw.contest, allDraws[index + 1]]));
-  const numbers = Array.from({ length: total }, (_, index) => index + 1);
+  const numbers = Array.from({ length: total }, (_, index) => index + start);
 
   return <div className={styles.tableScroll} tabIndex={0} aria-label="Matriz de concursos e dezenas; role horizontalmente para ver todas as colunas">
     <table className={styles.matrix}>
@@ -75,10 +76,10 @@ function ParameterPanel({ draws, total }: { draws: AnalysisDraw[]; total: number
   </div>;
 }
 
-function CyclePanel({ draws, total, mode }: { draws: AnalysisDraw[]; total: number; mode: "presence" | "absence" }) {
-  const cycle = analyzeCycles(draws, total, mode);
+function CyclePanel({ draws, total, start, mode }: { draws: AnalysisDraw[]; total: number; start: number; mode: "presence" | "absence" }) {
+  const cycle = analyzeCycles(draws, total, mode, start);
   const visible = [...draws.slice(0, 25)].reverse();
-  const numbers = Array.from({ length: total }, (_, index) => index + 1);
+  const numbers = Array.from({ length: total }, (_, index) => index + start);
   const isPresence = mode === "presence";
   const description = isPresence
     ? `Um ciclo termina quando as ${total} dezenas apareceram ao menos uma vez desde o início dele.`
@@ -112,8 +113,8 @@ export function AnalysisExplorer({ histories, initialSlug }: { histories: Record
   const draws = histories[game.slug] ?? [];
   const limit = windowSize === "all" ? draws.length : windowSize;
   const analysis = analyzeDraws(draws, game.total, limit);
-  const frequencyRank = Array.from({ length: game.total }, (_, index) => index + 1).sort((a, b) => analysis.frequencies[b] - analysis.frequencies[a] || a - b);
-  const delayRank = Array.from({ length: game.total }, (_, index) => index + 1).sort((a, b) => analysis.delays[b] - analysis.delays[a] || a - b);
+  const frequencyRank = Array.from({ length: game.total }, (_, index) => index + game.start).sort((a, b) => analysis.frequencies[b] - analysis.frequencies[a] || a - b);
+  const delayRank = Array.from({ length: game.total }, (_, index) => index + game.start).sort((a, b) => analysis.delays[b] - analysis.delays[a] || a - b);
 
   return <div className={styles.page} style={{ "--analysis-accent": game.color } as React.CSSProperties}>
     <header className={styles.header}><div><span className="eyebrow">Análises históricas</span><h1>Enxergue os concursos de outro jeito.</h1><p>Matrizes, distribuições e ciclos calculados a partir dos resultados que estão na base do Nexo.</p></div><label className={styles.selector}><span>Modalidade</span><select value={slug} onChange={(event) => { setSlug(event.target.value); setWindowSize(15); }}>{games.map((entry) => <option key={entry.slug} value={entry.slug}>{entry.name}</option>)}</select></label></header>
@@ -123,11 +124,11 @@ export function AnalysisExplorer({ histories, initialSlug }: { histories: Record
 
       <div className={styles.tabBar} role="tablist" aria-label="Tipos de análise">{([ ["matrix", "Matriz dos concursos"], ["parameters", "Parâmetros"], ["cycles", "Ciclos"] ] as const).map(([id, label]) => <button role="tab" aria-selected={view === id} className={view === id ? styles.activeTab : ""} key={id} type="button" onClick={() => setView(id)}>{label}</button>)}</div>
 
-      {view === "matrix" && <section className={styles.panel}><div className={styles.sectionLead}><div><span className="eyebrow">Concurso × dezena</span><h2>Matriz de resultados</h2><p>Coluna = dezena. Linha = concurso. Uma célula preenchida indica que a dezena saiu naquele sorteio.</p></div><span className={styles.latestChip}>Último: {draws[0].contest}</span></div><div className={styles.rangeBar}><span>Janela:</span>{([15, 30, 50, 100, "all"] as const).map((size) => <button key={size} className={windowSize === size ? styles.rangeActive : ""} type="button" onClick={() => setWindowSize(size)}>{size === "all" ? `Todos (${draws.length})` : size}</button>)}</div><Matrix draws={analysis.sample} allDraws={draws} total={game.total} frequencies={analysis.frequencies} /><div className={styles.matrixFooter}><span><i className={styles.legendHit} /> Dezena sorteada</span><span>Σ soma</span><span>P pares</span><span>R repetidas do anterior</span></div><p className={styles.methodNote}>As linhas “Vezes” e “%” consideram apenas os {analysis.sample.length} concursos selecionados. Frequência e atraso descrevem o passado; não mudam a chance de cada dezena no próximo sorteio.</p></section>}
+      {view === "matrix" && <section className={styles.panel}><div className={styles.sectionLead}><div><span className="eyebrow">Concurso × dezena</span><h2>Matriz de resultados</h2><p>Coluna = dezena. Linha = concurso. Uma célula preenchida indica que a dezena saiu naquele sorteio.</p></div><span className={styles.latestChip}>Último: {draws[0].contest}</span></div><div className={styles.rangeBar}><span>Janela:</span>{([15, 30, 50, 100, "all"] as const).map((size) => <button key={size} className={windowSize === size ? styles.rangeActive : ""} type="button" onClick={() => setWindowSize(size)}>{size === "all" ? `Todos (${draws.length})` : size}</button>)}</div><Matrix draws={analysis.sample} allDraws={draws} total={game.total} start={game.start} frequencies={analysis.frequencies} /><div className={styles.matrixFooter}><span><i className={styles.legendHit} /> Dezena sorteada</span><span>Σ soma</span><span>P pares</span><span>R repetidas do anterior</span></div><p className={styles.methodNote}>As linhas “Vezes” e “%” consideram apenas os {analysis.sample.length} concursos selecionados. Frequência e atraso descrevem o passado; não mudam a chance de cada dezena no próximo sorteio.</p></section>}
 
       {view === "parameters" && <ParameterPanel draws={draws} total={game.total} />}
 
-      {view === "cycles" && <div className={styles.sectionStack}><div className={styles.sectionLead}><div><span className="eyebrow">Sequências observadas</span><h2>Ciclos de dezenas</h2><p>Veja quando cada dezena apareceu ou ficou ausente ao longo dos concursos.</p></div></div><CyclePanel draws={draws} total={game.total} mode="presence" /><CyclePanel draws={draws} total={game.total} mode="absence" /><p className={styles.methodNote}>O fechamento de um ciclo é uma descrição dos sorteios passados. A quantidade que falta no ciclo atual não é uma probabilidade de fechamento no próximo concurso.</p></div>}
+      {view === "cycles" && <div className={styles.sectionStack}><div className={styles.sectionLead}><div><span className="eyebrow">Sequências observadas</span><h2>Ciclos de dezenas</h2><p>Veja quando cada dezena apareceu ou ficou ausente ao longo dos concursos.</p></div></div><CyclePanel draws={draws} total={game.total} start={game.start} mode="presence" /><CyclePanel draws={draws} total={game.total} start={game.start} mode="absence" /><p className={styles.methodNote}>O fechamento de um ciclo é uma descrição dos sorteios passados. A quantidade que falta no ciclo atual não é uma probabilidade de fechamento no próximo concurso.</p></div>}
     </> : <div className={styles.empty}><h2>Ainda não há concursos de {game.name} na base.</h2><p>Depois da importação, as matrizes e os parâmetros aparecerão aqui.</p></div>}
   </div>;
 }

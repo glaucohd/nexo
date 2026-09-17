@@ -1,5 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
+import { count } from "drizzle-orm";
+
+import { db } from "@/db";
+import { draws } from "@/db/schema";
 
 const games = [
   { slug: "lotofacil", initials: "LF", icon: "lotofacil", name: "Lotofácil", subtitle: "15 a 20 números", color: "purple" },
@@ -7,9 +11,11 @@ const games = [
   { slug: "quina", initials: "QN", icon: "quina", name: "Quina", subtitle: "5 a 15 números", color: "violet" },
   { slug: "mais-milionaria", initials: "+M", icon: "mais-milionaria", name: "+Milionária", subtitle: "Números + trevos", color: "blue" },
   { slug: "dia-de-sorte", initials: "DS", icon: "dia-de-sorte", name: "Dia de Sorte", subtitle: "Números + mês", color: "amber" },
+  { slug: "lotomania", initials: "LM", icon: "lotomania", name: "Lotomania", subtitle: "50 números · espelho", color: "orange" },
 ];
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const [{ total: drawCount }] = await db.select({ total: count() }).from(draws);
   return (
     <>
       <header className="dashboard-header">
@@ -46,13 +52,13 @@ export default function DashboardPage() {
         <article className="dashboard-card stat-card">
           <div className="dashboard-card-icon green">#</div>
           <span>Modalidades</span>
-          <strong className="metric">5</strong>
+          <strong className="metric">6</strong>
           <small>Com análises e geradores dedicados</small>
         </article>
         <article className="dashboard-card stat-card">
           <div className="dashboard-card-icon blue">∿</div>
           <span>Concursos na base</span>
-          <strong className="metric">1.010+</strong>
+          <strong className="metric">{drawCount.toLocaleString("pt-BR")}</strong>
           <small>Históricos reunidos para análise</small>
         </article>
         <article className="dashboard-card action-card wide">

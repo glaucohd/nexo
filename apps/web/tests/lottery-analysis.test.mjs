@@ -52,3 +52,15 @@ test("absence cycles track numbers omitted in each draw", () => {
   assert.equal(result.byContest.get(3)?.closed, true);
   assert.deepEqual(result.missing, [1, 2]);
 });
+
+test("Lotomania analysis treats 00 as a real dezena", () => {
+  const sample = [
+    { contest: 2, date: "2026-01-02", numbers: [0, 1] },
+    { contest: 1, date: "2026-01-01", numbers: [2, 3] },
+  ];
+  const summary = analyzeDraws(sample, 4, 2);
+  assert.equal(summary.frequencies[0], 1);
+  assert.equal(summary.delays[0], 0);
+  assert.equal(analyzeCycles(sample, 4, "presence", 0).completed, 1);
+  assert.equal(analyzeCycles(sample, 4, "absence", 0).completed, 1);
+});

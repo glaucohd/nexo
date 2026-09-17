@@ -1,3 +1,5 @@
+import { historyWeights, weightedSample, type DrawNumbers, type GeneratorMode } from "./lottery-generator.ts";
+
 export type MilionariaTicket = { numbers: number[]; trevos: number[] };
 
 export function isExcluded(number: number, general: ReadonlySet<string>, personal: ReadonlySet<string>) {
@@ -41,26 +43,42 @@ export function generateMilionariaTickets({
   size,
   general,
   personal,
+  fixed = new Set<number>(),
+  avoided = new Set<number>(),
+  history = [],
+  mode = "pure",
   random = Math.random,
 }: {
   quantity: number;
   size: number;
   general: ReadonlySet<string>;
   personal: readonly ReadonlySet<string>[];
+  fixed?: ReadonlySet<number>;
+  avoided?: ReadonlySet<number>;
+  history?: readonly DrawNumbers[];
+  mode?: GeneratorMode;
   random?: () => number;
 }): MilionariaTicket[] {
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10 || !Number.isInteger(size) || size < 6 || size > 12) {
     throw new RangeError("Escolha de 1 a 10 jogos, com 6 a 12 dezenas por jogo.");
   }
-  const pools = Array.from({ length: quantity }, (_, index) => availableNumbers(general, personal[index] ?? new Set<string>()));
+  if (fixed.size > size || [...fixed].some((number) => !Number.isInteger(number) || number < 1 || number > 50 || avoided.has(number))) {
+    throw new RangeError("Revise as dezenas fixadas: há conflito, número inválido ou mais fixas do que vagas na cartela.");
+  }
+  if ([...avoided].some((number) => !Number.isInteger(number) || number < 1 || number > 50)) throw new RangeError("Há uma dezena inválida entre as evitadas.");
+  const pools = Array.from({ length: quantity }, (_, index) => availableNumbers(general, personal[index] ?? new Set<string>()).filter((number) => !avoided.has(number)));
   if (pools.some((pool) => pool.length < size)) throw new RangeError("As exclusões deixam menos dezenas livres do que o jogo exige.");
+  if (pools.some((pool) => [...fixed].some((number) => !pool.includes(number)))) throw new RangeError("Uma dezena fixa foi excluída em algum jogo.");
+  const weights = historyWeights("mais-milionaria", history, mode);
 
   const tickets: MilionariaTicket[] = [];
   const used = new Set<string>();
   for (let index = 0; index < quantity; index += 1) {
     let ticket: MilionariaTicket | null = null;
     for (let attempt = 0; attempt < 2000; attempt += 1) {
-      const numbers = shuffled(pools[index], random).slice(0, size).sort((a, b) => a - b);
+      const free = pools[index].filter((number) => !fixed.has(number));
+      const chosen = mode === "pure" || !history.length ? shuffled(free, random).slice(0, size - fixed.size) : weightedSample(free, size - fixed.size, weights, random);
+      const numbers = [...fixed, ...chosen].sort((a, b) => a - b);
       const trevos = shuffled([1, 2, 3, 4, 5, 6], random).slice(0, 2).sort((a, b) => a - b);
       const key = `${numbers.join(",")}|${trevos.join(",")}`;
       if (!used.has(key)) {

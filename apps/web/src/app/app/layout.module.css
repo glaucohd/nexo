@@ -1,0 +1,5 @@
+.unavailable { display: grid; min-height: 100vh; place-items: center; padding: 24px; background: var(--paper); }
+.card { display: grid; gap: 18px; width: min(100%, 480px); padding: clamp(24px, 5vw, 42px); border: 1px solid var(--line); border-radius: 22px; background: var(--surface); box-shadow: var(--shadow); }
+.card h1 { font-family: "Fredoka Variable", sans-serif; font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 620; line-height: 1.12; }
+.card p { color: var(--muted); line-height: 1.55; }
+.card a { width: fit-content; }

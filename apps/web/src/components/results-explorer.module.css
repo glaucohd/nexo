@@ -15,7 +15,9 @@
 .contest { display: grid; justify-items: center; gap: 2px; text-align: center; }
 .counter { color: var(--result-accent); font-size: .7rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .contest strong { font-family: "Fredoka Variable", sans-serif; font-size: 1.55rem; font-weight: 650; }
-.contest > span:last-child { color: var(--muted); font-size: .78rem; font-weight: 700; }
+.contest > span:last-of-type { color: var(--muted); font-size: .78rem; font-weight: 700; }
+.navigator .latestButton { width: auto; min-height: 0; margin-top: 5px; padding: 0; border: 0; color: var(--result-accent); background: transparent; font-size: .71rem; font-weight: 900; }
+.navigator .latestButton:hover { background: transparent; transform: none; text-decoration: underline; }
 .contest i { padding: 0 3px; font-style: normal; }
 .mainGrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(285px, .75fr); align-items: start; gap: 16px; }
 .boardCard, .detailCard, .empty { border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 8px 25px rgba(37, 30, 76, .035); }
@@ -23,8 +25,15 @@
 .cardHeading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
 .cardHeading h2, .detailCard h2 { margin-top: 4px; font-size: 1.3rem; }
 .layoutTag { padding: 7px 10px; border-radius: 9px; color: var(--result-accent); background: color-mix(in srgb, var(--result-accent) 10%, var(--surface)); font-size: .72rem; font-weight: 900; white-space: nowrap; }
+.viewSwitch { display: inline-flex; gap: 4px; margin-top: 16px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+.viewSwitch button { min-height: 34px; padding: 5px 11px; border: 0; border-radius: 7px; color: var(--muted); background: transparent; cursor: pointer; font: inherit; font-size: .75rem; font-weight: 850; }
+.viewSwitch button[aria-pressed="true"] { color: white; background: var(--result-accent); }
 .board { position: relative; display: grid; width: min(100%, 520px); grid-template-columns: repeat(var(--result-columns), minmax(0, 1fr)); gap: clamp(3px, .6vw, 6px); margin: 24px auto; padding: clamp(7px, 1.3vw, 14px); border: 1px solid var(--line); border-radius: 17px; background: color-mix(in srgb, var(--result-accent) 5%, var(--paper)); }
+.blockBoard { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.blockGroup { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; min-width: 0; padding: 3px; border: 1px solid color-mix(in srgb, var(--result-accent) 43%, var(--line)); border-radius: 9px; background: color-mix(in srgb, var(--result-accent) 11%, var(--surface)); }
+.blockGroup .cell { font-size: clamp(.53rem, .85vw, .75rem); }
 .narrowBoard { width: min(100%, 320px); }
+.lotofacilBoard { width: min(100%, 230px); }
 .quadrantBoard, .halvesBoard { padding-block: 19px; }
 .quadrantBoard::before, .quadrantBoard::after, .halvesBoard::before { position: absolute; z-index: 0; border-radius: 99px; background: color-mix(in srgb, var(--result-accent) 65%, var(--ink)); content: ""; pointer-events: none; }
 .quadrantBoard::before, .halvesBoard::before { top: 50%; right: 8px; left: 8px; height: 3px; transform: translateY(-50%); }
@@ -79,7 +88,7 @@
   .navigator button:last-child { justify-content: center; }
   .navigator button small { display: none; }
   .contest strong { font-size: 1.24rem; }
-  .contest > span:last-child { font-size: .68rem; }
+  .contest > span:last-of-type { font-size: .68rem; }
   .boardCard, .detailCard { padding: 18px; }
   .board { gap: 3px; margin-block: 20px; padding: 7px; }
   .quadrantBoard, .halvesBoard { padding-block: 18px; }

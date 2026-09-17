@@ -1,6 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import { NumberInsightPicker } from "@/components/number-insight-picker";
+import { HistoricalBacktest } from "@/components/historical-backtest";
+import type { GeneratorMode } from "@/lib/lottery-generator";
 
 import {
   availableNumbers,
@@ -40,10 +44,10 @@ const groups = [
   })) },
 ];
 
-function TicketBoard({ ticket, general, personal }: { ticket: MilionariaTicket; general: ReadonlySet<string>; personal: ReadonlySet<string> }) {
+function TicketBoard({ ticket, general, personal, fixed, avoided }: { ticket: MilionariaTicket; general: ReadonlySet<string>; personal: ReadonlySet<string>; fixed: ReadonlySet<number>; avoided: ReadonlySet<number> }) {
   const selected = new Set(ticket.numbers);
   return <div className={styles.ticketBoard} role="img" aria-label={`Dezenas ${ticket.numbers.map(numberLabel).join(", ")}; trevos ${ticket.trevos.join(" e ")}`}>
-    {Array.from({ length: 50 }, (_, index) => <span key={index} className={selected.has(index + 1) ? styles.ticketHit : isExcluded(index + 1, general, personal) ? styles.ticketExcluded : ""} aria-hidden="true">{numberLabel(index + 1)}</span>)}
+    {Array.from({ length: 50 }, (_, index) => <span key={index} className={selected.has(index + 1) ? `${styles.ticketHit} ${fixed.has(index + 1) ? styles.ticketFixed : ""}` : avoided.has(index + 1) || isExcluded(index + 1, general, personal) ? styles.ticketExcluded : ""} aria-hidden="true">{numberLabel(index + 1)}</span>)}
   </div>;
 }
 
@@ -53,18 +57,29 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
   const [scope, setScope] = useState<Scope>("general");
   const [selectedGame, setSelectedGame] = useState(0);
   const [rules, setRules] = useState<{ general: string[]; personal: Record<number, string[]> }>({ general: [], personal: {} });
+  const [fixedNumbers, setFixedNumbers] = useState<number[]>([]);
+  const [avoidedNumbers, setAvoidedNumbers] = useState<number[]>([]);
+  const [mode, setMode] = useState<GeneratorMode>("pure");
   const [tickets, setTickets] = useState<MilionariaTicket[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const resultsRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!tickets.length) return;
+    resultsRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  }, [tickets]);
 
   const { general, personal } = rules;
   const generalSet = new Set(general);
   const personalSet = new Set(personal[selectedGame] ?? []);
+  const fixed = new Set(fixedNumbers);
+  const avoided = new Set(avoidedNumbers);
   const activePersonal = scope === "personal" ? personalSet : new Set<string>();
-  const available = availableNumbers(generalSet, activePersonal);
+  const available = availableNumbers(generalSet, activePersonal).filter((number) => !avoided.has(number));
   const availableSet = new Set(available);
   const matchingHistory = history.filter((draw) => draw.numbers.every((number) => availableSet.has(number))).length;
-  const minAvailable = Math.min(...Array.from({ length: quantity }, (_, index) => availableNumbers(generalSet, new Set(personal[index] ?? [])).length));
+  const minAvailable = Math.min(...Array.from({ length: quantity }, (_, index) => availableNumbers(generalSet, new Set(personal[index] ?? [])).filter((number) => !avoided.has(number)).length));
 
   function toggle(key: string) {
     const nextGeneral = new Set(general);
@@ -78,9 +93,12 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
       else keys.add(key);
       nextPersonal[selectedGame] = [...keys];
     }
-    const tooFew = Array.from({ length: quantity }, (_, index) => availableNumbers(nextGeneral, new Set(nextPersonal[index] ?? [])).length).findIndex((count) => count < size);
+    const tooFew = Array.from({ length: quantity }, (_, index) => {
+      const pool = availableNumbers(nextGeneral, new Set(nextPersonal[index] ?? [])).filter((number) => !avoided.has(number));
+      return pool.length < size || fixedNumbers.some((number) => !pool.includes(number));
+    }).findIndex(Boolean);
     if (tooFew >= 0) {
-      setError(`Essa exclusão deixaria menos de ${size} dezenas disponíveis no jogo ${tooFew + 1}.`);
+      setError(`Essa exclusão deixaria menos de ${size} dezenas disponíveis ou bloquearia uma fixa no jogo ${tooFew + 1}.`);
       return;
     }
     setRules({ general: [...nextGeneral], personal: nextPersonal });
@@ -90,6 +108,7 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
   }
 
   function changeSize(nextSize: number) {
+    if (fixed.size > nextSize) { setError(`Você fixou ${fixed.size} dezenas. Desfixe algumas antes de escolher ${nextSize}.`); return; }
     if (minAvailable < nextSize) {
       setError(`O jogo com mais exclusões tem só ${minAvailable} dezenas livres. Reduza os filtros antes de escolher ${nextSize}.`);
       return;
@@ -99,11 +118,11 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
     setError(null);
   }
 
-  function generate() {
+  function generate(chosenMode: GeneratorMode = mode) {
     try {
       const perGameRules = Array.from({ length: quantity }, (_, index) => new Set(personal[index] ?? []));
-      const generated = generateMilionariaTickets({ quantity, size, general: generalSet, personal: perGameRules });
-      if (generated.some((ticket, index) => ticket.numbers.some((number) => isExcluded(number, generalSet, perGameRules[index])))) {
+      const generated = generateMilionariaTickets({ quantity, size, general: generalSet, personal: perGameRules, fixed, avoided, history, mode: chosenMode });
+      if (generated.some((ticket, index) => ticket.numbers.some((number) => avoided.has(number) || isExcluded(number, generalSet, perGameRules[index])))) {
         throw new Error("Uma cartela não respeitou as exclusões. Nenhum jogo foi exibido; tente gerar novamente.");
       }
       setTickets(generated);
@@ -113,6 +132,26 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
       setTickets([]);
       setError(cause instanceof Error ? cause.message : "Não foi possível gerar os jogos.");
     }
+  }
+
+  function toggleFixedNumber(number: number) {
+    if (fixed.has(number)) { setFixedNumbers((current) => current.filter((entry) => entry !== number)); setTickets([]); setError(null); return; }
+    if (fixed.size >= size) { setError(`O jogo tem ${size} vagas. Desfixe uma dezena antes de incluir outra.`); return; }
+    const blocked = Array.from({ length: quantity }, (_, index) => !availableNumbers(generalSet, new Set(personal[index] ?? [])).includes(number)).findIndex(Boolean);
+    if (blocked >= 0) { setError(`A dezena ${numberLabel(number)} está excluída no jogo ${blocked + 1}.`); return; }
+    setFixedNumbers((current) => [...current, number]);
+    setAvoidedNumbers((current) => current.filter((entry) => entry !== number));
+    setTickets([]); setError(null);
+  }
+
+  function toggleAvoidedNumber(number: number) {
+    if (avoided.has(number)) { setAvoidedNumbers((current) => current.filter((entry) => entry !== number)); setTickets([]); setError(null); return; }
+    const next = new Set([...avoided, number]);
+    const blocked = Array.from({ length: quantity }, (_, index) => availableNumbers(generalSet, new Set(personal[index] ?? [])).filter((entry) => !next.has(entry)).length < size).findIndex(Boolean);
+    if (blocked >= 0) { setError(`Evitar a dezena ${numberLabel(number)} deixaria menos de ${size} dezenas no jogo ${blocked + 1}.`); return; }
+    setAvoidedNumbers([...next]);
+    setFixedNumbers((current) => current.filter((entry) => entry !== number));
+    setTickets([]); setError(null);
   }
 
   async function copyAll() {
@@ -128,7 +167,7 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
 
   return <main className={styles.page}>
     <header className={styles.header}>
-      <div><span className="eyebrow">Gerador de jogos</span><h1>Monte sua +Milionária.</h1><p>Marque as partes do volante que você quer excluir. Você pode definir regras para todos os jogos e outras específicas para cada cartela.</p></div>
+      <div><span className="eyebrow">Gerador de jogos</span><h1>Monte sua +Milionária.</h1><p>Leia o histórico, fixe suas dezenas e combine as escolhas com as exclusões do volante.</p></div>
       <span className={styles.gameBadge}>50 dezenas + 6 trevos</span>
     </header>
 
@@ -144,7 +183,15 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
         </section>
 
         <section className={styles.card}>
-          <div className={styles.stepHeading}><span>02</span><div><h2>Exclua partes do volante</h2><p>Regras gerais e individuais são somadas.</p></div></div>
+          <div className={styles.stepHeading}><span>02</span><div><h2>Critério para completar</h2><p>Suas dezenas fixas continuam presentes em qualquer modo.</p></div></div>
+          <div className={styles.scopeSwitch} role="group" aria-label="Critério histórico">
+            {([['pure', 'Sorteio puro'], ['hot', 'Frequentes'], ['delayed', 'Atrasadas'], ['mixed', 'Misto']] as const).map(([value, label]) => <button key={value} type="button" disabled={!history.length && value !== 'pure'} className={mode === value ? styles.active : ''} onClick={() => { setMode(value); setTickets([]); setError(null); }}>{label}</button>)}
+          </div>
+          <p className={styles.scopeNote}>O critério seleciona as dezenas; os dois trevos são gerados à parte.</p>
+        </section>
+
+        <section className={styles.card}>
+          <div className={styles.stepHeading}><span>03</span><div><h2>Exclua partes do volante</h2><p>Regras gerais e individuais são somadas.</p></div></div>
           <div className={styles.scopeSwitch} role="group" aria-label="Aplicação das exclusões">
             <button type="button" className={scope === "general" ? styles.active : ""} onClick={() => { setScope("general"); setError(null); }}>Todos os jogos</button>
             <button type="button" className={scope === "personal" ? styles.active : ""} onClick={() => { setScope("personal"); setError(null); }}>Personalizar por jogo</button>
@@ -162,14 +209,18 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
           </div>)}</div>
           <button className={styles.clearButton} type="button" onClick={() => { setRules((current) => scope === "general" ? { ...current, general: [] } : { ...current, personal: { ...current.personal, [selectedGame]: [] } }); setTickets([]); setError(null); }}>Limpar {scope === "general" ? "regras gerais" : `jogo ${selectedGame + 1}`}</button>
         </section>
+        <section className={styles.card}>
+          <NumberInsightPicker history={history} total={50} fixed={fixed} avoided={avoided} onFixed={toggleFixedNumber} onAvoided={toggleAvoidedNumber} />
+          {(fixedNumbers.length > 0 || avoidedNumbers.length > 0) && <p className={styles.scopeNote}>{fixedNumbers.length} fixas · {avoidedNumbers.length} evitadas em todos os jogos.</p>}
+        </section>
       </div>
 
       <aside className={styles.preview}>
         <section className={styles.card}>
-          <div className={styles.stepHeading}><span>03</span><div><h2>Confira o espaço restante</h2><p>{scope === "general" ? "Aplicando só a regra geral" : `Regras do jogo ${selectedGame + 1}`}</p></div></div>
+          <div className={styles.stepHeading}><span>04</span><div><h2>Confira o espaço restante</h2><p>{scope === "general" ? "Aplicando as regras gerais" : `Regras do jogo ${selectedGame + 1}`}</p></div></div>
           <div className={styles.board} role="img" aria-label={`${available.length} dezenas disponíveis de 50`}>
             <span className={styles.topMarker}>SUPERIOR</span><span className={styles.bottomMarker}>INFERIOR</span>
-            {Array.from({ length: 50 }, (_, index) => <span key={index} className={isExcluded(index + 1, generalSet, activePersonal) ? styles.blocked : styles.free} aria-hidden="true">{numberLabel(index + 1)}</span>)}
+            {Array.from({ length: 50 }, (_, index) => <span key={index} className={avoided.has(index + 1) || isExcluded(index + 1, generalSet, activePersonal) ? styles.blocked : fixed.has(index + 1) ? styles.boardFixed : styles.free} aria-hidden="true">{numberLabel(index + 1)}</span>)}
           </div>
           <div className={styles.boardLegend}><span><i className={styles.freeLegend} /> Disponível</span><span><i className={styles.blockedLegend} /> Excluída</span></div>
           <div className={styles.coverageGrid}>
@@ -183,19 +234,22 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
           <strong className={styles.rulesTitle}>Regras que serão aplicadas</strong>
           <div className={styles.rulesList}>{Array.from({ length: quantity }, (_, index) => {
             const keys = [...new Set([...general, ...(personal[index] ?? [])])];
-            const count = availableNumbers(generalSet, new Set(personal[index] ?? [])).length;
-            return <div key={index}><b>Jogo {index + 1}</b><span>{keys.length ? keys.map(ruleLabel).join(" · ") : "Sem exclusões"}</span><small>{count} dezenas livres</small></div>;
+            const count = availableNumbers(generalSet, new Set(personal[index] ?? [])).filter((number) => !avoided.has(number)).length;
+            return <div key={index}><b>Jogo {index + 1}</b><span>{keys.length ? keys.map(ruleLabel).join(" · ") : "Sem áreas excluídas"}</span><small>{count} dezenas livres</small></div>;
           })}</div>
-          <button type="button" className={styles.generateButton} onClick={generate}>Gerar {quantity} {quantity === 1 ? "jogo" : "jogos"} ↗</button><p>Geração aleatória dentro das áreas permitidas. A escolha dos filtros não aumenta a chance de cada combinação.</p>
+          {(fixedNumbers.length > 0 || avoidedNumbers.length > 0) && <p>Fixas: {fixedNumbers.length ? fixedNumbers.map(numberLabel).join(" · ") : "nenhuma"} · Evitadas: {avoidedNumbers.length ? avoidedNumbers.map(numberLabel).join(" · ") : "nenhuma"}</p>}
+          <button type="button" className={styles.generateButton} onClick={() => generate()}>Gerar {quantity} {quantity === 1 ? "jogo" : "jogos"} ↗</button>
+          {history.length > 0 && <button type="button" className={styles.suggestionButton} onClick={() => { setMode("mixed"); generate("mixed"); }}>Sugestão Nexo com histórico</button>}
+          <p>Suas dezenas fixas, evitadas e áreas marcadas entram na geração.</p>
         </div>
       </aside>
     </div>
 
     {error && <p className={styles.error} role="alert">{error}</p>}
-    {tickets.length > 0 && <section className={styles.results} aria-live="polite"><div className={styles.resultsHeading}><div><span className="eyebrow">Jogos gerados</span><h2>{tickets.length} cartelas prontas para conferir</h2><p>Copie ou anote antes de sair: estes jogos ainda não são salvos automaticamente no Nexo.</p></div><button type="button" onClick={copyAll}>{copied ? "Copiados ✓" : "Copiar todos"}</button></div><div className={styles.ticketGrid}>{tickets.map((ticket, index) => {
+    {tickets.length > 0 && <section ref={resultsRef} className={styles.results} aria-live="polite"><div className={styles.resultsHeading}><div><span className="eyebrow">Jogos gerados</span><h2>{tickets.length} cartelas prontas para conferir</h2><p>Copie ou anote antes de sair: estes jogos ainda não são salvos automaticamente no Nexo.</p></div><button type="button" onClick={copyAll}>{copied ? "Copiados ✓" : "Copiar todos"}</button></div><HistoricalBacktest key={JSON.stringify(tickets)} slug="mais-milionaria" tickets={tickets} /><div className={styles.ticketGrid}>{tickets.map((ticket, index) => {
       const gameRules = new Set(personal[index] ?? []);
       const appliedRules = [...new Set([...general, ...gameRules])];
-      return <article className={styles.ticket} key={`${ticket.numbers.join("-")}-${ticket.trevos.join("-")}`}><div><strong>Jogo {index + 1}</strong><small>{ticket.numbers.length} dezenas · 2 trevos</small></div><p className={styles.ticketRules}>{appliedRules.length ? `Excluídas: ${appliedRules.map(ruleLabel).join(" · ")}` : "Sem exclusões"}</p><TicketBoard ticket={ticket} general={generalSet} personal={gameRules} /><p>Trevos <b>{ticket.trevos.map(numberLabel).join(" · ")}</b></p></article>;
+      return <article className={styles.ticket} key={`${ticket.numbers.join("-")}-${ticket.trevos.join("-")}`}><div><strong>Jogo {index + 1}</strong><small>{ticket.numbers.length} dezenas · 2 trevos</small></div><p className={styles.ticketRules}>{appliedRules.length ? `Excluídas: ${appliedRules.map(ruleLabel).join(" · ")}` : "Sem exclusões"}{fixedNumbers.length ? ` · Fixas: ${fixedNumbers.map(numberLabel).join(" · ")}` : ""}</p><TicketBoard ticket={ticket} general={generalSet} personal={gameRules} fixed={fixed} avoided={avoided} /><p>Trevos <b>{ticket.trevos.map(numberLabel).join(" · ")}</b></p></article>;
     })}</div></section>}
     <p className={styles.source}>Regras e preço da aposta simples: <a href="https://loterias.caixa.gov.br/Paginas/mais-milionaria.aspx" target="_blank" rel="noreferrer">CAIXA · +Milionária ↗</a>. Confira o valor no canal de aposta antes de registrar seus jogos.</p>
   </main>;

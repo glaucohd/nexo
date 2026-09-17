@@ -74,3 +74,18 @@ test("impossible exclusions are rejected", () => {
     personal: [],
   }), RangeError);
 });
+
+test("fixed, avoided and historical mode are applied to +Milionária", () => {
+  const tickets = generateMilionariaTickets({
+    quantity: 3, size: 6, general: new Set(["column:5"]), personal: [new Set(["row:2"]), new Set(), new Set()],
+    fixed: new Set([1, 26]), avoided: new Set([2, 3, 4]), mode: "mixed",
+    history: [{ contest: 1, numbers: [1, 2, 5, 26, 37, 49] }], random: (() => { let seed = 917; return () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 2 ** 32; }; })(),
+  });
+  assert.equal(tickets.length, 3);
+  tickets.forEach((ticket) => {
+    assert.ok(ticket.numbers.includes(1) && ticket.numbers.includes(26));
+    assert.ok(ticket.numbers.every((number) => ![2, 3, 4].includes(number)));
+    assert.equal(ticket.trevos.length, 2);
+  });
+  assert.throws(() => generateMilionariaTickets({ quantity: 1, size: 6, general: new Set(["row:1"]), personal: [], fixed: new Set([1]) }), /fixa/);
+});

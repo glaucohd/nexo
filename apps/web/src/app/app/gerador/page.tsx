@@ -1,18 +1,21 @@
 import { desc, eq } from "drizzle-orm";
 
-import { MilionariaGenerator } from "@/components/milionaria-generator";
+import { LotteryGenerator } from "@/components/lottery-generator";
 import { db } from "@/db";
 import { draws, lotteries } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 
-export default async function GeneratorPage() {
-  const history = await db
-    .select({ contest: draws.contestNumber, numbers: draws.numbers })
+export default async function GeneratorPage({ searchParams }: { searchParams: Promise<{ modalidade?: string }> }) {
+  const { modalidade } = await searchParams;
+  const rows = await db
+    .select({ slug: lotteries.slug, contest: draws.contestNumber, numbers: draws.numbers })
     .from(draws)
     .innerJoin(lotteries, eq(draws.lotteryId, lotteries.id))
-    .where(eq(lotteries.slug, "mais-milionaria"))
-    .orderBy(desc(draws.contestNumber));
+    .orderBy(lotteries.slug, desc(draws.contestNumber));
 
-  return <MilionariaGenerator history={history} />;
+  const histories: Record<string, { contest: number; numbers: number[] }[]> = {};
+  for (const row of rows) (histories[row.slug] ??= []).push({ contest: row.contest, numbers: row.numbers });
+
+  return <LotteryGenerator histories={histories} initialSlug={modalidade} />;
 }

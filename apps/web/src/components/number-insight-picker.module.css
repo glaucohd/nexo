@@ -1,0 +1,18 @@
+.picker { display: grid; gap: 12px; }
+.heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; }
+.heading h3 { font-family: "Fredoka Variable", sans-serif; font-size: 1.2rem; font-weight: 620; }
+.heading p, .legend { margin-top: 4px; color: var(--muted); font-size: .72rem; line-height: 1.45; }
+.heading label { display: grid; flex: none; gap: 4px; color: var(--muted); font-size: .68rem; font-weight: 850; }
+.heading select { min-height: 35px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--paper); font: inherit; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; max-height: 390px; overflow: auto; padding: 3px 5px 3px 2px; }
+.item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 7px; min-width: 0; padding: 7px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); }
+.item > strong { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 6px; color: var(--ink); background: var(--surface); font-size: .72rem; }
+.item > span { min-width: 0; font-size: .68rem; font-weight: 850; }
+.item small { display: block; color: var(--muted); font-size: .61rem; font-weight: 650; }
+.actions { display: flex; gap: 3px; }
+.actions button { min-height: 27px; padding: 3px 5px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); background: var(--surface); font-size: .6rem; font-weight: 900; cursor: pointer; }
+.actions .fixed { border-color: #187653; color: white; background: #187653; }
+.actions .avoided { border-color: #a54435; color: white; background: #a54435; }
+.picker button:focus-visible, .picker select:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 430px) { .heading { align-items: stretch; flex-direction: column; } }
