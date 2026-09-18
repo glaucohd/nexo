@@ -162,6 +162,19 @@ function StandardGenerator({ slug, history }: { slug: LotterySlug; history: Draw
   const ticketCount = mirror ? pairCount * 2 : lotomaniaMirrorMode ? quantity * 2 : quantity;
   const portfolio = useMemo(() => slug === "lotofacil" && !mirror && tickets.length ? lotofacilPortfolioProfile(tickets) : null, [slug, mirror, tickets]);
 
+  // Descrição da estratégia salva junto com os jogos em Minhas apostas.
+  const exclusionCount = new Set([...rules.general, ...Object.values(rules.personal).flat(), ...Object.values(randomBlocks).flat()]).size;
+  const strategy = (mirror
+    ? ["Jogada espelho", `${pairCount} ${pairCount === 1 ? "par" : "pares"} com 5 fixas`]
+    : [
+      modes.find((entry) => entry.value === mode)?.label ?? "Gerador",
+      lotomaniaMirrorMode && "com espelho",
+      repeatCount !== null && `${repeatCount} repetidas do último concurso`,
+      fixedNumbers.length > 0 && `fixas ${fixedNumbers.map(pad).join(", ")}`,
+      avoidedNumbers.length > 0 && `${avoidedNumbers.length} evitadas`,
+      exclusionCount > 0 && `${exclusionCount} ${exclusionCount === 1 ? "exclusão" : "exclusões"} no volante`,
+    ]).filter(Boolean).join(" · ");
+
   function invalidate() { setTickets([]); setError(null); setCopied(false); }
 
   function toggleRule(key: string) {
@@ -336,7 +349,7 @@ function StandardGenerator({ slug, history }: { slug: LotterySlug; history: Draw
 
     {error && <p className={styles.error} role="alert">{error}</p>}
     {tickets.length > 0 && <section ref={resultsRef} className={styles.results} aria-live="polite">
-      <div className={styles.resultsHeader}><div><span className="eyebrow">Jogos gerados</span><h2>{tickets.length} cartelas prontas</h2><p>Salve para conferir depois em Minhas apostas, ou copie os jogos.</p></div><div className={styles.resultsActions}><SaveBetsButton key={JSON.stringify(tickets)} slug={slug} tickets={tickets} name={`${game.name} · ${tickets.length} ${tickets.length === 1 ? "jogo" : "jogos"} de ${tickets[0].numbers.length} dezenas`} /><button type="button" onClick={copyAll}>{copied ? "Copiados ✓" : "Copiar todos"}</button></div></div>
+      <div className={styles.resultsHeader}><div><span className="eyebrow">Jogos gerados</span><h2>{tickets.length} cartelas prontas</h2><p>Salve para conferir depois em Minhas apostas, ou copie os jogos.</p></div><div className={styles.resultsActions}><SaveBetsButton key={JSON.stringify(tickets)} slug={slug} tickets={tickets} strategy={strategy} name={`${game.name} · ${tickets.length} ${tickets.length === 1 ? "jogo" : "jogos"} de ${tickets[0].numbers.length} dezenas`} /><button type="button" onClick={copyAll}>{copied ? "Copiados ✓" : "Copiar todos"}</button></div></div>
       {portfolio && <div className={styles.coverageSummary}><strong>Cobertura possível desta carteira</strong><div><span><b>{integer.format(portfolio.exact15Draws)}</b> combinações distintas para 15 pontos</span><span><b>{integer.format(portfolio.drawsWith14Plus)}</b> cenários distintos de 14 ou 15 pontos</span><span><b>{integer.format(portfolio.simpleBets)}</b> apostas simples embutidas</span><span><b>{portfolio.coveredNumbers}/25</b> dezenas presentes</span></div><p>{portfolio.raw14PlusDraws === portfolio.drawsWith14Plus ? "As cartelas não repetem cenários de 14+." : `${integer.format(portfolio.raw14PlusDraws - portfolio.drawsWith14Plus)} cenários de 14+ se repetem entre cartelas.`} Para 15 pontos, a carteira cobre {integer.format(portfolio.exact15Draws)} de {integer.format(portfolio.possibleDraws)} sorteios possíveis. Isto mostra possibilidades, não prêmios já obtidos.</p></div>}
       <HistoricalBacktest key={JSON.stringify(tickets)} slug={slug} tickets={tickets} availableContests={history.length} />
       <div className={styles.ticketGrid}>{tickets.map((ticket, index) => <article className={styles.ticket} key={`${index}-${ticket.numbers.join("-")}`}>

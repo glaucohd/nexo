@@ -100,3 +100,8 @@
   .ticketLabel { grid-column: 1 / -1; }
   .card { padding: 14px; }
 }
+
+.strategy { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-top: 2px; color: var(--ink); font-size: .8rem; line-height: 1.45; }
+.strategy span { padding: 2px 7px; border-radius: 999px; color: var(--acc); background: color-mix(in srgb, var(--game) 10%, transparent); font-family: var(--font-mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; }
+.outcomeTotal .positive { color: var(--success); font-weight: 600; }
+.outcomeTotal .negative { color: var(--danger); font-weight: 600; }

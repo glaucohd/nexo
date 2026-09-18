@@ -12,7 +12,8 @@ import { lotterySlugSchema, ticketSchema, ticketsFitLottery } from "@/lib/ticket
 const bodySchema = z.object({
   slug: lotterySlugSchema,
   name: z.string().trim().min(1).max(120),
-  mode: z.string().trim().min(1).max(40).default("gerador"),
+  // Estratégia usada para gerar os jogos, em texto legível.
+  mode: z.string().trim().min(1).max(160).default("Gerador"),
   tickets: z.array(ticketSchema).min(1).max(120),
 }).strict();
 

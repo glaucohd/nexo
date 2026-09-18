@@ -130,7 +130,7 @@ export function LotomaniaWheelGenerator({ history }: { history: DrawNumbers[] })
         <div className={styles.resultHeading}>
           <div><span className="eyebrow">Redução {rounds.length - position}</span><h2>{round.tickets.length} jogos · garante 15 pontos se as 20 caírem nas suas 70</h2></div>
           <div className={styles.roundActions}>
-            <SaveBetsButton slug="lotomania" mode="reducao" tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers }))} name="Lotomania · redução 70 dezenas · garante 15" /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
+            <SaveBetsButton slug="lotomania" strategy="Redução 70 dezenas · 21 jogos · garante 15 pontos" tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers }))} name="Lotomania · redução 70 dezenas · garante 15" /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
             <button type="button" className={styles.remove} onClick={() => setRounds((current) => current.filter((entry) => entry.id !== round.id))}>Remover</button>
           </div>
         </div>

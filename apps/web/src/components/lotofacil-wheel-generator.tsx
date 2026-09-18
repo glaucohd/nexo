@@ -156,7 +156,7 @@ export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] })
         <div className={styles.resultHeading}>
           <div><span className="eyebrow">Redução {rounds.length - position}</span><h2>{round.tickets.length} jogos · garante {round.tier.guarantee} pontos · excluiu {round.excluded.map(pad).join(", ")}</h2></div>
           <div className={styles.roundActions}>
-            <SaveBetsButton slug="lotofacil" mode="reducao" tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers }))} name={`Lotofácil · redução ${round.tier.pool} dezenas · garante ${round.tier.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
+            <SaveBetsButton slug="lotofacil" strategy={`Redução ${round.tier.pool} dezenas · ${round.tier.games} jogos · garante ${round.tier.guarantee} pontos · excluiu ${round.excluded.map(pad).join(", ")}`} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers }))} name={`Lotofácil · redução ${round.tier.pool} dezenas · garante ${round.tier.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
             <button type="button" className={styles.remove} onClick={() => removeRound(round.id)}>Remover</button>
           </div>
         </div>

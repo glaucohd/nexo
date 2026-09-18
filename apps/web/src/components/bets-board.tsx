@@ -24,6 +24,7 @@ export type SavedPortfolio = {
 
 type CheckResult =
   | { status: "loading" }
+  | { status: "syncing"; target: number }
   | { status: "error"; message: string }
   | { status: "pending"; target: number; latest: number }
   | { status: "done"; target: number; draws: { date: string; numbers: number[] }[]; totalCents: number; unavailablePrizeUnits: number; tickets: { position: number; hits: number; prizeCents: number; prizeDraws: number }[] };
@@ -39,6 +40,17 @@ function ticketCostCents(slug: LotterySlug, ticket: SavedPortfolio["tickets"][nu
     return columns.length === 7 ? superSeteCombinations({ columns }) * standardTicketPriceCents["super-sete"] : 0;
   }
   return standardTicketCost(slug, ticket.numbers.length, 1);
+}
+
+// Carteiras salvas antes da estratégia existir guardavam só "gerador" ou
+// "reducao": nas reduções o detalhe está no nome ("Loteria · redução …").
+function strategyLabel(portfolio: SavedPortfolio) {
+  if (portfolio.mode === "reducao") {
+    const detail = portfolio.name.split(" · ").slice(1).join(" · ");
+    return detail ? detail.charAt(0).toUpperCase() + detail.slice(1) : "Redução";
+  }
+  if (portfolio.mode === "gerador") return "Gerador (critério não registrado nesta carteira)";
+  return portfolio.mode;
 }
 
 const portfolioCost = (portfolio: SavedPortfolio) => portfolio.tickets.reduce((sum, ticket) => sum + ticketCostCents(portfolio.slug, ticket), 0);
@@ -60,7 +72,7 @@ export function BetsBoard({ portfolios }: { portfolios: SavedPortfolio[] }) {
       <div>
         <span className="eyebrow">Minhas apostas</span>
         <h1>Seus jogos <em>salvos</em>.</h1>
-        <p>Cada carteira fica guardada para o concurso seguinte ao dia em que foi salva. Depois do sorteio, use &ldquo;Conferir&rdquo; para ver os acertos daquele concurso.</p>
+        <p>Salvar não registra aposta na CAIXA: é só para acompanhar. Cada carteira fica guardada para o concurso seguinte ao dia em que foi salva; depois do sorteio, use &ldquo;Conferir&rdquo; para ver quanto você teria ganhado.</p>
       </div>
       <Link className="button button-primary" href="/app/gerador">Gerar novos jogos <span aria-hidden="true">→</span></Link>
     </header>
@@ -74,7 +86,7 @@ export function BetsBoard({ portfolios }: { portfolios: SavedPortfolio[] }) {
         <div><span>Carteiras</span><strong>{portfolios.length}</strong></div>
         <div><span>Aguardando sorteio</span><strong>{portfolios.filter((portfolio) => !portfolio.drawn).length}</strong></div>
         <div><span>Prontas para conferir</span><strong>{portfolios.filter((portfolio) => portfolio.drawn).length}</strong></div>
-        <div><span>Custo das apostas</span><strong>{money.format(totalCost / 100)}</strong></div>
+        <div><span>Custaria apostar tudo</span><strong>{money.format(totalCost / 100)}</strong></div>
       </div>
 
       <div className={styles.filters}>
@@ -106,30 +118,33 @@ function PortfolioCard({ portfolio }: { portfolio: SavedPortfolio }) {
   const [open, setOpen] = useState(portfolio.tickets.length <= 4);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const done = result?.status === "done" ? result : null;
   const drawnNumbers = new Set(done?.draws.flatMap((draw) => draw.numbers) ?? []);
 
-  async function check() {
+  async function ask() {
+    const response = await fetch(`/api/apostas/${portfolio.id}/conferir`, { method: "POST" });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error ?? "Não foi possível conferir.");
+    return payload as CheckResult;
+  }
+
+  // Um clique só: confere e, se o concurso ainda não estiver na base, busca os
+  // resultados na CAIXA e confere de novo antes de avisar que não saiu.
+  async function check({ sync = true } = {}) {
     setResult({ status: "loading" });
     setOpen(true);
     try {
-      const response = await fetch(`/api/apostas/${portfolio.id}/conferir`, { method: "POST" });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error ?? "Não foi possível conferir.");
+      let payload = await ask();
+      if (payload.status === "pending" && sync) {
+        setResult({ status: "syncing", target: payload.target });
+        await fetch("/api/sync-caixa", { method: "POST" });
+        payload = await ask();
+        router.refresh();
+      }
       setResult(payload);
     } catch (cause) {
       setResult({ status: "error", message: cause instanceof Error ? cause.message : "Não foi possível conferir." });
     }
-  }
-
-  async function syncAndCheck() {
-    setSyncing(true);
-    try {
-      await fetch("/api/sync-caixa", { method: "POST" });
-      router.refresh();
-      await check();
-    } finally { setSyncing(false); }
   }
 
   async function remove() {
@@ -144,13 +159,14 @@ function PortfolioCard({ portfolio }: { portfolio: SavedPortfolio }) {
       <div className={styles.cardTitle}>
         <span className={styles.gameTag}><i aria-hidden="true" />{portfolio.gameName}</span>
         <h3>{portfolio.name}</h3>
-        <small>Concurso <b>#{portfolio.target}</b> · salvo em {formatDate(portfolio.createdAt)} · {portfolio.tickets.length} {portfolio.tickets.length === 1 ? "jogo" : "jogos"} · {money.format(portfolioCost(portfolio) / 100)}</small>
+        <p className={styles.strategy}><span>Estratégia</span>{strategyLabel(portfolio)}</p>
+        <small>Concurso <b>#{portfolio.target}</b> · salvo em {formatDate(portfolio.createdAt)} · {portfolio.tickets.length} {portfolio.tickets.length === 1 ? "jogo" : "jogos"} · custaria {money.format(portfolioCost(portfolio) / 100)}</small>
       </div>
       <span className={`${styles.status} ${portfolio.drawn ? styles.statusDrawn : ""}`}>{portfolio.drawn ? "Sorteado" : "Aguardando sorteio"}</span>
     </div>
 
     <div className={styles.actions}>
-      <button type="button" className={styles.primary} disabled={result?.status === "loading"} onClick={check}>{result?.status === "loading" ? "Conferindo…" : "Conferir jogos"}</button>
+      <button type="button" className={styles.primary} disabled={result?.status === "loading" || result?.status === "syncing"} onClick={() => check()}>{result?.status === "syncing" ? "Buscando resultado…" : result?.status === "loading" ? "Conferindo…" : "Conferir jogos"}</button>
       <button type="button" onClick={() => setOpen((current) => !current)}>{open ? "Esconder jogos" : "Ver jogos"}</button>
       {confirming
         ? <><button type="button" className={styles.danger} disabled={deleting} onClick={remove}>{deleting ? "Excluindo…" : "Confirmar exclusão"}</button><button type="button" onClick={() => setConfirming(false)}>Cancelar</button></>
@@ -158,9 +174,10 @@ function PortfolioCard({ portfolio }: { portfolio: SavedPortfolio }) {
     </div>
 
     {result?.status === "error" && <p className={styles.error} role="alert">{result.message}</p>}
+    {result?.status === "syncing" && <p className={styles.pending}>Buscando o resultado do concurso <b>#{result.target}</b> na CAIXA…</p>}
     {result?.status === "pending" && <div className={styles.pending}>
-      <p>O resultado do concurso <b>#{result.target}</b> ainda não está na base (último registrado: #{result.latest}). Se o sorteio já aconteceu, atualize a base.</p>
-      <button type="button" disabled={syncing} onClick={syncAndCheck}>{syncing ? "Atualizando…" : "Atualizar base e conferir"}</button>
+      <p>O concurso <b>#{result.target}</b> ainda não saiu: mesmo depois de buscar na CAIXA, o último resultado disponível é o #{result.latest}.</p>
+      <button type="button" onClick={() => check()}>Tentar de novo</button>
     </div>}
     {done && <div className={styles.outcome}>
       <div className={styles.outcomeDraws}>
@@ -170,8 +187,9 @@ function PortfolioCard({ portfolio }: { portfolio: SavedPortfolio }) {
         </div>)}
       </div>
       <div className={styles.outcomeTotal}>
-        <span>Prêmio nesta carteira</span>
+        <span>Se tivesse apostado</span>
         <strong>{done.totalCents > 0 ? money.format(done.totalCents / 100) : "Sem prêmio"}</strong>
+        <small className={done.totalCents - portfolioCost(portfolio) >= 0 ? styles.positive : styles.negative}>Saldo: {money.format((done.totalCents - portfolioCost(portfolio)) / 100)} (prêmio − {money.format(portfolioCost(portfolio) / 100)} das apostas)</small>
         <small>Melhor jogo: {Math.max(...done.tickets.map((ticket) => ticket.hits))} acertos{done.unavailablePrizeUnits > 0 ? ` · ${done.unavailablePrizeUnits} prêmio(s) sem valor publicado` : ""}</small>
       </div>
     </div>}

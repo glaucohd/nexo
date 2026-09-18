@@ -176,7 +176,7 @@ export function DiaDeSorteWheelGenerator({ history }: { history: DrawNumbers[] }
         <div className={styles.resultHeading}>
           <div><span className="eyebrow">Redução {rounds.length - position}</span><h2>{round.tickets.length} jogos · garante {round.mode.guarantee} pontos {round.mode.condition === "all" ? "se as 7 caírem" : `se ${round.mode.guarantee} caírem`} · pool {round.pool.map(pad).join(", ")}</h2></div>
           <div className={styles.roundActions}>
-            <SaveBetsButton slug="dia-de-sorte" mode="reducao" tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers }))} name={`Dia de Sorte · redução ${round.pool.length} dezenas · garante ${round.mode.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
+            <SaveBetsButton slug="dia-de-sorte" strategy={`Redução ${round.pool.length} dezenas · ${round.mode.title}`} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers }))} name={`Dia de Sorte · redução ${round.pool.length} dezenas · garante ${round.mode.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
             <button type="button" className={styles.remove} onClick={() => removeRound(round.id)}>Remover</button>
           </div>
         </div>

@@ -165,7 +165,7 @@ export function MilionariaWheelGenerator({ history }: { history: DrawNumbers[] }
         <div className={styles.resultHeading}>
           <div><span className="eyebrow">Redução {rounds.length - position}</span><h2>{round.tickets.length} jogos · garante {round.preset.guarantee} acertos · trevos {round.trevos.map(pad).join(", ")}</h2></div>
           <div className={styles.roundActions}>
-            <SaveBetsButton slug="mais-milionaria" mode="reducao" tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers, trevos: round.trevos }))} name={`+Milionária · redução ${round.preset.poolSize} dezenas · garante ${round.preset.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
+            <SaveBetsButton slug="mais-milionaria" strategy={`Redução ${round.preset.poolSize} dezenas · garante ${round.preset.guarantee} acertos · trevos ${round.trevos.map(pad).join(" e ")}`} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers, trevos: round.trevos }))} name={`+Milionária · redução ${round.preset.poolSize} dezenas · garante ${round.preset.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
             <button type="button" className={styles.remove} onClick={() => removeRound(round.id)}>Remover</button>
           </div>
         </div>

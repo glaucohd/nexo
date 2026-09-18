@@ -182,7 +182,7 @@ export function NumberWheelGenerator({ slug, history }: { slug: "mega-sena" | "q
         <div className={styles.resultHeading}>
           <div><span className="eyebrow">Redução {rounds.length - position}</span><h2>{round.tickets.length} jogos · garante {round.preset.guarantee} pontos · pool {round.pool.map(pad).join(", ")}</h2></div>
           <div className={styles.roundActions}>
-            <SaveBetsButton slug={slug} mode="reducao" tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers }))} name={`${game.name} · redução ${round.preset.poolSize} dezenas · garante ${round.preset.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
+            <SaveBetsButton slug={slug} strategy={`Redução ${round.preset.poolSize} dezenas · ${round.preset.games} jogos · garante ${hitName(round.preset.guarantee)}`} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers }))} name={`${game.name} · redução ${round.preset.poolSize} dezenas · garante ${round.preset.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
             <button type="button" className={styles.remove} onClick={() => removeRound(round.id)}>Remover</button>
           </div>
         </div>
