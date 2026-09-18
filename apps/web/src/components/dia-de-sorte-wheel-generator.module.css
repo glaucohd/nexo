@@ -1,0 +1,82 @@
+.page { --generator-accent: #9a6508; --generator-accent-ink: #7a5006; display: grid; gap: var(--gen-gap); color: var(--ink); padding-bottom: 40px; }
+
+.header { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
+.header h1 { margin: 6px 0 8px; font-family: "Fredoka Variable", sans-serif; font-size: clamp(2rem, 3.3vw, 2.9rem); font-weight: 600; letter-spacing: -.035em; }
+.header p, .card p, .preview p { color: var(--muted); font-size: var(--gen-body); line-height: 1.6; }
+.header > span { flex: none; padding: 10px 14px; border-radius: 999px; color: var(--generator-accent-ink); background: var(--gen-tint); font-size: var(--gen-small); font-weight: 900; white-space: nowrap; }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(270px, .7fr); align-items: start; gap: var(--gen-gap); }
+.controls { display: grid; gap: var(--gen-gap); min-width: 0; }
+.card, .preview, .results, .ticket { min-width: 0; padding: var(--gen-pad-card); border-radius: var(--gen-radius-card); background: var(--surface); box-shadow: var(--gen-card-shadow); }
+.card h2, .preview h2 { margin-bottom: 14px; font-family: "Fredoka Variable", sans-serif; font-size: var(--gen-title); font-weight: 620; }
+.card p { margin-top: 12px; font-size: var(--gen-small); }
+
+.segment { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.segment button { display: grid; align-content: center; min-height: 56px; padding: 10px; border: 1.5px solid transparent; border-radius: var(--gen-radius-control); color: var(--muted); background: var(--paper); font: inherit; font-size: .77rem; font-weight: 900; cursor: pointer; transition: border-color .15s, background .15s, color .15s; }
+.segment button:hover { border-color: color-mix(in srgb, var(--gen-accent) 35%, transparent); }
+.segment .active { color: var(--generator-accent-ink); background: var(--gen-tint); border-color: var(--gen-accent); }
+
+.field { display: grid; gap: 7px; margin-top: 16px; color: var(--muted); font-size: var(--gen-small); font-weight: 850; }
+.field select { min-height: 46px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); color: var(--ink); background: var(--paper); font: inherit; font-weight: 700; cursor: pointer; }
+
+.autoFill { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.autoFill button { min-height: 42px; padding: 8px 14px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); color: var(--ink); background: var(--paper); cursor: pointer; font: inherit; font-size: var(--gen-small); font-weight: 850; transition: border-color .15s, background .15s; }
+.autoFill button:hover:not(:disabled) { border-color: var(--gen-accent); background: var(--gen-tint); }
+.autoFill button:disabled { opacity: .45; cursor: not-allowed; }
+.autoFill .clear { color: var(--muted); }
+
+/* 7 colunas lembram um calendário — a Dia de Sorte sorteia dias do mês. */
+.board { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 7px; margin-top: 16px; padding: 14px; border-radius: var(--gen-radius-card); background: var(--gen-tint); }
+.board button { aspect-ratio: 1; border: 0; border-radius: 50%; color: var(--ink); background: var(--surface); cursor: pointer; font: inherit; font-size: clamp(.7rem, 2.2vw, .88rem); font-weight: 850; font-variant-numeric: tabular-nums; transition: transform .12s, color .12s, background .12s; }
+.board button:hover:not(.selected) { color: var(--generator-accent-ink); transform: translateY(-1px); }
+.board button.selected, .board .selected { color: white; background: var(--gen-accent); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .14), 0 2px 6px color-mix(in srgb, var(--gen-accent) 35%, transparent); }
+
+.generate { min-height: 56px; border: 0; border-radius: var(--gen-radius-control); color: white; background: var(--gen-accent); cursor: pointer; font: inherit; font-size: .95rem; font-weight: 950; box-shadow: 0 6px 18px color-mix(in srgb, var(--gen-accent) 30%, transparent); transition: transform .15s, box-shadow .15s; }
+.generate:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 24px color-mix(in srgb, var(--gen-accent) 38%, transparent); }
+.generate:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+
+.priceNote { font-size: var(--gen-small); color: var(--muted); line-height: 1.6; }
+.priceNote a { color: var(--generator-accent-ink); font-weight: 850; }
+.error { padding: 13px 15px; border-radius: var(--gen-radius-control); color: #9b3024; background: color-mix(in srgb, #9b3024 9%, var(--surface)); font-weight: 800; font-size: var(--gen-small); }
+
+.preview { position: sticky; top: 20px; box-shadow: var(--gen-card-shadow-lift); }
+.preview h2 { margin: 6px 0 8px; font-size: 1.8rem; }
+
+.roundList { display: grid; gap: 20px; scroll-margin-top: 24px; }
+.results { display: grid; gap: var(--gen-gap); }
+.resultHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.resultHeading h2 { margin: 5px 0 0; font-family: "Fredoka Variable", sans-serif; font-size: 1.3rem; font-weight: 640; overflow-wrap: anywhere; }
+.roundActions { display: flex; flex: none; gap: 8px; }
+.resultHeading button { min-height: 42px; padding: 8px 15px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); color: var(--generator-accent-ink); background: var(--paper); cursor: pointer; font: inherit; font-size: var(--gen-small); font-weight: 850; }
+.resultHeading button:hover { border-color: var(--gen-accent); background: var(--gen-tint); }
+.resultHeading .remove { color: var(--danger); }
+
+.ticketGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 12px; }
+.ticket { padding: 16px; background: var(--paper); box-shadow: none; }
+.ticket p { color: var(--muted); font-size: var(--gen-small); line-height: 1.7; font-variant-numeric: tabular-nums; }
+
+.miniVolante { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin: 12px 0; }
+.miniVolante span { display: grid; aspect-ratio: 1; place-items: center; border-radius: 50%; color: var(--muted); background: var(--surface); font-size: .56rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.miniVolante .miniMarked { color: white; background: var(--gen-accent); }
+
+.page button:focus-visible, .page select:focus-visible { outline: 3px solid color-mix(in srgb, var(--gen-accent) 50%, transparent); outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .preview { position: static; }
+}
+@media (max-width: 720px) {
+  .header { align-items: start; flex-direction: column; gap: 10px; }
+  .resultHeading { align-items: start; flex-direction: column; gap: 12px; }
+  .roundActions { width: 100%; }
+  .roundActions button { flex: 1; }
+}
+@media (max-width: 520px) {
+  .card, .preview, .results { padding: 18px; }
+  .segment { grid-template-columns: 1fr; }
+  .board { gap: 6px; padding: 12px; }
+  .autoFill { flex-direction: column; }
+  .autoFill button { width: 100%; }
+  .ticketGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 380px) { .board { grid-template-columns: repeat(5, minmax(0, 1fr)); } }

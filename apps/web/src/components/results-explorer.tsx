@@ -22,6 +22,9 @@ const games = [
   { slug: "mais-milionaria", name: "+Milionária", total: 50, start: 1, columns: 5, color: "#2a3580", layout: "10 × 5", division: "halves" },
   { slug: "dia-de-sorte", name: "Dia de Sorte", total: 31, start: 1, columns: 7, color: "#7e6906", layout: "5 linhas", division: "none" },
   { slug: "lotomania", name: "Lotomania", total: 100, start: 0, columns: 10, color: "#b55727", layout: "10 × 10", division: "quadrants" },
+  { slug: "super-sete", name: "Super Sete", total: 70, start: 0, columns: 7, color: "#718c23", layout: "7 colunas × 10 dígitos", division: "none" },
+  { slug: "dupla-sena", name: "Dupla Sena", total: 50, start: 1, columns: 10, color: "#b5195a", layout: "5 × 10", division: "none" },
+  { slug: "timemania", name: "Timemania", total: 80, start: 1, columns: 10, color: "#00854a", layout: "8 × 10", division: "quadrants" },
 ] as const;
 
 const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -36,12 +39,23 @@ export function ResultsExplorer({ histories }: { histories: Record<string, Lotte
   const [index, setIndex] = useState(0);
   const [lotomaniaView, setLotomaniaView] = useState<"cross" | "blocks">("cross");
   const game = games.find((entry) => entry.slug === slug) ?? games[0];
-  const history = useMemo(() => [...(histories[game.slug] ?? [])].sort((a, b) => b.contest - a.contest), [histories, game.slug]);
+  // A Dupla Sena guarda cada sorteio numa "modalidade" própria no banco; aqui
+  // o 1º sorteio conduz a navegação e o 2º aparece junto, no mesmo concurso.
+  const isDuplaSena = game.slug === "dupla-sena";
+  const history = useMemo(() => {
+    const key = game.slug === "dupla-sena" ? "dupla-sena-1" : game.slug;
+    return [...(histories[key] ?? [])].sort((a, b) => b.contest - a.contest);
+  }, [histories, game.slug]);
   const draw = history[index];
+  const secondDraw = useMemo(() => {
+    if (game.slug !== "dupla-sena" || !draw) return null;
+    return (histories["dupla-sena-2"] ?? []).find((entry) => entry.contest === draw.contest) ?? null;
+  }, [game.slug, draw, histories]);
   const selected = useMemo(() => new Set(draw?.numbers ?? []), [draw]);
+  const secondSelected = useMemo(() => new Set(secondDraw?.numbers ?? []), [secondDraw]);
   const rows = Math.ceil(game.total / game.columns);
   const partitionCounts = game.division === "quadrants" ? [0, 0, 0, 0] : game.division === "halves" ? [0, 0] : [];
-  for (const number of draw?.numbers ?? []) {
+  for (const number of game.slug === "super-sete" ? [] : draw?.numbers ?? []) {
     const position = lotteryBoardPosition(game.slug, number);
     const row = Math.floor(position / game.columns);
     if (game.division === "quadrants") {
@@ -64,7 +78,7 @@ export function ResultsExplorer({ histories }: { histories: Record<string, Lotte
 
   const extras = draw?.extras;
   const trevos = Array.isArray(extras?.trevos) ? extras.trevos.filter((value): value is number => typeof value === "number") : [];
-  const month = typeof extras?.mes === "number" ? months[extras.mes - 1] : typeof extras?.mesSorte === "string" ? extras.mesSorte : null;
+  const month = typeof extras?.mes === "number" ? months[extras.mes - 1] : typeof extras?.mesSorte === "string" ? months[Number(extras.mesSorte) - 1] ?? extras.mesSorte : null;
 
   return (
     <section className={styles.page} style={{ "--result-accent": game.color, "--result-columns": game.columns } as React.CSSProperties}>
@@ -97,9 +111,9 @@ export function ResultsExplorer({ histories }: { histories: Record<string, Lotte
 
           <div className={styles.mainGrid}>
             <article className={styles.boardCard}>
-              <div className={styles.cardHeading}><div><span className="eyebrow">{game.name}</span><h2>Volante do concurso</h2></div><span className={styles.layoutTag}>{game.layout}</span></div>
+              <div className={styles.cardHeading}><div><span className="eyebrow">{game.name}</span><h2>{isDuplaSena ? "Volante do 1º sorteio" : "Volante do concurso"}</h2></div><span className={styles.layoutTag}>{game.layout}</span></div>
               {game.slug === "lotomania" && <div className={styles.viewSwitch} role="group" aria-label="Divisão do volante"><button type="button" aria-pressed={lotomaniaView === "cross"} onClick={() => setLotomaniaView("cross")}>Quadrantes</button><button type="button" aria-pressed={lotomaniaView === "blocks"} onClick={() => setLotomaniaView("blocks")}>Blocos de 4</button></div>}
-              <div className={`${styles.board} ${game.division === "quadrants" && !(game.slug === "lotomania" && lotomaniaView === "blocks") ? styles.quadrantBoard : ""} ${game.division === "halves" ? `${styles.halvesBoard} ${styles.narrowBoard}` : ""} ${game.slug === "lotofacil" ? styles.lotofacilBoard : ""} ${game.slug === "lotomania" && lotomaniaView === "blocks" ? styles.blockBoard : ""}`} role="img" aria-label={`Volante do concurso ${draw.contest}: dezenas ${draw.numbers.join(", ")}`}>
+              <div className={`${styles.board} ${game.division === "quadrants" && !(game.slug === "lotomania" && lotomaniaView === "blocks") ? styles.quadrantBoard : ""} ${game.division === "halves" ? `${styles.halvesBoard} ${styles.narrowBoard}` : ""} ${game.slug === "lotofacil" ? styles.lotofacilBoard : ""} ${game.slug === "lotomania" && lotomaniaView === "blocks" ? styles.blockBoard : ""} ${game.slug === "super-sete" ? styles.superSeteBoard : ""}`} role="img" aria-label={`Volante do concurso ${draw.contest}: ${game.slug === "super-sete" ? draw.numbers.map((digit, column) => `coluna ${column + 1}, dígito ${digit}`).join("; ") : `dezenas ${draw.numbers.join(", ")}`}`}>
                 {game.division === "quadrants" && !(game.slug === "lotomania" && lotomaniaView === "blocks") && <div className={styles.boardMarkers} aria-hidden="true">
                   <span className={styles.markerTopLeft}>Q1</span><span className={styles.markerTopRight}>Q2</span>
                   <span className={styles.markerBottomLeft}>Q3</span><span className={styles.markerBottomRight}>Q4</span>
@@ -107,7 +121,9 @@ export function ResultsExplorer({ histories }: { histories: Record<string, Lotte
                 {game.division === "halves" && <div className={styles.boardMarkers} aria-hidden="true">
                   <span className={styles.markerTopLeft}>SUPERIOR</span><span className={styles.markerBottomLeft}>INFERIOR</span>
                 </div>}
-                {game.slug === "lotomania" && lotomaniaView === "blocks"
+                {game.slug === "super-sete"
+                  ? Array.from({ length: 7 }, (_, column) => <div className={styles.superSeteColumn} key={column}><strong>{column + 1}</strong>{Array.from({ length: 10 }, (_, digit) => <span className={`${styles.cell} ${draw.numbers[column] === digit ? styles.marked : ""}`} key={digit} aria-hidden="true">{digit}</span>)}</div>)
+                  : game.slug === "lotomania" && lotomaniaView === "blocks"
                   ? Array.from({ length: 25 }, (_, block) => {
                     const row = Math.floor(block / 5) * 2;
                     const column = block % 5 * 2;
@@ -124,14 +140,26 @@ export function ResultsExplorer({ histories }: { histories: Record<string, Lotte
               {partitionCounts.length > 0 && <div className={`${styles.partitionSummary} ${game.division === "halves" ? styles.narrowSummary : ""}`} aria-label={game.division === "quadrants" ? "Dezenas sorteadas por quadrante" : "Dezenas sorteadas por metade"}>
                 {partitionCounts.map((count, position) => <div key={position}><span>{game.division === "quadrants" ? `Q${position + 1}` : position === 0 ? "Superior" : "Inferior"}</span><strong>{count}</strong></div>)}
               </div>}
-              <div className={styles.boardLegend}><span className={styles.legendMark} /> Dezena sorteada <span className={styles.legendEmpty} /> Não sorteada</div>
+              <div className={styles.boardLegend}><span className={styles.legendMark} /> {game.slug === "super-sete" ? "Dígito sorteado na coluna" : "Dezena sorteada"} <span className={styles.legendEmpty} /> Não sorteada</div>
+
+              {secondDraw && <>
+                <div className={styles.secondDrawHeading}><span className="eyebrow">Mesmo concurso</span><h2>Volante do 2º sorteio</h2></div>
+                <div className={styles.board} role="img" aria-label={`2º sorteio do concurso ${draw.contest}: dezenas ${secondDraw.numbers.join(", ")}`}>
+                  {Array.from({ length: game.total }, (_, position) => {
+                    const number = lotteryBoardNumber(game.slug, position);
+                    return <span className={`${styles.cell} ${secondSelected.has(number) ? styles.marked : ""}`} key={number} aria-hidden="true">{String(number).padStart(2, "0")}</span>;
+                  })}
+                </div>
+                <div className={styles.numberList}>{[...secondDraw.numbers].sort((a, b) => a - b).map((number) => <span key={number}>{String(number).padStart(2, "0")}</span>)}</div>
+              </>}
             </article>
 
             <aside className={styles.details}>
               <div className={styles.detailCard}>
                 <span className="eyebrow">Resultado</span>
-                <h2>{draw.numbers.length} dezenas sorteadas</h2>
-                <div className={styles.numberList}>{[...draw.numbers].sort((a, b) => a - b).map((number) => <span key={number}>{String(number).padStart(2, "0")}</span>)}</div>
+                <h2>{game.slug === "super-sete" ? "7 dígitos, um por coluna" : `${draw.numbers.length} dezenas sorteadas`}</h2>
+                <div className={styles.numberList}>{(game.slug === "super-sete" ? draw.numbers : [...draw.numbers].sort((a, b) => a - b)).map((number, position) => <span key={position} title={game.slug === "super-sete" ? `Coluna ${position + 1}` : undefined}>{game.slug === "super-sete" ? number : String(number).padStart(2, "0")}</span>)}</div>
+                {game.slug === "super-sete" && <p className={styles.extra}>Ordem: coluna 1 → coluna 7. Dígitos iguais em colunas diferentes são válidos.</p>}
                 <p className={styles.source}>{draw.source.startsWith("caixa:") ? "Fonte: resultados da CAIXA" : "Fonte: histórico importado do projeto"}</p>
                 {trevos.length > 0 && <p className={styles.extra}>Trevos: <strong>{trevos.map((value) => String(value).padStart(2, "0")).join(" · ")}</strong></p>}
                 {month && <p className={styles.extra}>Mês da Sorte: <strong>{month}</strong></p>}
@@ -139,11 +167,11 @@ export function ResultsExplorer({ histories }: { histories: Record<string, Lotte
               </div>
               <div className={styles.detailCard}>
                 <span className="eyebrow">Distribuição</span>
-                <h2>Como caiu por linha</h2>
+                <h2>{game.slug === "super-sete" ? "Dígitos sorteados" : "Como caiu por linha"}</h2>
                 <div className={styles.rowList}>{Array.from({ length: rows }, (_, row) => {
                   const rowSize = Math.min(game.columns, game.total - row * game.columns);
-                  const count = Array.from({ length: rowSize }, (_, column) => lotteryBoardNumber(game.slug, row * game.columns + column)).filter((number) => selected.has(number)).length;
-                  return <div className={styles.row} key={row}><span>{row + 1}ª</span><div className={styles.rowTrack}><i style={{ width: `${count / rowSize * 100}%` }} /></div><strong>{count}</strong></div>;
+                  const count = game.slug === "super-sete" ? draw.numbers.filter((digit) => digit === row).length : Array.from({ length: rowSize }, (_, column) => lotteryBoardNumber(game.slug, row * game.columns + column)).filter((number) => selected.has(number)).length;
+                  return <div className={styles.row} key={row}><span>{game.slug === "super-sete" ? row : `${row + 1}ª`}</span><div className={styles.rowTrack}><i style={{ width: `${count / rowSize * 100}%` }} /></div><strong>{count}</strong></div>;
                 })}</div>
               </div>
             </aside>

@@ -1,37 +1,64 @@
 .wrap { margin-top: 18px; }
-.controls { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.buyNow { margin-bottom: 12px; padding: 14px 16px; border-radius: var(--gen-radius-control); color: var(--ink); background: color-mix(in srgb, var(--generator-accent, var(--accent)) 8%, var(--surface)); font-size: .82rem; font-weight: 750; }
+.buyNow strong { color: var(--generator-accent, var(--accent)); }
+.controls { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; padding: 18px; border-radius: var(--gen-radius-control); background: var(--paper); }
 .controls > div { display: grid; flex: 1 1 220px; gap: 3px; }
 .controls strong { font-family: "Fredoka Variable", sans-serif; font-size: 1.05rem; }
 .controls small, .controls label { color: var(--muted); font-size: .73rem; }
 .controls label { display: grid; gap: 5px; font-weight: 850; }
-.controls select { min-height: 39px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--surface); font: inherit; }
-.controls button { min-height: 39px; padding: 8px 13px; border: 0; border-radius: 8px; color: white; background: var(--generator-accent, var(--accent)); font: inherit; font-size: .75rem; font-weight: 900; cursor: pointer; }
+.controls select { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); color: var(--ink); background: var(--surface); font: inherit; }
+.controls button { min-height: 44px; padding: 8px 18px; border: 0; border-radius: var(--gen-radius-control); color: white; background: var(--generator-accent, var(--accent)); font: inherit; font-size: .78rem; font-weight: 900; cursor: pointer; box-shadow: 0 4px 14px color-mix(in srgb, var(--generator-accent, var(--accent)) 28%, transparent); }
 .controls button:disabled { opacity: .6; cursor: wait; }
 .error { margin-top: 10px; color: var(--danger); font-size: .78rem; font-weight: 800; }
-.report { display: grid; gap: 18px; margin-top: 16px; padding: 18px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); scroll-margin-top: 24px; }
+.report { display: grid; gap: 18px; margin-top: 16px; padding: 20px; border-radius: var(--gen-radius-card); background: var(--paper); scroll-margin-top: 24px; }
 .heading h3 { margin: 4px 0; font-family: "Fredoka Variable", sans-serif; font-size: 1.4rem; }
 .heading p, .method { color: var(--muted); font-size: .76rem; line-height: 1.5; }
+.lotofacilHits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.lotofacilHits > div { display: grid; gap: 3px; min-width: 0; padding: 14px; border-radius: var(--gen-radius-control); background: color-mix(in srgb, var(--generator-accent, var(--accent)) 6%, var(--surface)); }
+.lotofacilHits span, .lotofacilHits small { color: var(--muted); font-size: .69rem; }
+.lotofacilHits strong { color: var(--generator-accent, var(--accent)); font-family: "Fredoka Variable", sans-serif; font-size: 1.55rem; font-variant-numeric: tabular-nums; }
 .summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
-.summary > div { display: grid; gap: 4px; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.summary > div { display: grid; gap: 4px; min-width: 0; padding: 14px; border-radius: var(--gen-radius-control); background: var(--surface); }
 .summary span, .summary small { color: var(--muted); font-size: .69rem; }
 .summary strong { overflow-wrap: anywhere; font-family: "Fredoka Variable", sans-serif; font-size: clamp(1rem, 1.5vw, 1.45rem); }
 .notice { padding: 10px 12px; border-radius: 8px; color: var(--ink); background: color-mix(in srgb, var(--amber) 13%, var(--surface)); font-size: .75rem; }
+.simulation { display: grid; gap: 12px; padding: 18px; border: 1px dashed color-mix(in srgb, var(--ink) 16%, transparent); border-radius: var(--gen-radius-control); background: var(--surface); }
+.simulation > strong { font-size: .82rem; line-height: 1.4; }
+.simulation > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.simulation span { display: grid; gap: 3px; min-width: 0; padding: 12px; border-radius: var(--gen-radius-control); background: var(--paper); color: var(--muted); font-size: .69rem; }
+.simulation span b { color: var(--ink); font-family: "Fredoka Variable", sans-serif; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.simulation span small { color: var(--muted); font-size: .65rem; font-weight: 650; }
+.simulation > p { margin: 0; color: var(--muted); font-size: .72rem; line-height: 1.5; }
 .distribution h4 { margin-bottom: 9px; font-size: .85rem; }
 .distribution > div { display: flex; flex-wrap: wrap; gap: 6px; }
-.distribution span, .ticketDistribution span { display: inline-flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); font-size: .71rem; }
+.distribution span, .ticketDistribution span { display: inline-flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 999px; background: var(--surface); font-size: .71rem; }
 .distribution span b { font-weight: 700; }
 .distribution span strong { color: var(--generator-accent, var(--accent)); }
 .ticketGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.ticket { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
-.ticketHeading { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.ticketHeading h4 { font-family: "Fredoka Variable", sans-serif; font-size: 1.05rem; }
-.ticketHeading strong { color: var(--generator-accent, var(--accent)); font-size: .79rem; }
-.ticketMetrics { display: flex; flex-wrap: wrap; gap: 5px 13px; margin: 9px 0; font-size: .73rem; }
-.ticketMetrics span { color: var(--muted); }
-.ticketMetrics b { color: var(--ink); }
-.ticket small, .ticket p { color: var(--muted); font-size: .69rem; line-height: 1.45; }
-.ticketDistribution { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0; }
+.ticket { display: grid; align-content: start; gap: 15px; min-width: 0; padding: 20px; border-radius: var(--gen-radius-card); background: var(--surface); box-shadow: var(--gen-card-shadow); }
+/* A cartela que melhor pontuou ganha um anel na cor do jogo, já que os
+   cartões não usam mais borda. */
+.ticketLeader { background: linear-gradient(145deg, color-mix(in srgb, var(--generator-accent, var(--accent)) 9%, var(--surface)), var(--surface) 55%); box-shadow: 0 0 0 2px color-mix(in srgb, var(--generator-accent, var(--accent)) 45%, transparent), var(--gen-card-shadow-lift); }
+.ticketHeading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+.ticketIdentity { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rankBadge { display: grid; flex: none; width: 44px; height: 44px; place-items: center; border-radius: 50%; color: var(--generator-accent, var(--accent)); background: color-mix(in srgb, var(--generator-accent, var(--accent)) 12%, var(--surface)); font-family: "Fredoka Variable", sans-serif; font-size: 1.1rem; font-weight: 700; }
+.ticketLeader .rankBadge { color: white; background: var(--generator-accent, var(--accent)); }
+.ticketIdentity small { display: block; color: var(--muted); font-size: .65rem; font-weight: 800; }
+.ticketIdentity h4 { margin: 1px 0 0; font-family: "Fredoka Variable", sans-serif; font-size: 1.14rem; font-weight: 650; }
+.ticketScore { display: flex; align-items: center; gap: 6px; color: var(--generator-accent, var(--accent)); }
+.ticketScore > strong { font-family: "Fredoka Variable", sans-serif; font-size: 2.15rem; line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ticketScore > span { color: var(--ink); font-size: .76rem; font-weight: 850; line-height: 1.1; }
+.ticketScore small { display: block; margin-top: 2px; color: var(--muted); font-size: .63rem; font-weight: 700; }
+.ticketMetrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.ticketMetrics > div { display: grid; align-content: start; gap: 5px; min-width: 0; padding: 12px; border-radius: var(--gen-radius-control); background: var(--paper); }
+.ticketMetrics span { color: var(--muted); font-size: .68rem; font-weight: 750; }
+.ticketMetrics strong { overflow-wrap: anywhere; color: var(--ink); font-size: .9rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+.unavailable { color: var(--muted); font-size: .68rem; }
+.ticketBreakdown > strong, .bestContests > strong { color: var(--ink); font-size: .74rem; font-weight: 850; }
+.ticketDistribution { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
 .ticketDistribution span { font-size: .65rem; }
+.bestContests { padding-top: 12px; border-top: 1px solid var(--line); }
+.bestContests p { margin-top: 6px; color: var(--muted); font-size: .71rem; line-height: 1.55; }
 .method { padding-top: 12px; border-top: 1px solid var(--line); }
 @media (max-width: 820px) { .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ticketGrid { grid-template-columns: 1fr; } }
-@media (max-width: 480px) { .controls > div, .controls label, .controls button { width: 100%; } .report { padding: 12px; } }
+@media (max-width: 480px) { .controls > div, .controls label, .controls button { width: 100%; } .report { padding: 12px; } .lotofacilHits { grid-template-columns: 1fr; } .ticket { padding: 14px; } .ticketMetrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ticketMetrics > div:last-child { grid-column: 1 / -1; } }

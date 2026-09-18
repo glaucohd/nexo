@@ -1,6 +1,7 @@
 import { lotteryGames, type LotterySlug } from "./lottery-generator.ts";
+import { superSeteHitDistribution, validSuperSeteDraw } from "./super-sete.ts";
 
-export type BacktestTicket = { numbers: number[]; month?: number; trevos?: number[] };
+export type BacktestTicket = { numbers: number[]; month?: number; trevos?: number[]; columns?: number[][] };
 export type BacktestPrize = { label: string; hits: number; extraHits: number | null; winners: number; prize: number | null };
 export type BacktestDraw = { contest: number; date: string; numbers: number[]; extras: Record<string, unknown> | null; prizes: BacktestPrize[] };
 export type BacktestTicketResult = {
@@ -27,7 +28,17 @@ export type BacktestReport = {
   unavailablePrizeUnits: number;
   distribution: { hits: number; contests: number }[];
   tickets: BacktestTicketResult[];
+  lotofacil?: { contestsWith14Plus: number; contestsWith15: number; simple14Prizes: number; simple15Prizes: number };
 };
+
+export function rankBacktestTickets(tickets: readonly BacktestTicketResult[]) {
+  return [...tickets].sort((left, right) =>
+    right.bestHits - left.bestHits
+    || right.averageHits - left.averageHits
+    || right.prizeDraws - left.prizeDraws
+    || right.knownGrossCents - left.knownGrossCents
+    || left.position - right.position);
+}
 
 const monthNames = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
@@ -40,7 +51,11 @@ export function combinations(total: number, picked: number) {
 
 function drawnMonth(extras: Record<string, unknown> | null) {
   if (typeof extras?.mes === "number") return extras.mes;
-  if (typeof extras?.mesSorte === "string") return monthNames.indexOf(extras.mesSorte.trim().toLocaleLowerCase("pt-BR")) + 1;
+  if (typeof extras?.mesSorte === "string") {
+    const value = extras.mesSorte.trim().toLocaleLowerCase("pt-BR");
+    if (/^(?:0?[1-9]|1[0-2])$/.test(value)) return Number(value);
+    return monthNames.indexOf(value) + 1;
+  }
   return null;
 }
 
@@ -50,12 +65,17 @@ function drawnTrevos(extras: Record<string, unknown> | null) {
 }
 
 function isVerifiable(slug: LotterySlug, draw: BacktestDraw) {
+  if (slug === "super-sete") return validSuperSeteDraw(draw.numbers);
   return slug === "dia-de-sorte" ? (drawnMonth(draw.extras) ?? 0) > 0
     : slug === "mais-milionaria" ? drawnTrevos(draw.extras) !== null
       : true;
 }
 
 function prizeApplies(slug: LotterySlug, prize: BacktestPrize, trevoHits: number) {
+  // O prêmio "Time do Coração" da Timemania não depende das dezenas, e o
+  // gerador ainda não escolhe um time — não há como avaliá-lo, então ele
+  // fica de fora da conferência (nunca soma prêmio, nunca soma "sem valor").
+  if (slug === "timemania") return !prize.label.toLocaleLowerCase("pt-BR").includes("time do coração");
   if (slug !== "mais-milionaria") return true;
   if (prize.extraHits === 2) return trevoHits === 2;
   if (prize.extraHits === 1) return trevoHits === 1;
@@ -63,7 +83,7 @@ function prizeApplies(slug: LotterySlug, prize: BacktestPrize, trevoHits: number
 }
 
 function awardForDraw(slug: LotterySlug, ticket: BacktestTicket, draw: BacktestDraw, hits: number) {
-  const baseSize = slug === "lotomania" ? 50 : lotteryGames[slug].drawSize;
+  const baseSize = slug === "lotomania" || slug === "timemania" ? lotteryGames[slug].min : lotteryGames[slug].drawSize;
   const trevos = drawnTrevos(draw.extras);
   const trevoHits = slug === "mais-milionaria" ? (ticket.trevos ?? []).filter((number) => trevos?.includes(number)).length : 0;
   let knownGrossCents = 0;
@@ -84,11 +104,29 @@ function awardForDraw(slug: LotterySlug, ticket: BacktestTicket, draw: BacktestD
   return { prizeUnits, knownGrossCents, unavailablePrizeUnits };
 }
 
+function awardSuperSeteDraw(distribution: readonly number[], draw: BacktestDraw) {
+  let prizeUnits = 0;
+  let knownGrossCents = 0;
+  let unavailablePrizeUnits = 0;
+  for (const prize of draw.prizes) {
+    if (prize.hits < 3 || prize.hits > 7) continue;
+    const units = distribution[prize.hits] ?? 0;
+    prizeUnits += units;
+    if (prize.prize === null || !Number.isFinite(prize.prize) || prize.prize === 0 && prize.winners === 0) unavailablePrizeUnits += units;
+    else knownGrossCents += Math.round(prize.prize * 100) * units;
+  }
+  return { prizeUnits, knownGrossCents, unavailablePrizeUnits };
+}
+
 export function backtestTickets(slug: LotterySlug, tickets: readonly BacktestTicket[], draws: readonly BacktestDraw[]): BacktestReport {
   const sample = draws.filter((draw) => isVerifiable(slug, draw));
   const skippedContests = draws.length - sample.length;
   const distribution = new Map<number, number>();
   const contestsWithPrize = new Set<number>();
+  const contestsWith14Plus = new Set<number>();
+  const contestsWith15 = new Set<number>();
+  let simple14Prizes = 0;
+  let simple15Prizes = 0;
   let prizeDraws = 0;
   let knownGrossCents = 0;
   let unavailablePrizeUnits = 0;
@@ -103,12 +141,19 @@ export function backtestTickets(slug: LotterySlug, tickets: readonly BacktestTic
     let ticketGross = 0;
     let ticketUnavailable = 0;
     for (const draw of sample) {
-      const hits = draw.numbers.filter((number) => selected.has(number)).length;
+      const superDistribution = slug === "super-sete" && ticket.columns ? superSeteHitDistribution({ columns: ticket.columns }, draw.numbers) : null;
+      const hits = superDistribution ? superDistribution.findLastIndex((units) => units > 0) : draw.numbers.filter((number) => selected.has(number)).length;
       hitSum += hits;
       bestHits = Math.max(bestHits, hits);
       ticketDistribution.set(hits, (ticketDistribution.get(hits) ?? 0) + 1);
       distribution.set(hits, (distribution.get(hits) ?? 0) + 1);
-      const award = awardForDraw(slug, ticket, draw, hits);
+      if (slug === "lotofacil") {
+        if (hits >= 14) contestsWith14Plus.add(draw.contest);
+        if (hits === 15) contestsWith15.add(draw.contest);
+        simple14Prizes += combinations(hits, 14) * combinations(ticket.numbers.length - hits, 1);
+        simple15Prizes += combinations(hits, 15);
+      }
+      const award = superDistribution ? awardSuperSeteDraw(superDistribution, draw) : awardForDraw(slug, ticket, draw, hits);
       if (award.prizeUnits) { ticketPrizeDraws += 1; prizeDraws += 1; contestsWithPrize.add(draw.contest); }
       ticketGross += award.knownGrossCents;
       ticketUnavailable += award.unavailablePrizeUnits;
@@ -138,6 +183,7 @@ export function backtestTickets(slug: LotterySlug, tickets: readonly BacktestTic
     prizeDraws, contestsWithPrize: contestsWithPrize.size,
     knownGrossCents, unavailablePrizeUnits,
     distribution: [...distribution].sort((a, b) => b[0] - a[0]).map(([hits, contests]) => ({ hits, contests })),
-    tickets: results,
+    tickets: rankBacktestTickets(results),
+    ...(slug === "lotofacil" ? { lotofacil: { contestsWith14Plus: contestsWith14Plus.size, contestsWith15: contestsWith15.size, simple14Prizes, simple15Prizes } } : {}),
   };
 }

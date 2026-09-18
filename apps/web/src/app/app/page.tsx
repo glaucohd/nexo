@@ -12,6 +12,9 @@ const games = [
   { slug: "mais-milionaria", initials: "+M", icon: "mais-milionaria", name: "+Milionária", subtitle: "Números + trevos", color: "blue" },
   { slug: "dia-de-sorte", initials: "DS", icon: "dia-de-sorte", name: "Dia de Sorte", subtitle: "Números + mês", color: "amber" },
   { slug: "lotomania", initials: "LM", icon: "lotomania", name: "Lotomania", subtitle: "50 números · espelho", color: "orange" },
+  { slug: "super-sete", initials: "S7", icon: "super-sete", name: "Super Sete", subtitle: "7 colunas · dígitos 0 a 9", color: "lime" },
+  { slug: "dupla-sena", initials: "DP", icon: "dupla-sena", name: "Dupla Sena", subtitle: "6 números · 2 sorteios", color: "crimson" },
+  { slug: "timemania", initials: "TM", icon: "timemania", name: "Timemania", subtitle: "10 números · time do coração", color: "forest" },
 ];
 
 export default async function DashboardPage() {
@@ -52,7 +55,7 @@ export default async function DashboardPage() {
         <article className="dashboard-card stat-card">
           <div className="dashboard-card-icon green">#</div>
           <span>Modalidades</span>
-          <strong className="metric">6</strong>
+          <strong className="metric">{games.length}</strong>
           <small>Com análises e geradores dedicados</small>
         </article>
         <article className="dashboard-card stat-card">
