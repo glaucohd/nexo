@@ -3,9 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 
 import { HistoricalBacktest } from "@/components/historical-backtest";
+import { GuaranteeSummary, ReductionOptions, mostFrequentPrize } from "@/components/reduction-guide";
 import { SaveBetsButton } from "@/components/save-bets-button";
 import type { DrawNumbers } from "@/lib/lottery-generator";
 import { lotofacilWheel, lotofacilWheel14, lotofacilWheel20, lotofacilWheel20x13, type LotofacilWheelTicket } from "@/lib/lotofacil-wheel";
+
+import { reductionGuarantees } from "@/lib/reduction-stats";
 
 import styles from "./lotofacil-wheel-generator.module.css";
 
@@ -109,14 +112,23 @@ export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] })
 
   return <main className={styles.page}>
     <header className={styles.header}>
-      <div><span className="eyebrow">Fechamento</span><h1>Redução de <em>{tier.pool} dezenas</em>.</h1><p>Escolha {excludeCount} dezenas para excluir. As {tier.pool} restantes viram jogos de 15 dezenas com pontuação mínima garantida. Gere quantas reduções quiser, cada uma com suas próprias exclusões.</p></div>
+      <div><span className="eyebrow">Fechamento</span><h1>Redução de <em>{tier.pool} dezenas</em>.</h1><p>Exclua {excludeCount} dezenas e as {tier.pool} restantes viram jogos de 15. A tabela abaixo mostra exatamente o que fica garantido e com que frequência. Gere quantas reduções quiser, cada uma com suas próprias exclusões.</p></div>
       <span>{history.length} concursos na base</span>
     </header>
     <div className={styles.layout}>
       <div className={styles.controls}>
         <section className={styles.card}>
-          <h2>01 · Escolha o nível de garantia</h2>
-          <div className={styles.segment}>{tiers.map((entry) => <button type="button" key={entry.id} aria-pressed={tier.id === entry.id} className={tier.id === entry.id ? styles.active : ""} onClick={() => chooseTier(entry)}>{entry.pool} dezenas · {entry.games} jogos · garante {entry.guarantee} pontos · {currency.format(entry.games * TICKET_PRICE_CENTS / 100)}</button>)}</div>
+          <h2>01 · Escolha a redução</h2>
+          <ReductionOptions selected={tier.id} onSelect={(id) => chooseTier(tiers.find((entry) => entry.id === id) ?? tiers[0])} options={tiers.map((entry) => ({
+            id: entry.id,
+            title: `${entry.pool} dezenas · garante ${entry.guarantee} pontos`,
+            games: entry.games,
+            costCents: entry.games * TICKET_PRICE_CENTS,
+            foot: mostFrequentPrize(reductionGuarantees[`lotofacil:${entry.id}`] ?? [], { total: 25, drawSize: 15, pool: entry.pool }),
+          }))} />
+          <GuaranteeSummary pool={tier.pool} games={tier.games} costCents={tier.games * TICKET_PRICE_CENTS} ticketSize={15} drawSize={15} total={25}
+            rows={reductionGuarantees[`lotofacil:${tier.id}`] ?? [{ inPool: 15, hits: tier.guarantee }]} hitName={(hits) => `${hits} pontos`}
+            note={`Você escolhe o grupo excluindo ${excludeCount} dezenas. Garantir 15 pontos exigiria todos os ${tier.pool === 20 ? "15.504" : "816"} jogos possíveis dentro do grupo (${currency.format((tier.pool === 20 ? 15504 : 816) * TICKET_PRICE_CENTS / 100)}). Garantias provadas por força bruta; fora da condição os jogos concorrem normalmente.`} />
         </section>
         <section className={styles.card}>
           <h2>{rounds.length ? `Redução ${rounds.length + 1} · escolha ${excludeCount} dezenas` : `02 · Escolha ${excludeCount} dezenas para excluir`}</h2>
@@ -127,11 +139,6 @@ export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] })
             {excluded.length > 0 && <button type="button" className={styles.clear} onClick={() => { setExcluded([]); setError(null); }}>Limpar seleção</button>}
           </div>
           <div className={styles.board}>{board.map((number) => <button type="button" key={number} aria-pressed={excludedSet.has(number)} className={excludedSet.has(number) ? styles.excluded : ""} onClick={() => toggle(number)}>{pad(number)}</button>)}</div>
-        </section>
-        <section className={styles.card}>
-          <h2>Garantia matemática</h2>
-          <p>Se as 15 dezenas sorteadas caírem todas dentro das suas {tier.pool} escolhidas, pelo menos 1 dos {tier.games} jogos vai bater no mínimo <strong>{tier.guarantee} pontos</strong> — isso é combinatória garantida, não estimativa. O ponto de atenção é escolher bem quais {excludeCount} dezenas excluir: a garantia só vale se o sorteio real não usar nenhuma delas{tier.pool === 20 ? " (isso acontece em cerca de 1 a cada 211 concursos)" : " (cerca de 1 a cada 4.000 concursos)"}. Fora disso não há garantia, mas os jogos continuam concorrendo normalmente.</p>
-          {tier.pool === 20 && <p>Por que não garantir 15? Seriam necessários todos os 15.504 jogos possíveis dentro das 20 dezenas ({currency.format(15504 * TICKET_PRICE_CENTS / 100)}) — o mesmo que a aposta de 20 dezenas da CAIXA.</p>}
         </section>
         <button className={styles.generate} type="button" disabled={excluded.length !== excludeCount} onClick={generate}>Gerar os {tier.games} jogos ↗</button>
         <p className={styles.priceNote}>Custo estimado: {currency.format(tier.games * TICKET_PRICE_CENTS / 100)} ({tier.games} × {currency.format(TICKET_PRICE_CENTS / 100)} a aposta simples de 15 dezenas). Confira o valor atualizado na <a href="https://loterias.caixa.gov.br/Paginas/lotofacil.aspx" target="_blank" rel="noreferrer">CAIXA ↗</a>.</p>

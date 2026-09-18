@@ -3,9 +3,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { HistoricalBacktest } from "@/components/historical-backtest";
+import { GuaranteeSummary, ReductionOptions, mostFrequentPrize } from "@/components/reduction-guide";
 import { SaveBetsButton } from "@/components/save-bets-button";
 import { standardTicketPriceCents, type DrawNumbers } from "@/lib/lottery-generator";
 import { cyclicWheel, type CyclicWheelTicket } from "@/lib/cyclic-wheel";
+
+import { reductionGuarantees } from "@/lib/reduction-stats";
 
 import styles from "./number-wheel-generator.module.css";
 
@@ -113,17 +116,26 @@ export function MilionariaWheelGenerator({ history }: { history: DrawNumbers[] }
 
   return <main className={styles.page} style={{ "--generator-accent": "#3445a5" } as CSSProperties}>
     <header className={styles.header}>
-      <div><span className="eyebrow">Fechamento</span><h1>Redução da <em>+Milionária</em>.</h1><p>Escolha um pool de dezenas maior que a aposta simples. A garantia é só sobre as 6 dezenas: acertar 4 ou 5 já paga o prêmio base, com qualquer trevo. Os trevos certos destravam um prêmio ainda melhor, mas não são exigidos pela garantia.</p></div>
+      <div><span className="eyebrow">Fechamento</span><h1>Redução da <em>+Milionária</em>.</h1><p>Escolha um grupo de dezenas e 2 trevos. O Nexo monta jogos que garantem prêmio quando boa parte das sorteadas cai dentro do seu grupo — a tabela abaixo mostra exatamente o que fica garantido e com que frequência.</p></div>
       <span>{history.length} concursos na base</span>
     </header>
     <div className={styles.layout}>
       <div className={styles.controls}>
         <section className={styles.card}>
-          <h2>01 · Nível de garantia</h2>
-          <div className={styles.segment}>{presets.map((entry) => <button type="button" key={entry.id} aria-pressed={preset.id === entry.id} className={preset.id === entry.id ? styles.active : ""} onClick={() => choosePreset(entry)}>{entry.label}</button>)}</div>
+          <h2>01 · Escolha a redução</h2>
+          <ReductionOptions selected={preset.id} onSelect={(id) => choosePreset(presets.find((entry) => entry.id === id) ?? presets[0])} options={presets.map((entry) => ({
+            id: entry.id,
+            title: `${entry.poolSize} dezenas · garante ${entry.guarantee} acertos`,
+            games: entry.games,
+            costCents: entry.games * ticketPrice,
+            foot: mostFrequentPrize(reductionGuarantees[`mais-milionaria:${entry.id}`] ?? [], { total: 50, drawSize: 6, pool: entry.poolSize }),
+          }))} />
+          <GuaranteeSummary pool={preset.poolSize} games={preset.games} costCents={preset.games * ticketPrice} ticketSize={6} drawSize={6} total={50}
+            rows={reductionGuarantees[`mais-milionaria:${preset.id}`] ?? [{ inPool: 6, hits: preset.guarantee }]} hitName={(hits) => `${hits} acertos`}
+            note="4 ou mais acertos nas dezenas já pagam o prêmio base com qualquer trevo; acertar os trevos só melhora o prêmio. Garantia provada por força bruta; fora da condição os jogos concorrem normalmente." />
         </section>
         <section className={styles.card}>
-          <h2>{rounds.length ? `Redução ${rounds.length + 1} · escolha ${preset.poolSize} dezenas` : `02 · Escolha ${preset.poolSize} dezenas para o pool`}</h2>
+          <h2>{rounds.length ? `Redução ${rounds.length + 1} · escolha ${preset.poolSize} dezenas` : `02 · Escolha as ${preset.poolSize} dezenas do grupo`}</h2>
           <p>{pool.length}/{preset.poolSize} escolhidas. Clique nas dezenas pra montar manualmente, ou use o preenchimento automático.</p>
           <div className={styles.autoFill}>
             <button type="button" disabled={!history.length} onClick={fillFromLastDraw}>Sortear com base no último concurso{history[0] ? ` (#${history[0].contest})` : ""}</button>
@@ -136,10 +148,6 @@ export function MilionariaWheelGenerator({ history }: { history: DrawNumbers[] }
           <h2>03 · Escolha 2 trevos (não afetam a garantia)</h2>
           <p>{trevos.length}/2 escolhidos. Valem para todos os jogos desta redução.</p>
           <div className={styles.board} style={{ "--columns": 6 } as CSSProperties}>{trevoBoard.map((number) => <button type="button" key={number} aria-pressed={trevoSet.has(number)} className={trevoSet.has(number) ? styles.selected : ""} onClick={() => toggleTrevo(number)}>{pad(number)}</button>)}</div>
-        </section>
-        <section className={styles.card}>
-          <h2>Garantia matemática</h2>
-          <p>Se as 6 dezenas sorteadas caírem todas dentro do seu pool de {preset.poolSize}, ao menos 1 dos {preset.games} jogos vai bater no mínimo <strong>{preset.guarantee} acertos nas dezenas</strong> — o suficiente para o prêmio base, com qualquer resultado de trevo. Cobertura combinatória provada por força bruta.</p>
         </section>
         <button className={styles.generate} type="button" disabled={pool.length !== preset.poolSize || trevos.length !== 2} onClick={generate}>Gerar os {preset.games} jogos ↗</button>
         <p className={styles.priceNote}>Custo estimado: <strong>{currency.format(preset.games * ticketPrice / 100)}</strong> ({preset.games} × aposta simples de {currency.format(ticketPrice / 100)}). Confira o valor atualizado na CAIXA.</p>

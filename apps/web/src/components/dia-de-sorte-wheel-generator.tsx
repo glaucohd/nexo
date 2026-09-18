@@ -3,10 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 
 import { HistoricalBacktest } from "@/components/historical-backtest";
+import { GuaranteeSummary, ReductionOptions, mostFrequentPrize } from "@/components/reduction-guide";
 import { SaveBetsButton } from "@/components/save-bets-button";
 import type { DrawNumbers } from "@/lib/lottery-generator";
 import { diaDeSorteWheel, type DiaDeSorteWheelTicket } from "@/lib/dia-de-sorte-wheel";
 import { diaDeSorteWheel14, diaDeSorteWheel20 } from "@/lib/partition-wheels";
+
+import { reductionGuarantees } from "@/lib/reduction-stats";
 
 import styles from "./dia-de-sorte-wheel-generator.module.css";
 
@@ -37,28 +40,27 @@ function shuffled<T>(values: readonly T[]) {
 //   sorteadas estão no grupo (cobertura gulosa; a condição é frequente).
 // - "all": garante 4 pontos só quando as 7 caem no grupo (partição; poucos
 //   jogos, condição rara).
-// `games` é o tamanho que o algoritmo gera para cada grupo e `every` é, em
-// média, de quantos em quantos concursos a condição acontece (hipergeométrica).
-type PoolOption = { pool: number; games: number; every: number };
+// `games` é quantos jogos o algoritmo gera para cada tamanho de grupo; o que
+// cada opção garante está em reductionGuarantees (verificado por força bruta).
+type PoolOption = { pool: number; games: number };
 type Mode = { id: "any4" | "any5" | "all4"; guarantee: 4 | 5; condition: "all" | "any"; title: string; hint: string; options: PoolOption[] };
 type Round = { id: number; pool: number[]; mode: Mode; tickets: DiaDeSorteWheelTicket[]; copied: boolean };
 
 const modes: Mode[] = [
   { id: "any4", guarantee: 4, condition: "any", title: "Garantir 4 pontos", hint: "Vale quando 4 das 7 sorteadas estão no seu grupo.", options: [
-    { pool: 8, games: 5, every: 18.9 }, { pool: 9, games: 6, every: 11.7 }, { pool: 10, games: 12, every: 7.8 }, { pool: 11, games: 18, every: 5.6 },
-    { pool: 12, games: 27, every: 4.2 }, { pool: 13, games: 37, every: 3.2 }, { pool: 14, games: 51, every: 2.6 },
+    { pool: 8, games: 5 }, { pool: 9, games: 6 }, { pool: 10, games: 12 }, { pool: 11, games: 18 },
+    { pool: 12, games: 27 }, { pool: 13, games: 37 }, { pool: 14, games: 51 },
   ] },
   { id: "any5", guarantee: 5, condition: "any", title: "Garantir 5 pontos", hint: "Vale quando 5 das 7 sorteadas estão no seu grupo.", options: [
-    { pool: 8, games: 6, every: 177.4 }, { pool: 9, games: 10, every: 84.9 }, { pool: 10, games: 23, every: 45.8 },
-    { pool: 11, games: 38, every: 27 }, { pool: 12, games: 69, every: 17.1 }, { pool: 13, games: 110, every: 11.5 },
+    { pool: 8, games: 6 }, { pool: 9, games: 10 }, { pool: 10, games: 23 },
+    { pool: 11, games: 38 }, { pool: 12, games: 69 }, { pool: 13, games: 110 },
   ] },
   { id: "all4", guarantee: 4, condition: "all", title: "4 pontos · econômica", hint: "Poucos jogos, mas só vale quando as 7 sorteadas estão no seu grupo.", options: [
-    { pool: 14, games: 2, every: 766.2 }, { pool: 20, games: 20, every: 33.9 },
+    { pool: 14, games: 2 }, { pool: 20, games: 20 },
   ] },
 ];
 
-const integer = new Intl.NumberFormat("pt-BR");
-const everyLabel = (every: number) => `1 a cada ${integer.format(Math.max(2, Math.round(every)))} concursos`;
+const guaranteeRows = (mode: Mode, pool: number) => reductionGuarantees[`dia-de-sorte:${mode.id}-${pool}`] ?? [{ inPool: 7, hits: mode.guarantee }];
 
 export function DiaDeSorteWheelGenerator({ history }: { history: DrawNumbers[] }) {
   const [mode, setMode] = useState<Mode>(modes[0]);
@@ -139,15 +141,15 @@ export function DiaDeSorteWheelGenerator({ history }: { history: DrawNumbers[] }
           <h2>01 · O que você quer garantir?</h2>
           <div className={styles.segment}>{modes.map((entry) => <button type="button" key={entry.id} aria-pressed={mode.id === entry.id} className={mode.id === entry.id ? styles.active : ""} onClick={() => chooseMode(entry)}><strong>{entry.title}</strong><small>{entry.hint}</small></button>)}</div>
           <h2 className={styles.stepTitle}>02 · Quantas dezenas no seu grupo?</h2>
-          <div className={styles.poolOptions}>{mode.options.map((entry) => <button type="button" key={entry.pool} aria-pressed={option.pool === entry.pool} onClick={() => { setPoolSize(entry.pool); setPool([]); setError(null); }}>
-            <strong>{entry.pool} dezenas</strong>
-            <span>{entry.games} jogos · {currency.format(entry.games * TICKET_PRICE_CENTS / 100)}</span>
-            <small>garantia vale ~{everyLabel(entry.every)}</small>
-          </button>)}</div>
-          <div className={styles.plainSummary}>
-            <p>Você escolhe <b>{option.pool} dezenas</b>. O Nexo monta <b>{option.games} jogos de 7 dezenas</b> ({currency.format(option.games * TICKET_PRICE_CENTS / 100)}).</p>
-            <p>{mode.condition === "all" ? <>Se <b>as 7 sorteadas</b> estiverem entre as suas {option.pool}</> : <>Se <b>pelo menos {mode.guarantee} das 7 sorteadas</b> estiverem entre as suas {option.pool}</>} — em média {everyLabel(option.every)} — <b>pelo menos um jogo faz {mode.guarantee} pontos</b>. Nos outros concursos não há garantia, mas os jogos concorrem normalmente.</p>
-          </div>
+          <ReductionOptions selected={String(option.pool)} onSelect={(id) => { setPoolSize(Number(id)); setPool([]); setError(null); }} options={mode.options.map((entry) => ({
+            id: String(entry.pool),
+            title: `${entry.pool} dezenas · garante ${mode.guarantee} pontos`,
+            games: entry.games,
+            costCents: entry.games * TICKET_PRICE_CENTS,
+            foot: mostFrequentPrize(guaranteeRows(mode, entry.pool), { total: 31, drawSize: 7, pool: entry.pool }),
+          }))} />
+          <GuaranteeSummary pool={option.pool} games={option.games} costCents={option.games * TICKET_PRICE_CENTS} ticketSize={7} drawSize={7} total={31}
+            rows={guaranteeRows(mode, option.pool)} hitName={(hits) => `${hits} pontos`} />
         </section>
         <section className={styles.card}>
           <h2>{rounds.length ? `Redução ${rounds.length + 1} · escolha ${poolSize} dezenas` : `03 · Escolha as ${poolSize} dezenas do grupo`}</h2>

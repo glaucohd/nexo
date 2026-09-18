@@ -3,9 +3,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { HistoricalBacktest } from "@/components/historical-backtest";
+import { GuaranteeSummary, ReductionOptions, mostFrequentPrize } from "@/components/reduction-guide";
 import { SaveBetsButton } from "@/components/save-bets-button";
 import { lotteryGames, standardTicketPriceCents, type DrawNumbers, type LotterySlug } from "@/lib/lottery-generator";
 import { cyclicWheel, type CyclicWheelTicket } from "@/lib/cyclic-wheel";
+
+import { reductionGuarantees } from "@/lib/reduction-stats";
 
 import styles from "./number-wheel-generator.module.css";
 
@@ -13,7 +16,7 @@ const pad = (number: number) => String(number).padStart(2, "0");
 
 // Todos os presets abaixo mantêm o jogo do tamanho exato do sorteio (aposta
 // simples, sem desdobramento) — verificados por força bruta nos testes.
-type Preset = { id: string; label: string; poolSize: number; groups: number[]; games: number; guarantee: number; note?: string };
+type Preset = { id: string; label: string; poolSize: number; groups: number[]; games: number; guarantee: number };
 
 const presetsBySlug: Partial<Record<LotterySlug, Preset[]>> = {
   "mega-sena": [
@@ -38,12 +41,19 @@ const presetsBySlug: Partial<Record<LotterySlug, Preset[]>> = {
   timemania: [
     // 10 pares: cada jogo leva uma dezena de cada par, então as sorteadas que
     // caem no pool se dividem entre os 2 jogos e um deles fica com a metade.
-    { id: "quatro20", label: "20 dezenas · 2 jogos · garante 4 acertos", poolSize: 20, groups: [2, 2, 2, 2, 2, 2, 2, 2, 2, 2], games: 2, guarantee: 4, note: "Mesmo que só 5 ou 6 das 7 sorteadas caiam nas suas 20, um dos jogos faz ao menos 3 acertos." },
+    { id: "quatro20", label: "20 dezenas · 2 jogos · garante 4 acertos", poolSize: 20, groups: [2, 2, 2, 2, 2, 2, 2, 2, 2, 2], games: 2, guarantee: 4 },
     { id: "cinco15", label: "15 dezenas · 3 jogos · garante 5 acertos", poolSize: 15, groups: [3, 3, 3, 3, 3], games: 3, guarantee: 5 },
     { id: "seis13", label: "13 dezenas · 5 jogos · garante 6 acertos", poolSize: 13, groups: [5, 4, 4], games: 5, guarantee: 6 },
     { id: "sete11", label: "11 dezenas · 11 jogos · garante os 7 acertos", poolSize: 11, groups: [11], games: 11, guarantee: 7 },
   ],
 };
+
+// Nome da faixa de prêmio para o texto ("pelo menos um jogo faz a quadra").
+const sixNames: Record<number, string> = { 6: "a sena", 5: "a quina", 4: "a quadra", 3: "o terno" };
+const quinaNames: Record<number, string> = { 5: "a quina", 4: "a quadra", 3: "o terno", 2: "o duque" };
+function hitNameFor(slug: LotterySlug) {
+  return (hits: number) => (slug === "quina" ? quinaNames : slug === "timemania" ? {} as Record<number, string> : sixNames)[hits] ?? `${hits} acertos`;
+}
 
 function shuffled<T>(values: readonly T[]) {
   const result = [...values];
@@ -58,6 +68,8 @@ type Round = { id: number; pool: number[]; preset: Preset; tickets: CyclicWheelT
 
 export function NumberWheelGenerator({ slug, history }: { slug: "mega-sena" | "quina" | "dupla-sena" | "timemania"; history: DrawNumbers[] }) {
   const game = lotteryGames[slug];
+  const hitName = hitNameFor(slug);
+  const draws = slug === "dupla-sena" ? 2 : 1;
   const presets = presetsBySlug[slug] ?? [];
   const board = Array.from({ length: game.total }, (_, index) => index + game.start);
   const [presetId, setPresetId] = useState(presets[0].id);
@@ -126,17 +138,26 @@ export function NumberWheelGenerator({ slug, history }: { slug: "mega-sena" | "q
 
   return <main className={styles.page} style={{ "--generator-accent": game.color } as CSSProperties}>
     <header className={styles.header}>
-      <div><span className="eyebrow">Fechamento</span><h1>Redução da <em>{game.name}</em>.</h1><p>Escolha um pool de dezenas maior que a aposta simples. O fechamento cíclico garante uma pontuação mínima sempre que as {game.drawSize} dezenas sorteadas caírem dentro do seu pool.{slug === "dupla-sena" ? " Na Dupla Sena cada jogo concorre nos dois sorteios do concurso pelo mesmo preço, então a garantia vale para cada um deles." : ""}</p></div>
+      <div><span className="eyebrow">Fechamento</span><h1>Redução da <em>{game.name}</em>.</h1><p>Escolha um grupo de dezenas. O Nexo monta jogos que garantem prêmio quando boa parte das sorteadas cai dentro desse grupo — a tabela abaixo mostra exatamente o que fica garantido e com que frequência.</p></div>
       <span>{history.length} concursos na base</span>
     </header>
     <div className={styles.layout}>
       <div className={styles.controls}>
         <section className={styles.card}>
-          <h2>01 · Nível de garantia</h2>
-          <div className={styles.segment}>{presets.map((entry) => <button type="button" key={entry.id} aria-pressed={preset.id === entry.id} className={preset.id === entry.id ? styles.active : ""} onClick={() => choosePreset(entry)}>{entry.label}</button>)}</div>
+          <h2>01 · Escolha a redução</h2>
+          <ReductionOptions selected={preset.id} onSelect={(id) => choosePreset(presets.find((entry) => entry.id === id) ?? presets[0])} options={presets.map((entry) => ({
+            id: entry.id,
+            title: `${entry.poolSize} dezenas · garante ${hitName(entry.guarantee)}`,
+            games: entry.games,
+            costCents: entry.games * ticketPrice,
+            foot: mostFrequentPrize(reductionGuarantees[`${slug}:${entry.id}`] ?? [], { total: game.total, drawSize: game.drawSize, pool: entry.poolSize, draws }),
+          }))} />
+          <GuaranteeSummary pool={preset.poolSize} games={preset.games} costCents={preset.games * ticketPrice} ticketSize={game.min} drawSize={game.drawSize} total={game.total} draws={draws}
+            rows={reductionGuarantees[`${slug}:${preset.id}`] ?? [{ inPool: game.drawSize, hits: preset.guarantee }]} hitName={hitName}
+            note={slug === "dupla-sena" ? "Cada jogo concorre nos dois sorteios do concurso pelo mesmo preço; basta um deles cumprir a condição. Garantia provada por força bruta; fora da condição os jogos concorrem normalmente." : undefined} />
         </section>
         <section className={styles.card}>
-          <h2>{rounds.length ? `Redução ${rounds.length + 1} · escolha ${preset.poolSize} dezenas` : `02 · Escolha ${preset.poolSize} dezenas para o pool`}</h2>
+          <h2>{rounds.length ? `Redução ${rounds.length + 1} · escolha ${preset.poolSize} dezenas` : `02 · Escolha as ${preset.poolSize} dezenas do grupo`}</h2>
           <p>{pool.length}/{preset.poolSize} escolhidas. Clique nas dezenas pra montar manualmente, ou use o preenchimento automático.</p>
           <div className={styles.autoFill}>
             <button type="button" disabled={!history.length} onClick={fillFromLastDraw}>Sortear com base no último concurso{history[0] ? ` (#${history[0].contest})` : ""}</button>
@@ -144,10 +165,6 @@ export function NumberWheelGenerator({ slug, history }: { slug: "mega-sena" | "q
             {pool.length > 0 && <button type="button" className={styles.clear} onClick={() => { setPool([]); setError(null); }}>Limpar seleção</button>}
           </div>
           <div className={styles.board} style={{ "--columns": game.columns } as CSSProperties}>{board.map((number) => <button type="button" key={number} aria-pressed={poolSet.has(number)} className={poolSet.has(number) ? styles.selected : ""} onClick={() => toggle(number)}>{pad(number)}</button>)}</div>
-        </section>
-        <section className={styles.card}>
-          <h2>Garantia matemática</h2>
-          <p>Se as {game.drawSize} dezenas sorteadas caírem todas dentro do seu pool de {preset.poolSize}, ao menos 1 dos {preset.games} jogos vai bater no mínimo <strong>{preset.guarantee} pontos</strong> — cobertura combinatória provada por força bruta, não estimativa.{preset.note ? ` ${preset.note}` : ""}{slug === "dupla-sena" ? " Como são dois sorteios por concurso, a garantia é avaliada separadamente em cada um: basta o sorteio cair dentro do pool." : ""}</p>
         </section>
         <button className={styles.generate} type="button" disabled={pool.length !== preset.poolSize} onClick={generate}>Gerar os {preset.games} jogos ↗</button>
         <p className={styles.priceNote}>Custo estimado: <strong>{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(preset.games * ticketPrice / 100)}</strong> ({preset.games} × aposta simples de {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(ticketPrice / 100)}). Confira o valor atualizado na CAIXA.</p>

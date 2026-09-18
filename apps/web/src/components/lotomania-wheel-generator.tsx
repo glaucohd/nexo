@@ -3,9 +3,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { HistoricalBacktest } from "@/components/historical-backtest";
+import { GuaranteeSummary } from "@/components/reduction-guide";
 import { SaveBetsButton } from "@/components/save-bets-button";
 import type { DrawNumbers } from "@/lib/lottery-generator";
 import { lotomaniaWheel70, type PartitionWheelTicket } from "@/lib/partition-wheels";
+
+import { reductionGuarantees } from "@/lib/reduction-stats";
 
 import styles from "./number-wheel-generator.module.css";
 
@@ -106,8 +109,10 @@ export function LotomaniaWheelGenerator({ history }: { history: DrawNumbers[] })
           <div className={styles.board} style={{ "--columns": 10 } as CSSProperties}>{board.map((number) => <button type="button" key={number} aria-pressed={excludedSet.has(number)} className={excludedSet.has(number) ? styles.excluded : ""} onClick={() => toggle(number)}>{pad(number)}</button>)}</div>
         </section>
         <section className={styles.card}>
-          <h2>Garantia matemática</h2>
-          <p>Se as 20 dezenas sorteadas caírem todas dentro das suas 70, os 2 grupos com menos sorteadas somam no máximo 5 delas — e o jogo que deixa esses 2 grupos de fora faz ao menos <strong>15 pontos</strong>, que já é faixa premiada. Provado por força bruta, não estimativa. Isso acontece em cerca de 1 a cada 3.311 concursos; fora disso não há garantia, mas os jogos concorrem normalmente.</p>
+          <h2>O que fica garantido</h2>
+          <GuaranteeSummary pool={70} games={GAMES} costCents={GAMES * TICKET_PRICE_CENTS} ticketSize={50} drawSize={20} total={100}
+            rows={reductionGuarantees["lotomania:70"]} hitName={(hits) => `${hits} pontos`}
+            note="As 70 viram 7 grupos de 10 e cada jogo deixa 2 grupos de fora: os 2 grupos com menos sorteadas somam no máximo 5 delas, então algum jogo faz 15 ou mais. Garantia provada por força bruta; fora da condição os jogos concorrem normalmente." />
         </section>
         <button className={styles.generate} type="button" disabled={excluded.length !== EXCLUDE} onClick={generate}>Gerar os {GAMES} jogos ↗</button>
         <p className={styles.priceNote}>Custo estimado: <strong>{currency.format(GAMES * TICKET_PRICE_CENTS / 100)}</strong> ({GAMES} × {currency.format(TICKET_PRICE_CENTS / 100)} a aposta de 50 dezenas). Confira o valor atualizado na <a href="https://loterias.caixa.gov.br/Paginas/Lotomania.aspx" target="_blank" rel="noreferrer">CAIXA ↗</a>.</p>
