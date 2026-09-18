@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { Brand } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const lotteries = [
   { slug: "lotofacil", short: "LF", icon: "lotofacil", name: "Lotofácil", detail: "15 a 20 números", color: "#91278f" },
@@ -10,6 +11,9 @@ const lotteries = [
   { slug: "milionaria", short: "+M", icon: "mais-milionaria", name: "+Milionária", detail: "Números + trevos", color: "#2a3580" },
   { slug: "dia", short: "DS", icon: "dia-de-sorte", name: "Dia de Sorte", detail: "Números + mês", color: "#7e6906" },
   { slug: "lotomania", short: "LM", icon: "lotomania", name: "Lotomania", detail: "50 números · espelho", color: "#b55727" },
+  { slug: "super-sete", short: "S7", icon: "super-sete", name: "Super Sete", detail: "7 colunas · 0 a 9", color: "#718c23" },
+  { slug: "dupla-sena", short: "DP", icon: "dupla-sena", name: "Dupla Sena", detail: "6 números · 2 sorteios", color: "#b5195a" },
+  { slug: "timemania", short: "TM", icon: "timemania", name: "Timemania", detail: "10 números · time do coração", color: "#00854a" },
 ];
 
 const features = [
@@ -27,6 +31,7 @@ export default function Home() {
           <a href="#loterias">Loterias</a>
           <a href="#como-funciona">Como funciona</a>
           <a href="#recursos">Recursos</a>
+          <ThemeToggle />
           <Link className="button button-ghost" href="/entrar">Entrar</Link>
         </nav>
       </header>
@@ -85,7 +90,7 @@ export default function Home() {
         <div className="container">
           <div className="section-intro centered">
             <span className="eyebrow">Suas modalidades favoritas</span>
-            <h2>Escolha a loteria. O Nexo organiza o resto.</h2>
+            <h2>Escolha a loteria. O Nexo <em>organiza o resto</em>.</h2>
             <p>Cada modalidade tem seus próprios filtros, análises e formas de montar jogos.</p>
           </div>
           <div className="lottery-grid">
@@ -104,7 +109,7 @@ export default function Home() {
         <div className="container">
           <div className="section-intro">
             <span className="eyebrow">Do resultado à conferência</span>
-            <h2>Menos improviso.<br />Mais clareza em cada jogo.</h2>
+            <h2>Menos improviso.<br /><em>Mais clareza</em> em cada jogo.</h2>
           </div>
           <div className="feature-grid">
             {features.map((feature) => (
@@ -122,7 +127,7 @@ export default function Home() {
       <section className="resource-section container" id="recursos">
         <div className="resource-copy">
           <span className="eyebrow">Tudo conectado</span>
-          <h2>Da primeira combinação ao resultado final.</h2>
+          <h2>Da primeira combinação ao <em>resultado final</em>.</h2>
           <p>Seu histórico fica organizado por modalidade e concurso para você voltar quando quiser.</p>
           <Link className="button button-dark" href="/entrar?modo=cadastro">Criar conta gratuita <span>→</span></Link>
         </div>

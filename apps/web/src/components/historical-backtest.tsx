@@ -72,13 +72,26 @@ export function HistoricalBacktest({ slug, tickets, availableContests, pricePerT
       {report.unavailablePrizeUnits > 0 && <p className={styles.notice}>Há {integer.format(report.unavailablePrizeUnits)} premiação{report.unavailablePrizeUnits === 1 ? "" : "ões"} sem valor publicado no histórico. O total em dinheiro acima inclui apenas os valores conhecidos.</p>}
       {report.skippedContests > 0 && <p className={styles.notice}>{integer.format(report.skippedContests)} concurso{report.skippedContests === 1 ? "" : "s"} sem dados complementares foi ignorado.</p>}
       <div className={styles.distribution}><h4>{report.lotofacil ? "Acertos por cartela × concurso" : "Distribuição de acertos de todas as cartelas"}</h4><div>{report.distribution.map((entry) => <span key={entry.hits}><b>{entry.hits} {entry.hits === 1 ? "acerto" : "acertos"}</b><strong>{integer.format(entry.contests)}</strong></span>)}</div></div>
-      <div className={styles.ticketGrid}>{report.tickets.map((ticket, rank) => <article key={ticket.position} className={`${styles.ticket} ${rank === 0 ? styles.ticketLeader : ""}`}>
-        <div className={styles.ticketHeading}><div className={styles.ticketIdentity}><span className={styles.rankBadge}>{rank + 1}º</span><div><small>Cartela original</small><h4>Jogo {ticket.position}</h4></div></div><div className={styles.ticketScore}><strong>{ticket.bestHits}</strong><span>{ticket.bestHits === 1 ? "ponto" : "pontos"}<small>melhor concurso</small></span></div></div>
-        <div className={styles.ticketMetrics}><div><span>Média de pontos</span><strong>{ticket.averageHits.toFixed(1).replace(".", ",")}</strong></div><div><span>Concursos premiados</span><strong>{integer.format(ticket.prizeDraws)}×</strong></div><div><span>Prêmios publicados</span><strong>{formatMoney(ticket.knownGrossCents)}</strong></div></div>
-        {ticket.unavailablePrizeUnits > 0 && <small className={styles.unavailable}>{integer.format(ticket.unavailablePrizeUnits)} prêmio(s) sem valor publicado.</small>}
-        <div className={styles.ticketBreakdown}><strong>{report.lotofacil ? "Concursos por acerto da cartela" : "Distribuição de pontos"}</strong><div className={styles.ticketDistribution}>{ticket.distribution.map((entry) => <span key={entry.hits}>{entry.hits} pts <b>{integer.format(entry.contests)}×</b></span>)}</div></div>
-        <div className={styles.bestContests}><strong>Melhores concursos</strong><p>{ticket.bestContests.map((draw) => `#${draw.contest} · ${formatDate(draw.date)} · ${draw.hits} pts`).join("  /  ") || "—"}</p></div>
-      </article>)}</div>
+      <div className={styles.rankingIntro}><h4>Ranking das cartelas</h4><small>Clique numa cartela para ver os detalhes.</small></div>
+      <div className={styles.ranking}>
+        <div className={styles.rankingHead} aria-hidden="true"><span>#</span><span>Cartela</span><span>Melhor</span><span>Média</span><span>Premiada</span><span>Prêmios</span><span /></div>
+        {report.tickets.map((ticket, rank) => <details key={ticket.position} className={`${styles.rankRow} ${rank === 0 ? styles.rankLeader : ""}`}>
+          <summary>
+            <span className={styles.rankBadge}>{rank + 1}</span>
+            <strong className={styles.rankName}>Jogo {ticket.position}</strong>
+            <span className={styles.rankBest} data-label="Melhor"><b>{ticket.bestHits}</b> pts</span>
+            <span data-label="Média">{ticket.averageHits.toFixed(1).replace(".", ",")}</span>
+            <span data-label="Premiada">{integer.format(ticket.prizeDraws)}×</span>
+            <span className={styles.rankMoney} data-label="Prêmios">{formatMoney(ticket.knownGrossCents)}</span>
+            <i className={styles.chevron} aria-hidden="true" />
+          </summary>
+          <div className={styles.rankDetails}>
+            <div><strong>{report.lotofacil ? "Concursos por acerto" : "Distribuição de pontos"}</strong><div className={styles.ticketDistribution}>{ticket.distribution.map((entry) => <span key={entry.hits}>{entry.hits} pts <b>{integer.format(entry.contests)}×</b></span>)}</div></div>
+            <div><strong>Melhores concursos</strong><ul className={styles.bestList}>{ticket.bestContests.length ? ticket.bestContests.map((draw) => <li key={draw.contest}><span>#{draw.contest}</span><span>{formatDate(draw.date)}</span><b>{draw.hits} pts</b></li>) : <li>—</li>}</ul></div>
+            {ticket.unavailablePrizeUnits > 0 && <small className={styles.unavailable}>{integer.format(ticket.unavailablePrizeUnits)} prêmio(s) sem valor publicado.</small>}
+          </div>
+        </details>)}
+      </div>
       <p className={styles.method}>A simulação repete cada cartela em todos os concursos da amostra e usa os valores por faixa registrados na base. {slug === "super-sete" ? "Na Super Sete, cada marcação múltipla é desdobrada nas apostas simples de suas sete colunas; a distribuição mostra o melhor acerto possível por cartela em cada concurso." : "Em apostas com dezenas extras, considera as combinações simples contidas na cartela."} Não desconta o custo das apostas; quando uma faixa ficou sem ganhadores, o valor hipotético não é estimado.</p>
     </section>}
   </div>;

@@ -6,17 +6,11 @@ import { db } from "@/db";
 import { draws, lotteries, prizeTiers } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { backtestTickets, type BacktestDraw } from "@/lib/historical-backtest";
-import { drawSourceSlugs, lotteryGames, type LotterySlug } from "@/lib/lottery-generator";
-import { validSuperSeteTicket } from "@/lib/super-sete";
+import { drawSourceSlugs } from "@/lib/lottery-generator";
+import { lotterySlugSchema, ticketSchema, ticketsFitLottery } from "@/lib/ticket-validation";
 
-const ticketSchema = z.object({
-  numbers: z.array(z.number().int()).max(50),
-  columns: z.array(z.array(z.number().int().min(0).max(9)).max(3)).length(7).optional(),
-  month: z.number().int().min(1).max(12).optional(),
-  trevos: z.array(z.number().int().min(1).max(6)).optional(),
-}).strict();
 const bodySchema = z.object({
-  slug: z.enum(Object.keys(lotteryGames) as [LotterySlug, ...LotterySlug[]]),
+  slug: lotterySlugSchema,
   sample: z.union([z.literal(200), z.literal("all")]).default("all"),
   tickets: z.array(ticketSchema).min(1).max(120),
 }).strict();
@@ -31,11 +25,7 @@ export async function POST(request: Request) {
     const parsed = bodySchema.safeParse(await request.json());
     if (!parsed.success) return Response.json({ error: "Dados da conferência inválidos." }, { status: 400 });
     const { slug, sample, tickets } = parsed.data;
-    const game = lotteryGames[slug];
-    const valid = tickets.every((ticket) => slug === "super-sete" ? ticket.numbers.length === 0 && !!ticket.columns && validSuperSeteTicket({ columns: ticket.columns }) : ticket.columns === undefined && ticket.numbers.length >= game.min && ticket.numbers.length <= game.max
-      && new Set(ticket.numbers).size === ticket.numbers.length
-      && ticket.numbers.every((number) => number >= game.start && number < game.start + game.total)
-      && (slug !== "mais-milionaria" || ticket.trevos?.length === 2 && new Set(ticket.trevos).size === 2));
+    const valid = ticketsFitLottery(slug, tickets);
     if (!valid) return Response.json({ error: "Há uma cartela inválida para esta modalidade." }, { status: 400 });
 
     stage = "draws";

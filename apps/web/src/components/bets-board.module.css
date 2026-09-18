@@ -1,0 +1,102 @@
+.page { display: grid; gap: var(--gen-gap); padding-bottom: 48px; }
+.header { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin: 8px 0 10px; }
+.header h1 { margin: 12px 0 10px; font-family: var(--font-serif); font-size: clamp(2.3rem, 4vw, 3.5rem); font-weight: 480; line-height: 1.02; letter-spacing: -.03em; }
+.header p { max-width: 640px; color: var(--muted); font-size: .94rem; line-height: 1.6; }
+.header :global(.button) { flex: none; }
+
+.empty { display: grid; justify-items: start; gap: 12px; padding: 36px; border: 1px dashed var(--line-strong); border-radius: var(--r-lg); background: var(--surface); }
+.empty h2 { font-family: var(--font-serif); font-size: 1.8rem; font-weight: 480; }
+.empty p { max-width: 560px; color: var(--muted); line-height: 1.6; }
+
+.summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); }
+.summary > div { display: grid; gap: 4px; padding: 16px 20px; }
+.summary > div + div { border-left: 1px solid var(--line); }
+.summary span { color: var(--faint); font-family: var(--font-mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; }
+.summary strong { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 500; letter-spacing: -.03em; }
+
+.filters { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.statusTabs { display: inline-flex; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); }
+.statusTabs button { min-height: 32px; padding: 0 12px; border: 0; border-radius: var(--r-sm); color: var(--muted); background: transparent; font-size: .8rem; font-weight: 550; cursor: pointer; }
+.statusTabs button[aria-pressed="true"] { color: var(--ink); background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .1); }
+.gameChips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gameChips button { display: inline-flex; align-items: center; gap: 7px; min-height: 30px; padding: 0 11px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--surface); font-size: .78rem; font-weight: 550; cursor: pointer; }
+.gameChips button i { width: 7px; height: 7px; border-radius: 50%; background: var(--chip); }
+.gameChips button[aria-pressed="true"] { border-color: var(--line-strong); color: var(--ink); background: var(--surface-2); }
+
+.group { display: grid; gap: 10px; }
+.group > h2 { display: flex; align-items: baseline; gap: 10px; margin-top: 10px; font-family: var(--font-serif); font-size: 1.6rem; font-weight: 480; letter-spacing: -.02em; }
+.group > h2 small { color: var(--faint); font-family: var(--font-mono); font-size: .8rem; }
+.nothing { color: var(--muted); }
+
+/* Carteira */
+.card {
+  --acc: color-mix(in oklab, var(--game), white var(--lift));
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--game);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+.cardTop { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+.cardTitle { display: grid; gap: 4px; min-width: 0; }
+.gameTag { display: inline-flex; align-items: center; gap: 7px; color: var(--acc); font-family: var(--font-mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+.gameTag i { width: 7px; height: 7px; border-radius: 50%; background: var(--game); }
+.cardTitle h3 { font-size: 1.02rem; font-weight: 620; letter-spacing: -.015em; }
+.cardTitle small { color: var(--muted); font-size: .78rem; }
+.cardTitle small b { color: var(--ink); font-family: var(--font-mono); font-weight: 600; }
+.status { flex: none; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-family: var(--font-mono); font-size: .66rem; white-space: nowrap; }
+.statusDrawn { border-color: color-mix(in srgb, var(--success) 35%, transparent); color: var(--success); background: var(--success-soft); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.actions button { min-height: 34px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: var(--r-md); color: var(--ink); background: var(--surface); font-size: .8rem; font-weight: 600; cursor: pointer; }
+.actions button:hover:not(:disabled) { border-color: var(--faint); }
+.actions button:disabled { opacity: .6; cursor: wait; }
+.actions .primary { border-color: transparent; color: #fff; background: var(--game); }
+.actions .primary:hover:not(:disabled) { border-color: transparent; filter: brightness(1.1); }
+.actions .ghostDanger { margin-left: auto; border-color: transparent; color: var(--muted); }
+.actions .ghostDanger:hover { color: var(--danger); }
+.actions .danger { margin-left: auto; border-color: transparent; color: #fff; background: var(--danger); }
+
+.error { color: var(--danger); font-size: .82rem; }
+.pending { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px solid var(--warn-line); border-radius: var(--r-md); background: var(--warn-soft); }
+.pending p { flex: 1 1 320px; font-size: .82rem; line-height: 1.5; }
+.pending button { min-height: 34px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: var(--r-md); color: var(--ink); background: var(--surface); font-size: .8rem; font-weight: 600; cursor: pointer; }
+
+.outcome { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); }
+.outcomeDraws { display: grid; gap: 10px; }
+.outcomeDraws span { color: var(--faint); font-family: var(--font-mono); font-size: .66rem; letter-spacing: .06em; }
+.outcomeTotal { display: grid; justify-items: end; gap: 2px; text-align: right; }
+.outcomeTotal span { color: var(--faint); font-family: var(--font-mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; }
+.outcomeTotal strong { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 600; letter-spacing: -.03em; }
+.outcomeTotal small { color: var(--muted); font-size: .74rem; }
+
+.balls { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 4px; }
+.balls b { display: grid; width: 26px; height: 26px; place-items: center; border-radius: 50%; color: var(--muted); background: var(--surface-2); font-family: var(--font-mono); font-size: .66rem; font-weight: 500; }
+.balls .hit, .balls .drawBall { color: #fff; background: var(--game); font-weight: 600; }
+.column { padding: 3px 8px; border-radius: 999px; color: var(--muted); background: var(--surface-2); font-family: var(--font-mono); font-size: .68rem; }
+.extra { margin-left: 4px; color: var(--acc); font-size: .74rem; font-weight: 550; }
+
+.tickets { display: grid; overflow: hidden; border: 1px solid var(--line); border-radius: var(--r-md); list-style: none; }
+.tickets li { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 8px 14px; }
+.tickets li + li { border-top: 1px solid var(--line); }
+.tickets .balls { margin: 0; }
+.winner { background: color-mix(in srgb, var(--success) 7%, transparent); }
+.ticketLabel { color: var(--faint); font-family: var(--font-mono); font-size: .7rem; }
+.score { display: grid; justify-items: end; color: var(--muted); font-size: .74rem; white-space: nowrap; }
+.score b { color: var(--ink); font-family: var(--font-mono); font-size: .95rem; }
+.score em { color: var(--success); font-style: normal; font-weight: 600; }
+
+@media (max-width: 760px) {
+  .header { align-items: start; flex-direction: column; gap: 14px; }
+  .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .summary > div:nth-child(3) { border-left: 0; }
+  .summary > div:nth-child(n + 3) { border-top: 1px solid var(--line); }
+  .cardTop { flex-direction: column; gap: 8px; }
+  .outcome { grid-template-columns: 1fr; }
+  .outcomeTotal { justify-items: start; text-align: left; }
+  .tickets li { grid-template-columns: 1fr auto; padding: 10px 12px; }
+  .ticketLabel { grid-column: 1 / -1; }
+  .card { padding: 14px; }
+}

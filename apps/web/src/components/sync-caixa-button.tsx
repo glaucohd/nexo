@@ -26,8 +26,9 @@ export function SyncCaixaButton() {
   }
 
   return <div className="sync-caixa">
-    <button type="button" className="signout-button" disabled={state === "loading"} onClick={sync}>
-      {state === "loading" ? "Atualizando…" : "Atualizar base ↻"}
+    <button type="button" className="sidebar-action" disabled={state === "loading"} onClick={sync}>
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={state === "loading" ? "spin" : ""}><path d="M16 10a6 6 0 0 1-10.2 4.3M4 10a6 6 0 0 1 10.2-4.3M14.5 2.8v3.1h-3.1M5.5 17.2v-3.1h3.1" /></svg>
+      <span>{state === "loading" ? "Atualizando…" : "Atualizar base"}</span>
     </button>
     {message && <small className={state === "error" ? "sync-caixa-error" : "sync-caixa-message"}>{message}</small>}
   </div>;

@@ -1,79 +1,103 @@
+/* Base visual compartilhada pelas telas de fechamento. As cores vêm do
+   .hub do gerador (--generator-accent, --gen-accent, --gen-tint). */
 .page { display: grid; gap: var(--gen-gap); color: var(--ink); padding-bottom: 40px; }
 
-.header { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
-.header h1 { margin: 6px 0 8px; font-family: "Fredoka Variable", sans-serif; font-size: clamp(2rem, 3.3vw, 2.9rem); font-weight: 600; letter-spacing: -.035em; }
-.header p, .card p, .preview p { color: var(--muted); font-size: var(--gen-body); line-height: 1.6; }
-.header > span { flex: none; padding: 10px 14px; border-radius: 999px; color: var(--gen-accent); background: var(--gen-tint); font-size: var(--gen-small); font-weight: 900; white-space: nowrap; }
+.header { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin: 18px 0 10px; }
+.header h1 { margin: 12px 0 10px; font-family: var(--font-serif); font-size: clamp(2.3rem, 4vw, 3.5rem); font-weight: 480; line-height: 1.02; letter-spacing: -.03em; }
+.header h1 em { color: var(--gen-accent); font-weight: 450; }
+.header p { max-width: 660px; color: var(--muted); font-size: .94rem; line-height: 1.6; }
+.header > span { flex: none; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r-md); color: var(--muted); background: var(--surface); font-family: var(--font-mono); font-size: .7rem; white-space: nowrap; }
+.card p, .preview p { color: var(--muted); font-size: var(--gen-body); line-height: 1.6; }
 
-.layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(270px, .7fr); align-items: start; gap: var(--gen-gap); }
+.layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(280px, .7fr); align-items: start; gap: var(--gen-gap); }
 .controls { display: grid; gap: var(--gen-gap); min-width: 0; }
-.card, .preview, .results, .ticket { min-width: 0; padding: var(--gen-pad-card); border-radius: var(--gen-radius-card); background: var(--surface); box-shadow: var(--gen-card-shadow); }
-.card h2, .preview h2 { margin-bottom: 14px; font-family: "Fredoka Variable", sans-serif; font-size: var(--gen-title); font-weight: 620; }
+.card, .preview, .results { min-width: 0; padding: var(--gen-pad-card); border: 1px solid var(--line); border-radius: var(--gen-radius-card); background: var(--surface); }
+.card h2 { margin-bottom: 14px; font-size: 1.02rem; font-weight: 620; letter-spacing: -.015em; }
 .card p { margin-top: 12px; font-size: var(--gen-small); }
 
-/* Níveis de garantia: a escolha mais importante da tela, então são cartões
-   clicáveis de verdade, não abas apertadas. */
-.segment { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.segment button { display: grid; align-content: center; min-height: 64px; padding: 10px; border: 1.5px solid transparent; border-radius: var(--gen-radius-control); color: var(--muted); background: var(--paper); font: inherit; font-size: .73rem; font-weight: 900; line-height: 1.4; cursor: pointer; transition: border-color .15s, background .15s, color .15s; }
-.segment button:hover { border-color: color-mix(in srgb, var(--gen-accent) 35%, transparent); }
-.segment .active { color: var(--gen-accent); background: var(--gen-tint); border-color: var(--gen-accent); }
+/* Níveis de garantia como cartões clicáveis. */
+.segment { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.segment button { display: grid; align-content: center; min-height: 58px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); color: var(--muted); background: var(--surface); font: inherit; font-size: .78rem; font-weight: 550; line-height: 1.4; text-align: left; cursor: pointer; transition: border-color .15s, background-color .15s, color .15s; }
+.segment button:hover { border-color: var(--line-strong); color: var(--ink); }
+.segment .active, .segment .active:hover { border-color: var(--gen-ring); color: var(--ink); background: var(--gen-tint); box-shadow: inset 0 0 0 1px var(--gen-ring); font-weight: 620; }
 
-.field { display: grid; gap: 7px; margin-top: 16px; color: var(--muted); font-size: var(--gen-small); font-weight: 850; }
-.field select { min-height: 46px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); color: var(--ink); background: var(--paper); font: inherit; font-weight: 700; cursor: pointer; }
+.field { display: grid; gap: 7px; margin-top: 16px; color: var(--muted); font-size: var(--gen-small); font-weight: 550; }
+.field select {
+  min-height: 42px;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--gen-radius-control);
+  color: var(--ink);
+  background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%238d8a9b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E") no-repeat right 10px center / 16px;
+  font: inherit;
+  font-size: .86rem;
+  appearance: none;
+  cursor: pointer;
+}
 
-.autoFill { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-.autoFill button { min-height: 42px; padding: 8px 14px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); color: var(--ink); background: var(--paper); cursor: pointer; font: inherit; font-size: var(--gen-small); font-weight: 850; transition: border-color .15s, background .15s; }
-.autoFill button:hover:not(:disabled) { border-color: var(--gen-accent); background: var(--gen-tint); }
+.autoFill { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.autoFill button { min-height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); background: var(--surface); font: inherit; font-size: .78rem; font-weight: 550; cursor: pointer; transition: border-color .15s; }
+.autoFill button:hover:not(:disabled) { border-color: var(--gen-ring); }
 .autoFill button:disabled { opacity: .45; cursor: not-allowed; }
-.autoFill .clear { color: var(--muted); }
+.autoFill .clear { border-color: transparent; color: var(--muted); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
 
-/* Dezenas redondas, como bolas — mesma assinatura visual do resto do app. */
-.board { display: grid; grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); gap: 6px; margin-top: 16px; padding: 14px; border-radius: var(--gen-radius-card); background: var(--gen-tint); }
-.board button { aspect-ratio: 1; min-height: 0; border: 0; border-radius: 50%; color: var(--muted); background: var(--surface); cursor: pointer; font: inherit; font-size: clamp(.6rem, 1.5vw, .78rem); font-weight: 850; font-variant-numeric: tabular-nums; transition: transform .12s, color .12s, background .12s; }
-.board button:hover:not(.selected) { color: var(--gen-accent); transform: translateY(-1px); }
-.board button.selected, .board .selected { color: white; background: var(--gen-accent); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .14), 0 2px 6px color-mix(in srgb, var(--gen-accent) 35%, transparent); }
+/* Volante clicável: dezenas redondas em mono. */
+.board { display: grid; grid-template-columns: repeat(var(--columns, 10), minmax(0, 1fr)); gap: 6px; margin-top: 16px; padding: 12px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); background: var(--surface-2); }
+.board button { aspect-ratio: 1; min-height: 0; border: 0; border-radius: 50%; color: var(--muted); background: var(--surface); font-family: var(--font-mono); font-size: clamp(.6rem, 1.4vw, .78rem); font-weight: 500; cursor: pointer; transition: color .12s, background-color .12s, box-shadow .12s; }
+.board button:hover:not(.selected):not(.excluded) { color: var(--ink); box-shadow: inset 0 0 0 1px var(--gen-ring); }
+.board button.selected, .board .selected { color: #fff; background: var(--generator-accent); font-weight: 600; }
+.board button.excluded, .board .excluded { color: var(--faint); background: transparent; text-decoration: line-through; opacity: .5; }
 
-.generate { min-height: 56px; border: 0; border-radius: var(--gen-radius-control); color: white; background: var(--gen-accent); cursor: pointer; font: inherit; font-size: .95rem; font-weight: 950; box-shadow: 0 6px 18px color-mix(in srgb, var(--gen-accent) 30%, transparent); transition: transform .15s, box-shadow .15s; }
-.generate:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 24px color-mix(in srgb, var(--gen-accent) 38%, transparent); }
-.generate:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+.generate { min-height: 48px; border: 0; border-radius: var(--gen-radius-control); color: #fff; background: var(--generator-accent); font: inherit; font-size: .92rem; font-weight: 620; cursor: pointer; transition: filter .15s; }
+.generate:hover:not(:disabled) { filter: brightness(1.1); }
+.generate:disabled { opacity: .4; cursor: not-allowed; }
 
-.priceNote { font-size: var(--gen-small); color: var(--muted); line-height: 1.6; }
-.priceNote strong { color: var(--gen-accent); }
-.error { padding: 13px 15px; border-radius: var(--gen-radius-control); color: #9b3024; background: color-mix(in srgb, #9b3024 9%, var(--surface)); font-weight: 800; font-size: var(--gen-small); }
+.priceNote { padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-md); color: var(--muted); background: var(--surface-2); font-size: .76rem; line-height: 1.6; }
+.priceNote strong { color: var(--ink); font-family: var(--font-mono); font-weight: 600; }
+.priceNote a { color: var(--gen-accent); font-weight: 600; }
+.error { padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent); border-radius: var(--gen-radius-control); color: var(--danger); background: var(--danger-soft); font-size: .82rem; font-weight: 550; }
 
-.preview { position: sticky; top: 20px; box-shadow: var(--gen-card-shadow-lift); }
-.preview h2 { margin: 6px 0 8px; font-size: 1.8rem; }
+.preview { position: sticky; top: 20px; display: grid; gap: 10px; }
+.preview h2 { margin: 4px 0 2px; font-family: var(--font-serif); font-size: 2rem; font-weight: 480; line-height: 1.1; letter-spacing: -.025em; }
 
-.roundList { display: grid; gap: 20px; scroll-margin-top: 24px; }
+.roundList { display: grid; gap: 16px; scroll-margin-top: 24px; }
 .results { display: grid; gap: var(--gen-gap); }
-.resultHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.resultHeading h2 { margin: 5px 0 0; font-family: "Fredoka Variable", sans-serif; font-size: 1.3rem; font-weight: 640; overflow-wrap: anywhere; }
-.roundActions { display: flex; flex: none; gap: 8px; }
-.resultHeading button { min-height: 42px; padding: 8px 15px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); color: var(--gen-accent); background: var(--paper); cursor: pointer; font: inherit; font-size: var(--gen-small); font-weight: 850; }
-.resultHeading button:hover { border-color: var(--gen-accent); background: var(--gen-tint); }
-.resultHeading .remove { color: var(--danger); }
+.resultHeading { display: flex; align-items: end; justify-content: space-between; gap: 12px; }
+.resultHeading h2 { margin: 10px 0 0; font-family: var(--font-serif); font-size: 1.55rem; font-weight: 480; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.roundActions { display: flex; flex: none; flex-wrap: wrap; align-items: flex-start; justify-content: flex-end; gap: 6px; }
+.roundActions > button { min-height: 36px; padding: 0 13px; border: 1px solid var(--line-strong); border-radius: var(--gen-radius-control); color: var(--ink); background: var(--surface); font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; }
+.roundActions > button:hover { border-color: var(--gen-ring); }
+.roundActions > .remove { color: var(--danger); }
+.roundActions > .remove:hover { border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
 
-.ticketGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-.ticket { padding: 16px; background: var(--paper); box-shadow: none; }
-.ticket p { color: var(--muted); font-size: var(--gen-small); line-height: 1.7; font-variant-numeric: tabular-nums; }
+.ticketGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.ticket { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); background: var(--surface); }
+.ticket > div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.ticket strong { font-size: .86rem; font-weight: 620; }
+.ticket small { color: var(--faint); font-family: var(--font-mono); font-size: .66rem; }
+.ticket p { overflow-wrap: anywhere; color: var(--muted); font-family: var(--font-mono); font-size: .72rem; line-height: 1.7; }
+.ticket .board { gap: 3px; margin: 10px 0; padding: 7px; }
+.ticket .board span, .ticket .board button { font-size: .54rem; }
+.miniVolante { display: grid; grid-template-columns: repeat(var(--mini-columns, 5), minmax(0, 1fr)); gap: 3px; margin: 10px 0; padding: 7px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2); }
+.miniVolante span { display: grid; aspect-ratio: 1; place-items: center; border-radius: 50%; color: var(--faint); background: var(--surface); font-family: var(--font-mono); font-size: .56rem; }
+.miniVolante .miniMarked { color: #fff; background: var(--generator-accent); font-weight: 600; }
 
-.page button:focus-visible, .page select:focus-visible { outline: 3px solid color-mix(in srgb, var(--gen-accent) 50%, transparent); outline-offset: 2px; }
+.page button:focus-visible, .page select:focus-visible { outline: 2px solid var(--gen-ring); outline-offset: 2px; }
 
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
   .preview { position: static; }
 }
 @media (max-width: 720px) {
-  .header { align-items: start; flex-direction: column; gap: 10px; }
+  .header { align-items: start; flex-direction: column; gap: 10px; margin-top: 8px; }
   .resultHeading { align-items: start; flex-direction: column; gap: 12px; }
   .roundActions { width: 100%; }
   .roundActions button { flex: 1; }
 }
 @media (max-width: 520px) {
-  .card, .preview, .results { padding: 18px; }
+  .card, .preview, .results { padding: 16px; }
   .segment { grid-template-columns: 1fr; }
-  .segment button { min-height: 52px; }
-  .autoFill { flex-direction: column; }
-  .autoFill button { width: 100%; }
+  .autoFill button { flex: 1 1 auto; }
   .ticketGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+

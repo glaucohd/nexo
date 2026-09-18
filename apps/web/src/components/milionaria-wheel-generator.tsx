@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { HistoricalBacktest } from "@/components/historical-backtest";
+import { SaveBetsButton } from "@/components/save-bets-button";
 import { standardTicketPriceCents, type DrawNumbers } from "@/lib/lottery-generator";
 import { cyclicWheel, type CyclicWheelTicket } from "@/lib/cyclic-wheel";
 
@@ -112,7 +113,7 @@ export function MilionariaWheelGenerator({ history }: { history: DrawNumbers[] }
 
   return <main className={styles.page} style={{ "--generator-accent": "#3445a5" } as CSSProperties}>
     <header className={styles.header}>
-      <div><span className="eyebrow">Fechamento</span><h1>Redução da +Milionária.</h1><p>Escolha um pool de dezenas maior que a aposta simples. A garantia é só sobre as 6 dezenas: acertar 4 ou 5 já paga o prêmio base, com qualquer trevo. Os trevos certos destravam um prêmio ainda melhor, mas não são exigidos pela garantia.</p></div>
+      <div><span className="eyebrow">Fechamento</span><h1>Redução da <em>+Milionária</em>.</h1><p>Escolha um pool de dezenas maior que a aposta simples. A garantia é só sobre as 6 dezenas: acertar 4 ou 5 já paga o prêmio base, com qualquer trevo. Os trevos certos destravam um prêmio ainda melhor, mas não são exigidos pela garantia.</p></div>
       <span>{history.length} concursos na base</span>
     </header>
     <div className={styles.layout}>
@@ -156,7 +157,7 @@ export function MilionariaWheelGenerator({ history }: { history: DrawNumbers[] }
         <div className={styles.resultHeading}>
           <div><span className="eyebrow">Redução {rounds.length - position}</span><h2>{round.tickets.length} jogos · garante {round.preset.guarantee} acertos · trevos {round.trevos.map(pad).join(", ")}</h2></div>
           <div className={styles.roundActions}>
-            <button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
+            <SaveBetsButton slug="mais-milionaria" mode="reducao" tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers, trevos: round.trevos }))} name={`+Milionária · redução ${round.preset.poolSize} dezenas · garante ${round.preset.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
             <button type="button" className={styles.remove} onClick={() => removeRound(round.id)}>Remover</button>
           </div>
         </div>

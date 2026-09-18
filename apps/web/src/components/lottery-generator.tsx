@@ -8,8 +8,10 @@ import { LotofacilWheelGenerator } from "@/components/lotofacil-wheel-generator"
 import { DiaDeSorteWheelGenerator } from "@/components/dia-de-sorte-wheel-generator";
 import { NumberWheelGenerator } from "@/components/number-wheel-generator";
 import { MilionariaWheelGenerator } from "@/components/milionaria-wheel-generator";
+import { LotomaniaWheelGenerator } from "@/components/lotomania-wheel-generator";
 import { HistoricalBacktest } from "@/components/historical-backtest";
 import { NumberInsightPicker } from "@/components/number-insight-picker";
+import { SaveBetsButton } from "@/components/save-bets-button";
 import {
   availableLotteryNumbers,
   canExclude,
@@ -84,28 +86,30 @@ function Board({ slug, numbers, general = new Set<string>(), personal = new Set<
   </div>;
 }
 
-const wheelSlugs = new Set<LotterySlug>(["lotofacil", "dia-de-sorte", "mega-sena", "quina", "mais-milionaria", "dupla-sena", "timemania"]);
+const wheelSlugs = new Set<LotterySlug>(["lotofacil", "dia-de-sorte", "mega-sena", "quina", "mais-milionaria", "dupla-sena", "timemania", "lotomania"]);
 const wheelLabels: Partial<Record<LotterySlug, string>> = {
-  lotofacil: "Redução 18 → 6",
+  lotofacil: "Redução 18 ou 20",
   "dia-de-sorte": "Redução por pool",
   "mega-sena": "Redução por pool",
   quina: "Redução por pool",
   "mais-milionaria": "Redução por pool",
   "dupla-sena": "Redução por pool",
   timemania: "Redução por pool",
+  lotomania: "Redução 70 dezenas",
 };
 
 export function LotteryGenerator({ histories, initialSlug }: { histories: Record<string, DrawNumbers[]>; initialSlug?: string }) {
   const [slug, setSlug] = useState<LotterySlug>(slugs.includes(initialSlug as LotterySlug) ? initialSlug as LotterySlug : "lotofacil");
   const [tool, setTool] = useState<"generator" | "wheel">("generator");
   return <div className={styles.hub} style={{ "--generator-accent": lotteryGames[slug].color } as CSSProperties}>
-    <div className={styles.selectorBar}><label htmlFor="generator-lottery">Modalidade</label><select id="generator-lottery" value={slug} onChange={(event) => { setSlug(event.target.value as LotterySlug); setTool("generator"); }}>{slugs.map((entry) => <option value={entry} key={entry}>{lotteryGames[entry].name}</option>)}</select><span>Um gerador para cada volante</span></div>
-    {wheelSlugs.has(slug) && <div className={styles.segment}><button type="button" className={tool === "generator" ? styles.active : ""} onClick={() => setTool("generator")}>Gerador</button><button type="button" className={tool === "wheel" ? styles.active : ""} onClick={() => setTool("wheel")}>{wheelLabels[slug]}</button></div>}
+    <nav className={styles.games} aria-label="Modalidade">{slugs.map((entry) => <button type="button" key={entry} aria-pressed={slug === entry} className={styles.gameChip} style={{ "--chip": lotteryGames[entry].color } as CSSProperties} onClick={() => { setSlug(entry); setTool("generator"); }}><i aria-hidden="true" />{lotteryGames[entry].name}</button>)}</nav>
+    {wheelSlugs.has(slug) && <div className={styles.toolTabs} role="group" aria-label="Ferramenta"><button type="button" aria-pressed={tool === "generator"} onClick={() => setTool("generator")}>Gerador</button><button type="button" aria-pressed={tool === "wheel"} onClick={() => setTool("wheel")}>{wheelLabels[slug]}</button></div>}
     {slug === "mais-milionaria" && tool === "wheel" ? <MilionariaWheelGenerator history={histories[slug] ?? []} />
       : slug === "mais-milionaria" ? <MilionariaGenerator history={histories[slug] ?? []} />
         : slug === "super-sete" ? <SuperSeteGenerator history={histories[slug] ?? []} />
           : slug === "lotofacil" && tool === "wheel" ? <LotofacilWheelGenerator history={histories[slug] ?? []} />
             : slug === "dia-de-sorte" && tool === "wheel" ? <DiaDeSorteWheelGenerator history={histories[slug] ?? []} />
+            : slug === "lotomania" && tool === "wheel" ? <LotomaniaWheelGenerator history={histories[slug] ?? []} />
             : (slug === "mega-sena" || slug === "quina" || slug === "dupla-sena" || slug === "timemania") && tool === "wheel" ? <NumberWheelGenerator slug={slug} history={histories[slug] ?? []} />
               : <StandardGenerator key={slug} slug={slug} history={histories[slug] ?? []} />}
   </div>;
@@ -246,7 +250,7 @@ function StandardGenerator({ slug, history }: { slug: LotterySlug; history: Draw
   }
 
   return <main className={styles.page}>
-    <header className={styles.header}><div><span className="eyebrow">Gerador de jogos</span><h1>Monte sua {game.name}.</h1><p>{slug === "dupla-sena" ? "Cada cartela concorre nos dois sorteios do concurso pelo mesmo preço — uma aposta, duas chances. A conferência histórica avalia os dois sorteios." : "Leia as dezenas, marque seus palpites e confira cada cartela no formato do volante."}</p></div><span className={styles.badge}>{game.total} números · {game.min} a {game.max} por jogo · {history.length} concursos na base</span></header>
+    <header className={styles.header}><div><span className="eyebrow">Gerador de jogos</span><h1>Monte sua <em>{game.name}</em>.</h1><p>{slug === "dupla-sena" ? "Cada cartela concorre nos dois sorteios do concurso pelo mesmo preço — uma aposta, duas chances. A conferência histórica avalia os dois sorteios." : "Leia as dezenas, marque seus palpites e confira cada cartela no formato do volante."}</p></div><span className={styles.badge}>{game.total} números · {game.min} a {game.max} por jogo · {history.length} concursos na base</span></header>
 
     <div className={styles.layout}>
       <div className={styles.controls}>
@@ -332,7 +336,7 @@ function StandardGenerator({ slug, history }: { slug: LotterySlug; history: Draw
 
     {error && <p className={styles.error} role="alert">{error}</p>}
     {tickets.length > 0 && <section ref={resultsRef} className={styles.results} aria-live="polite">
-      <div className={styles.resultsHeader}><div><span className="eyebrow">Jogos gerados</span><h2>{tickets.length} cartelas prontas</h2><p>Copie ou anote: nesta versão, os jogos ainda não são salvos automaticamente.</p></div><button type="button" onClick={copyAll}>{copied ? "Copiados ✓" : "Copiar todos"}</button></div>
+      <div className={styles.resultsHeader}><div><span className="eyebrow">Jogos gerados</span><h2>{tickets.length} cartelas prontas</h2><p>Salve para conferir depois em Minhas apostas, ou copie os jogos.</p></div><div className={styles.resultsActions}><SaveBetsButton key={JSON.stringify(tickets)} slug={slug} tickets={tickets} name={`${game.name} · ${tickets.length} ${tickets.length === 1 ? "jogo" : "jogos"} de ${tickets[0].numbers.length} dezenas`} /><button type="button" onClick={copyAll}>{copied ? "Copiados ✓" : "Copiar todos"}</button></div></div>
       {portfolio && <div className={styles.coverageSummary}><strong>Cobertura possível desta carteira</strong><div><span><b>{integer.format(portfolio.exact15Draws)}</b> combinações distintas para 15 pontos</span><span><b>{integer.format(portfolio.drawsWith14Plus)}</b> cenários distintos de 14 ou 15 pontos</span><span><b>{integer.format(portfolio.simpleBets)}</b> apostas simples embutidas</span><span><b>{portfolio.coveredNumbers}/25</b> dezenas presentes</span></div><p>{portfolio.raw14PlusDraws === portfolio.drawsWith14Plus ? "As cartelas não repetem cenários de 14+." : `${integer.format(portfolio.raw14PlusDraws - portfolio.drawsWith14Plus)} cenários de 14+ se repetem entre cartelas.`} Para 15 pontos, a carteira cobre {integer.format(portfolio.exact15Draws)} de {integer.format(portfolio.possibleDraws)} sorteios possíveis. Isto mostra possibilidades, não prêmios já obtidos.</p></div>}
       <HistoricalBacktest key={JSON.stringify(tickets)} slug={slug} tickets={tickets} availableContests={history.length} />
       <div className={styles.ticketGrid}>{tickets.map((ticket, index) => <article className={styles.ticket} key={`${index}-${ticket.numbers.join("-")}`}>

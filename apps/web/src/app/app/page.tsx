@@ -24,7 +24,7 @@ export default async function DashboardPage() {
       <header className="dashboard-header">
         <div>
           <span className="eyebrow">Seu painel de jogos</span>
-          <h1>Qual jogo vamos analisar hoje?</h1>
+          <h1>Qual jogo vamos <em>analisar</em> hoje?</h1>
           <p>Escolha uma modalidade para consultar dados ou montar uma nova carteira.</p>
         </div>
         <span className="status-pill"><i /> Base conectada</span>
@@ -67,7 +67,7 @@ export default async function DashboardPage() {
         <article className="dashboard-card action-card wide">
           <div>
             <span className="eyebrow">Comece pela Lotofácil</span>
-            <h2>Monte sua primeira carteira no novo Nexo</h2>
+            <h2>Monte sua primeira carteira no <em>Nexo</em></h2>
             <p>Use frequências, repetições e filtros para gerar jogos diversificados.</p>
             <Link className="button button-primary" href="/app/analises?modalidade=lotofacil">Explorar análises <span>→</span></Link>
           </div>

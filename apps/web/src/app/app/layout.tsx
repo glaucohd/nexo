@@ -5,6 +5,7 @@ import { AppNav } from "@/components/app-nav";
 import { Brand } from "@/components/brand";
 import { SignOutButton } from "@/components/sign-out-button";
 import { SyncCaixaButton } from "@/components/sync-caixa-button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { auth } from "@/lib/auth";
 
 import styles from "./layout.module.css";
@@ -54,10 +55,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   if (!session) redirect("/entrar");
 
+  const initials = session.user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <Brand />
+        <div className="sidebar-top">
+          <Brand />
+          <ThemeToggle />
+        </div>
         <p className="sidebar-label">Meu Nexo</p>
         <AppNav />
         <div className="sidebar-games" aria-label="Modalidades disponíveis">
@@ -71,11 +77,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <span className="game-dot dupla-sena" title="Dupla Sena" />
           <span className="game-dot timemania" title="Timemania" />
         </div>
-        <div className="sidebar-user">
-          <strong>{session.user.name}</strong>
-          <span>{session.user.email}</span>
-          <SyncCaixaButton />
-          <SignOutButton />
+        <div className="sidebar-footer">
+          <div className="sidebar-user">
+            <span className="sidebar-avatar" aria-hidden="true">{initials || "?"}</span>
+            <div>
+              <strong>{session.user.name}</strong>
+              <span>{session.user.email}</span>
+            </div>
+          </div>
+          <div className="sidebar-actions">
+            <SyncCaixaButton />
+            <SignOutButton />
+          </div>
         </div>
       </aside>
       <main className="app-content">{children}</main>

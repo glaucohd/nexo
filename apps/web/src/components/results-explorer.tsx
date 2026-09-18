@@ -82,18 +82,15 @@ export function ResultsExplorer({ histories }: { histories: Record<string, Lotte
 
   return (
     <section className={styles.page} style={{ "--result-accent": game.color, "--result-columns": game.columns } as React.CSSProperties}>
+      <nav className={styles.games} aria-label="Modalidade">
+        {games.map((entry) => <button type="button" key={entry.slug} aria-pressed={slug === entry.slug} className={styles.gameChip} style={{ "--chip": entry.color } as React.CSSProperties} onClick={() => { setSlug(entry.slug); setIndex(0); }}><i aria-hidden="true" />{entry.name}</button>)}
+      </nav>
       <header className={styles.header}>
         <div>
           <span className="eyebrow">Histórico de sorteios</span>
-          <h1>Veja o sorteio na cartela.</h1>
+          <h1>Veja o sorteio <em>na cartela</em>.</h1>
           <p>Escolha a modalidade e percorra os concursos para ver a posição de cada dezena sorteada.</p>
         </div>
-        <label className={styles.selector}>
-          <span>Modalidade</span>
-          <select value={slug} onChange={(event) => { setSlug(event.target.value); setIndex(0); }}>
-            {games.map((entry) => <option key={entry.slug} value={entry.slug}>{entry.name}</option>)}
-          </select>
-        </label>
       </header>
 
       {draw ? (

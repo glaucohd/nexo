@@ -64,3 +64,50 @@ export function lotofacilWheel14(available: readonly number[]): LotofacilWheelTi
     }),
   );
 }
+
+function validated20(available: readonly number[]) {
+  if (
+    available.length !== 20 ||
+    new Set(available).size !== 20 ||
+    available.some((number) => !Number.isInteger(number) || number < 1 || number > 25)
+  ) {
+    throw new RangeError("A redução exige exatamente 20 dezenas distintas, de 1 a 25.");
+  }
+  return [...available].sort((a, b) => a - b);
+}
+
+function ticketExcluding(sorted: readonly number[], excluded: readonly number[]): LotofacilWheelTicket {
+  const excludedSet = new Set(excluded);
+  return { numbers: sorted.filter((number) => !excludedSet.has(number)), excluded: [...excluded].sort((a, b) => a - b) };
+}
+
+// Com 20 dezenas, cada jogo de 15 é definido pelas 5 que deixa de fora, e um
+// sorteio que cai dentro das 20 também "deixa de fora" 5 delas. Os acertos
+// de um jogo são 10 + quantas das suas 5 excluídas também não saíram.
+//
+// Garantia 12 com 4 jogos: as 20 dezenas viram 4 grupos de 5 e cada jogo
+// exclui um grupo. As 5 que não saem se espalham por só 4 grupos, então
+// algum grupo recebe ao menos 2 delas — o jogo que exclui esse grupo faz 12+.
+export function lotofacilWheel20(available: readonly number[]): LotofacilWheelTicket[] {
+  const sorted = validated20(available);
+  // Grupos intercalados (1º, 5º, 9º…) para cada jogo misturar baixas e altas.
+  return Array.from({ length: 4 }, (_, group) => ticketExcluding(sorted, sorted.filter((_, index) => index % 4 === group)));
+}
+
+// Cobertura de todos os trios de 10 pontos por 17 blocos de 5 (achada por
+// busca; cada trio de {0..9} está contido em ao menos um bloco).
+const TRIPLE_COVER_10 = [
+  [0, 1, 2, 6, 8], [0, 1, 3, 4, 7], [0, 1, 5, 8, 9], [0, 2, 3, 6, 8], [0, 2, 4, 8, 9], [0, 2, 5, 7, 8],
+  [0, 3, 4, 5, 6], [0, 3, 6, 7, 9], [1, 2, 3, 5, 9], [1, 2, 4, 5, 6], [1, 2, 6, 7, 9], [1, 3, 4, 8, 9],
+  [1, 3, 5, 6, 7], [1, 6, 7, 8, 9], [2, 3, 4, 7, 8], [3, 4, 5, 6, 8], [4, 5, 6, 7, 9],
+];
+
+// Garantia 13 com 34 jogos: as 20 dezenas viram 2 metades de 10. Das 5 que
+// não saem, ao menos 3 caem na mesma metade (casa dos pombos), e esse trio
+// está dentro de algum bloco excluído daquela metade — o jogo correspondente
+// tem ao menos 3 excluídas que também não saíram, ou seja, 13+ pontos.
+export function lotofacilWheel20x13(available: readonly number[]): LotofacilWheelTicket[] {
+  const sorted = validated20(available);
+  const halves = [sorted.filter((_, index) => index % 2 === 0), sorted.filter((_, index) => index % 2 === 1)];
+  return halves.flatMap((half) => TRIPLE_COVER_10.map((block) => ticketExcluding(sorted, block.map((index) => half[index]))));
+}

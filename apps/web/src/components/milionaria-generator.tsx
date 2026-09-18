@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { NumberInsightPicker } from "@/components/number-insight-picker";
 import { HistoricalBacktest } from "@/components/historical-backtest";
+import { SaveBetsButton } from "@/components/save-bets-button";
 import type { GeneratorMode } from "@/lib/lottery-generator";
 
 import {
@@ -167,7 +168,7 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
 
   return <main className={styles.page}>
     <header className={styles.header}>
-      <div><span className="eyebrow">Gerador de jogos</span><h1>Monte sua +Milionária.</h1><p>Leia o histórico, fixe suas dezenas e combine as escolhas com as exclusões do volante.</p></div>
+      <div><span className="eyebrow">Gerador de jogos</span><h1>Monte sua <em>+Milionária</em>.</h1><p>Leia o histórico, fixe suas dezenas e combine as escolhas com as exclusões do volante.</p></div>
       <span className={styles.gameBadge}>50 dezenas + 6 trevos</span>
     </header>
 
@@ -246,7 +247,7 @@ export function MilionariaGenerator({ history }: { history: HistoryDraw[] }) {
     </div>
 
     {error && <p className={styles.error} role="alert">{error}</p>}
-    {tickets.length > 0 && <section ref={resultsRef} className={styles.results} aria-live="polite"><div className={styles.resultsHeading}><div><span className="eyebrow">Jogos gerados</span><h2>{tickets.length} cartelas prontas para conferir</h2><p>Copie ou anote antes de sair: estes jogos ainda não são salvos automaticamente no Nexo.</p></div><button type="button" onClick={copyAll}>{copied ? "Copiados ✓" : "Copiar todos"}</button></div><HistoricalBacktest key={JSON.stringify(tickets)} slug="mais-milionaria" tickets={tickets} availableContests={history.length} /><div className={styles.ticketGrid}>{tickets.map((ticket, index) => {
+    {tickets.length > 0 && <section ref={resultsRef} className={styles.results} aria-live="polite"><div className={styles.resultsHeading}><div><span className="eyebrow">Jogos gerados</span><h2>{tickets.length} cartelas prontas para conferir</h2><p>Salve para conferir depois em Minhas apostas, ou copie os jogos.</p></div><div className={styles.resultsActions}><SaveBetsButton key={JSON.stringify(tickets)} slug="mais-milionaria" tickets={tickets} name={`+Milionária · ${tickets.length} ${tickets.length === 1 ? "jogo" : "jogos"}`} /><button type="button" onClick={copyAll}>{copied ? "Copiados ✓" : "Copiar todos"}</button></div></div><HistoricalBacktest key={JSON.stringify(tickets)} slug="mais-milionaria" tickets={tickets} availableContests={history.length} /><div className={styles.ticketGrid}>{tickets.map((ticket, index) => {
       const gameRules = new Set(personal[index] ?? []);
       const appliedRules = [...new Set([...general, ...gameRules])];
       return <article className={styles.ticket} key={`${ticket.numbers.join("-")}-${ticket.trevos.join("-")}`}><div><strong>Jogo {index + 1}</strong><small>{ticket.numbers.length} dezenas · 2 trevos</small></div><p className={styles.ticketRules}>{appliedRules.length ? `Excluídas: ${appliedRules.map(ruleLabel).join(" · ")}` : "Sem exclusões"}{fixedNumbers.length ? ` · Fixas: ${fixedNumbers.map(numberLabel).join(" · ")}` : ""}</p><TicketBoard ticket={ticket} general={generalSet} personal={gameRules} fixed={fixed} avoided={avoided} /><p>Trevos <b>{ticket.trevos.map(numberLabel).join(" · ")}</b></p></article>;
