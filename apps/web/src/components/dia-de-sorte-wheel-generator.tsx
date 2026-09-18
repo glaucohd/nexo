@@ -32,30 +32,44 @@ function shuffled<T>(values: readonly T[]) {
   return result;
 }
 
-// Dois tipos de garantia:
-// - "all": vale quando as 7 sorteadas caem todas no pool. Condição rara, mas
-//   pede poucos jogos (fechamento por partição).
-// - "any": vale quando ao menos `guarantee` das sorteadas caem no pool — bem
-//   mais frequente, e por isso pede muito mais jogos (cobertura gulosa).
-type Mode = { id: "all4" | "any4" | "any5"; guarantee: 4 | 5; condition: "all" | "any"; label: string; poolSizes: number[] };
+// Três tipos de fechamento, cada um com as opções de tamanho de grupo.
+// - "any": garante `guarantee` pontos quando ao menos `guarantee` das 7
+//   sorteadas estão no grupo (cobertura gulosa; a condição é frequente).
+// - "all": garante 4 pontos só quando as 7 caem no grupo (partição; poucos
+//   jogos, condição rara).
+// `games` é o tamanho que o algoritmo gera para cada grupo e `every` é, em
+// média, de quantos em quantos concursos a condição acontece (hipergeométrica).
+type PoolOption = { pool: number; games: number; every: number };
+type Mode = { id: "any4" | "any5" | "all4"; guarantee: 4 | 5; condition: "all" | "any"; title: string; hint: string; options: PoolOption[] };
 type Round = { id: number; pool: number[]; mode: Mode; tickets: DiaDeSorteWheelTicket[]; copied: boolean };
 
 const modes: Mode[] = [
-  { id: "all4", guarantee: 4, condition: "all", label: "Garante 4 se as 7 caírem no pool · poucos jogos", poolSizes: [14, 20] },
-  { id: "any4", guarantee: 4, condition: "any", label: "Garante 4 se 4 caírem no pool", poolSizes: [8, 9, 10, 11, 12, 13, 14] },
-  { id: "any5", guarantee: 5, condition: "any", label: "Garante 5 se 5 caírem no pool", poolSizes: [8, 9, 10, 11, 12, 13] },
+  { id: "any4", guarantee: 4, condition: "any", title: "Garantir 4 pontos", hint: "Vale quando 4 das 7 sorteadas estão no seu grupo.", options: [
+    { pool: 8, games: 5, every: 18.9 }, { pool: 9, games: 6, every: 11.7 }, { pool: 10, games: 12, every: 7.8 }, { pool: 11, games: 18, every: 5.6 },
+    { pool: 12, games: 27, every: 4.2 }, { pool: 13, games: 37, every: 3.2 }, { pool: 14, games: 51, every: 2.6 },
+  ] },
+  { id: "any5", guarantee: 5, condition: "any", title: "Garantir 5 pontos", hint: "Vale quando 5 das 7 sorteadas estão no seu grupo.", options: [
+    { pool: 8, games: 6, every: 177.4 }, { pool: 9, games: 10, every: 84.9 }, { pool: 10, games: 23, every: 45.8 },
+    { pool: 11, games: 38, every: 27 }, { pool: 12, games: 69, every: 17.1 }, { pool: 13, games: 110, every: 11.5 },
+  ] },
+  { id: "all4", guarantee: 4, condition: "all", title: "4 pontos · econômica", hint: "Poucos jogos, mas só vale quando as 7 sorteadas estão no seu grupo.", options: [
+    { pool: 14, games: 2, every: 766.2 }, { pool: 20, games: 20, every: 33.9 },
+  ] },
 ];
+
+const integer = new Intl.NumberFormat("pt-BR");
+const everyLabel = (every: number) => `1 a cada ${integer.format(Math.max(2, Math.round(every)))} concursos`;
 
 export function DiaDeSorteWheelGenerator({ history }: { history: DrawNumbers[] }) {
   const [mode, setMode] = useState<Mode>(modes[0]);
-  const [poolSize, setPoolSize] = useState(modes[0].poolSizes[0]);
+  const [poolSize, setPoolSize] = useState(10);
   const [pool, setPool] = useState<number[]>([]);
   const [rounds, setRounds] = useState<Round[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const resultsRef = useRef<HTMLElement>(null);
   const poolSet = new Set(pool);
-  const poolSizes = mode.poolSizes;
+  const option = mode.options.find((entry) => entry.pool === poolSize) ?? mode.options[0];
 
   useEffect(() => {
     if (rounds.length) resultsRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
@@ -63,7 +77,7 @@ export function DiaDeSorteWheelGenerator({ history }: { history: DrawNumbers[] }
 
   function chooseMode(next: Mode) {
     setMode(next);
-    if (!next.poolSizes.includes(poolSize)) setPoolSize(next.poolSizes[0]);
+    if (!next.options.some((entry) => entry.pool === poolSize)) setPoolSize(next.options[Math.min(2, next.options.length - 1)].pool);
     setPool([]);
     setError(null);
   }
@@ -122,12 +136,21 @@ export function DiaDeSorteWheelGenerator({ history }: { history: DrawNumbers[] }
     <div className={styles.layout}>
       <div className={styles.controls}>
         <section className={styles.card}>
-          <h2>01 · Nível de garantia e tamanho do pool</h2>
-          <div className={styles.segment}>{modes.map((entry) => <button type="button" key={entry.id} aria-pressed={mode.id === entry.id} className={mode.id === entry.id ? styles.active : ""} onClick={() => chooseMode(entry)}>{entry.label}</button>)}</div>
-          <label className={styles.field}>Dezenas no pool<select value={poolSize} onChange={(event) => { setPoolSize(Number(event.target.value)); setPool([]); setError(null); }}>{poolSizes.map((size) => <option key={size} value={size}>{size} dezenas{mode.condition === "all" ? ` · ${size === 20 ? 20 : 2} jogos · ${currency.format((size === 20 ? 20 : 2) * TICKET_PRICE_CENTS / 100)}` : ""}</option>)}</select></label>
+          <h2>01 · O que você quer garantir?</h2>
+          <div className={styles.segment}>{modes.map((entry) => <button type="button" key={entry.id} aria-pressed={mode.id === entry.id} className={mode.id === entry.id ? styles.active : ""} onClick={() => chooseMode(entry)}><strong>{entry.title}</strong><small>{entry.hint}</small></button>)}</div>
+          <h2 className={styles.stepTitle}>02 · Quantas dezenas no seu grupo?</h2>
+          <div className={styles.poolOptions}>{mode.options.map((entry) => <button type="button" key={entry.pool} aria-pressed={option.pool === entry.pool} onClick={() => { setPoolSize(entry.pool); setPool([]); setError(null); }}>
+            <strong>{entry.pool} dezenas</strong>
+            <span>{entry.games} jogos · {currency.format(entry.games * TICKET_PRICE_CENTS / 100)}</span>
+            <small>garantia vale ~{everyLabel(entry.every)}</small>
+          </button>)}</div>
+          <div className={styles.plainSummary}>
+            <p>Você escolhe <b>{option.pool} dezenas</b>. O Nexo monta <b>{option.games} jogos de 7 dezenas</b> ({currency.format(option.games * TICKET_PRICE_CENTS / 100)}).</p>
+            <p>{mode.condition === "all" ? <>Se <b>as 7 sorteadas</b> estiverem entre as suas {option.pool}</> : <>Se <b>pelo menos {mode.guarantee} das 7 sorteadas</b> estiverem entre as suas {option.pool}</>} — em média {everyLabel(option.every)} — <b>pelo menos um jogo faz {mode.guarantee} pontos</b>. Nos outros concursos não há garantia, mas os jogos concorrem normalmente.</p>
+          </div>
         </section>
         <section className={styles.card}>
-          <h2>{rounds.length ? `Redução ${rounds.length + 1} · escolha ${poolSize} dezenas` : `02 · Escolha ${poolSize} dezenas para o pool`}</h2>
+          <h2>{rounds.length ? `Redução ${rounds.length + 1} · escolha ${poolSize} dezenas` : `03 · Escolha as ${poolSize} dezenas do grupo`}</h2>
           <p>{pool.length}/{poolSize} escolhidas. Clique nas dezenas pra montar manualmente, ou use o preenchimento automático.</p>
           <div className={styles.autoFill}>
             <button type="button" disabled={!history.length} onClick={fillFromLastDraw}>Sortear com base no último concurso{history[0] ? ` (#${history[0].contest})` : ""}</button>
@@ -136,13 +159,7 @@ export function DiaDeSorteWheelGenerator({ history }: { history: DrawNumbers[] }
           </div>
           <div className={styles.board}>{board.map((number) => <button type="button" key={number} aria-pressed={poolSet.has(number)} className={poolSet.has(number) ? styles.selected : ""} onClick={() => toggle(number)}>{pad(number)}</button>)}</div>
         </section>
-        <section className={styles.card}>
-          <h2>Garantia matemática</h2>
-          {mode.condition === "all"
-            ? <p>Se as 7 dezenas sorteadas caírem todas dentro do seu pool de {poolSize}, ao menos 1 dos {poolSize === 20 ? "20 jogos" : "2 jogos"} vai bater no mínimo <strong>4 pontos</strong> — provado por força bruta, não estimativa. Isso acontece em cerca de 1 a cada {poolSize === 20 ? "34" : "766"} concursos; fora disso não há garantia, mas os jogos concorrem normalmente.</p>
-            : <p>Se ao menos {mode.guarantee} das 7 dezenas sorteadas caírem no seu pool de {poolSize}, algum jogo contém essas {mode.guarantee} e bate no mínimo <strong>{mode.guarantee} pontos</strong>. A condição é bem mais frequente que &ldquo;as 7 no pool&rdquo;, por isso pede mais jogos. O algoritmo usa busca gulosa: reduz bastante frente à cobertura total, mas não é garantido ser o menor fechamento possível.</p>}
-        </section>
-        <button className={styles.generate} type="button" disabled={pool.length !== poolSize || busy} onClick={generate}>{busy ? "Montando…" : "Gerar jogos ↗"}</button>
+        <button className={styles.generate} type="button" disabled={pool.length !== poolSize || busy} onClick={generate}>{busy ? "Montando…" : `Gerar os ${option.games} jogos ↗`}</button>
         {error && <p role="alert" className={styles.error}>{error}</p>}
       </div>
       <aside className={styles.preview}>
