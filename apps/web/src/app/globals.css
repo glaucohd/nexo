@@ -112,9 +112,9 @@
    da página: o que for mais largo que a tela (tabelas, chips) rola dentro do
    próprio contêiner. `clip` em vez de `hidden` para não quebrar o sticky. */
 html { scroll-behavior: smooth; overscroll-behavior: none; overflow-x: clip; -webkit-text-size-adjust: 100%; }
-body { overscroll-behavior: none; overflow-x: clip; }
+body { overscroll-behavior: none; }
 body {
-  min-height: 100vh;
+  min-height: 100svh;
   color: var(--ink);
   background: var(--paper);
   font-family: var(--font-sans);
@@ -127,6 +127,9 @@ body {
 }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
+/* Ao focar um campo, o navegador rola deixando folga: o teclado virtual e a
+   barra de navegação de baixo não ficam por cima dele. */
+input, select, textarea { scroll-margin-block: 96px 120px; }
 ::selection { background: var(--brand-soft); }
 .container { width: min(1180px, calc(100% - 40px)); margin-inline: auto; }
 
@@ -373,7 +376,7 @@ h1 em, h2 em { font-style: italic; color: var(--brand); }
 /* ==========================================================================
    Entrar / criar conta
    ========================================================================== */
-.auth-shell { display: grid; min-height: 100vh; grid-template-columns: 1.05fr minmax(460px, .85fr); }
+.auth-shell { display: grid; min-height: 100svh; grid-template-columns: 1.05fr minmax(460px, .85fr); }
 .auth-aside {
   position: relative;
   display: flex;
@@ -409,7 +412,10 @@ h1 em, h2 em { font-style: italic; color: var(--brand); }
 .auth-aside .brand-mark i.picked:nth-child(5) { background: #f2a930; }
 .auth-quote { max-width: 620px; font-family: var(--font-serif); font-size: clamp(2.4rem, 4vw, 4.2rem); font-weight: 460; line-height: 1.04; letter-spacing: -.03em; }
 .auth-note { color: #716e83; font-family: var(--font-mono); font-size: .72rem; }
-.auth-panel { display: grid; place-items: center; padding: 40px; background: var(--surface); }
+.auth-panel { display: grid; align-content: center; justify-items: center; padding: 40px; background: var(--surface); }
+/* Tela baixa (celular deitado ou teclado aberto): alinha pelo topo para o
+   formulário não ser cortado. */
+@media (max-height: 720px) { .auth-panel { align-content: start; } }
 .auth-card { width: min(400px, 100%); }
 .auth-card h1 { margin-bottom: 10px; font-family: var(--font-serif); font-size: 2.6rem; font-weight: 480; line-height: 1.05; letter-spacing: -.03em; }
 .auth-card > p { margin-bottom: 28px; color: var(--muted); line-height: 1.55; }
@@ -424,13 +430,13 @@ h1 em, h2 em { font-style: italic; color: var(--brand); }
 /* ==========================================================================
    Área logada
    ========================================================================== */
-.app-shell { display: grid; min-height: 100vh; grid-template-columns: 244px minmax(0, 1fr); }
+.app-shell { display: grid; min-height: 100svh; grid-template-columns: 244px minmax(0, 1fr); }
 
 .sidebar {
   position: sticky;
   top: 0;
   display: flex;
-  height: 100vh;
+  height: 100svh;
   flex-direction: column;
   padding: 18px 12px;
   border-right: 1px solid var(--line);
