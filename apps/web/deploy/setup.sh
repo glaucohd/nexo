@@ -47,8 +47,9 @@ if [ ! -d "$ROOT/src/.git" ]; then
   git clone --branch "$BRANCH" "$REPO_URL" "$ROOT/src"
 else
   # Reinstalação: traz o código mais novo para os serviços abaixo também serem.
-  git -C "$ROOT/src" fetch --quiet origin "$BRANCH"
-  git -C "$ROOT/src" reset --quiet --hard "origin/$BRANCH"
+  # Como o dono da pasta (nexo): o git recusa repositórios de outro usuário.
+  runuser -u nexo -- git -C "$ROOT/src" fetch --quiet origin "$BRANCH"
+  runuser -u nexo -- git -C "$ROOT/src" reset --quiet --hard "origin/$BRANCH"
 fi
 chown -R nexo:nexo "$ROOT"
 
