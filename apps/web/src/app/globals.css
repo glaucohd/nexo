@@ -108,7 +108,11 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; overscroll-behavior-y: none; -webkit-text-size-adjust: 100%; }
+/* Sem "efeito elástico" do celular em nenhum sentido, e sem rolagem lateral
+   da página: o que for mais largo que a tela (tabelas, chips) rola dentro do
+   próprio contêiner. `clip` em vez de `hidden` para não quebrar o sticky. */
+html { scroll-behavior: smooth; overscroll-behavior: none; overflow-x: clip; -webkit-text-size-adjust: 100%; }
+body { overscroll-behavior: none; overflow-x: clip; }
 body {
   min-height: 100vh;
   color: var(--ink);
