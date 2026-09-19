@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/inter/opsz.css";
 import "@fontsource-variable/jetbrains-mono/wght.css";
 import "@fontsource-variable/newsreader/opsz.css";
@@ -12,6 +12,22 @@ export const metadata: Metadata = {
   },
   description:
     "Organize jogos, compare resultados e explore dados históricos com clareza e responsabilidade.",
+  applicationName: "Nexo",
+  // No iPhone, "Adicionar à Tela de Início" abre em tela cheia; a barra de
+  // status fica sobre o app (o CSS reserva o espaço com safe-area-inset).
+  appleWebApp: { capable: true, title: "Nexo", statusBarStyle: "black-translucent" },
+  // O Next gera só a tag padrão; versões antigas do iOS ainda leem esta.
+  other: { "apple-mobile-web-app-capable": "yes" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#16151d" },
+  ],
 };
 
 // Aplica o tema salvo (ou o do sistema) antes da primeira pintura, para a
