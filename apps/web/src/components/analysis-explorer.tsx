@@ -9,6 +9,8 @@ import {
   type AnalysisDraw,
 } from "@/lib/lottery-analysis";
 
+import { StrategyLab } from "@/components/strategy-lab";
+
 import styles from "./analysis-explorer.module.css";
 import { validSuperSeteDraw } from "@/lib/super-sete";
 
@@ -24,7 +26,7 @@ const games = [
   { slug: "timemania", name: "Timemania", total: 80, start: 1, color: "#00854a" },
 ] as const;
 
-type View = "matrix" | "cycles";
+type View = "matrix" | "cycles" | "strategies";
 type WindowSize = 15 | 30 | 50 | 100 | "all";
 
 const numberLabel = (number: number) => String(number).padStart(2, "0");
@@ -107,13 +109,15 @@ export function AnalysisExplorer({ histories, initialSlug }: { histories: Record
     <nav className={styles.games} aria-label="Modalidade">{games.map((entry) => <button type="button" key={entry.slug} aria-pressed={slug === entry.slug} className={styles.gameChip} style={{ "--chip": entry.color } as React.CSSProperties} onClick={() => { setSlug(entry.slug); setWindowSize(15); }}><i aria-hidden="true" />{entry.name}</button>)}</nav>
     <header className={styles.header}><div><span className="eyebrow">Análises históricas</span><h1>Enxergue os concursos de <em>outro jeito</em>.</h1><p>Matriz e ciclos calculados a partir dos resultados que estão na base do Nexo.</p></div></header>
 
-    {game.slug === "super-sete" ? <SuperSeteAnalysis draws={draws} windowSize={windowSize} setWindowSize={setWindowSize} /> : draws.length ? <>
+    {game.slug === "super-sete" ? <><SuperSeteAnalysis draws={draws} windowSize={windowSize} setWindowSize={setWindowSize} /><StrategyLab key={game.slug} slug={game.slug} gameName={game.name} /></> : draws.length ? <>
       <div className={styles.summary}><div><span>Concursos na base</span><strong>{draws.length}</strong><small>Até o concurso {draws[0].contest}</small></div><div><span>Repetição média</span><strong>{analysis.repeatMean?.toFixed(1).replace(".", ",") ?? "—"}</strong><small>com o concurso anterior</small></div><div><span>Mais frequente</span><strong>{numberLabel(frequencyRank[0])}</strong><small>{analysis.frequencies[frequencyRank[0]]} vezes em {analysis.sample.length}</small></div><div><span>Maior atraso atual</span><strong>{numberLabel(delayRank[0])}</strong><small>{analysis.delays[delayRank[0]]} concursos sem sair</small></div></div>
 
-      <div className={styles.tabBar} role="tablist" aria-label="Tipos de análise">{([ ["matrix", "Matriz dos concursos"], ["cycles", "Ciclos"] ] as const).filter(([id]) => hasMatrix || id !== "matrix").map(([id, label]) => <button role="tab" aria-selected={activeView === id} className={activeView === id ? styles.activeTab : ""} key={id} type="button" onClick={() => setView(id)}>{label}</button>)}</div>
+      <div className={styles.tabBar} role="tablist" aria-label="Tipos de análise">{([ ["matrix", "Matriz dos concursos"], ["cycles", "Ciclos"], ["strategies", "Estratégias"] ] as const).filter(([id]) => hasMatrix || id !== "matrix").map(([id, label]) => <button role="tab" aria-selected={activeView === id} className={activeView === id ? styles.activeTab : ""} key={id} type="button" onClick={() => setView(id)}>{label}</button>)}</div>
 
       {activeView === "matrix" && <section className={`${styles.panel} ${matrixExpanded ? styles.panelExpanded : ""}`}><div className={styles.sectionLead}><div><span className="eyebrow">Concurso × dezena</span><h2>Matriz de resultados</h2><p>Coluna = dezena. Linha = concurso. Uma célula preenchida indica que a dezena saiu naquele sorteio.</p></div><span className={styles.latestChip}>Último: {draws[0].contest}</span></div><div className={styles.rangeBar}><span>Janela:</span>{([15, 30, 50, 100, "all"] as const).map((size) => <button key={size} className={windowSize === size ? styles.rangeActive : ""} type="button" onClick={() => setWindowSize(size)}>{size === "all" ? `Todos (${draws.length})` : size}</button>)}<button type="button" className={styles.expandButton} aria-pressed={matrixExpanded} onClick={() => setMatrixExpanded((current) => !current)}>{matrixExpanded ? "Fechar tela cheia ✕" : "Expandir matriz ⤢"}</button></div><Matrix draws={analysis.sample} allDraws={draws} total={game.total} start={game.start} frequencies={analysis.frequencies} /><div className={styles.matrixFooter}><span><i className={styles.legendHit} /> Dezena sorteada</span><span>Σ soma</span><span>P pares</span><span>R repetidas do anterior</span></div><p className={styles.methodNote}>As linhas “Vezes” e “%” consideram apenas os {analysis.sample.length} concursos selecionados. Frequência e atraso descrevem o passado; não mudam a chance de cada dezena no próximo sorteio.</p></section>}
 
+
+      {activeView === "strategies" && <StrategyLab key={game.slug} slug={game.slug} gameName={game.name} />}
 
       {activeView === "cycles" && <div className={styles.sectionStack}><div className={styles.sectionLead}><div><span className="eyebrow">Sequências observadas</span><h2>Ciclo de dezenas</h2><p>Quantos concursos a base levou para ver todas as dezenas saírem ao menos uma vez.</p></div></div><CyclePanel draws={draws} total={game.total} start={game.start} /><p className={styles.methodNote}>O fechamento de um ciclo é uma descrição dos sorteios passados. A quantidade que falta no ciclo atual não é uma probabilidade de fechamento no próximo concurso.</p></div>}
     </> : <div className={styles.empty}><h2>Ainda não há concursos de {game.name} na base.</h2><p>Depois da importação, as matrizes e os parâmetros aparecerão aqui.</p></div>}

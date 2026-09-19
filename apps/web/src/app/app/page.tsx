@@ -1,9 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
-import { count } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
+import { headers } from "next/headers";
 
 import { db } from "@/db";
-import { draws } from "@/db/schema";
+import { draws, lotteries, portfolios } from "@/db/schema";
+import { auth } from "@/lib/auth";
+import { uiSlugFor } from "@/lib/lottery-generator";
+
+const formatDate = (date: Date) => date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
 
 const games = [
   { slug: "lotofacil", initials: "LF", icon: "lotofacil", name: "Lotofácil", subtitle: "15 a 20 números", color: "purple" },
@@ -18,7 +23,26 @@ const games = [
 ];
 
 export default async function DashboardPage() {
+  const session = await auth.api.getSession({ headers: await headers() });
   const [{ total: drawCount }] = await db.select({ total: count() }).from(draws);
+
+  // Último concurso de cada loteria (na Dupla Sena, o maior entre os dois sorteios).
+  const latestRows = await db.selectDistinctOn([lotteries.slug], { source: lotteries.slug, contest: draws.contestNumber, date: draws.drawnAt })
+    .from(draws).innerJoin(lotteries, eq(draws.lotteryId, lotteries.id))
+    .orderBy(lotteries.slug, desc(draws.contestNumber));
+  const latest = new Map<string, { contest: number; date: Date }>();
+  for (const row of latestRows) {
+    const slug = uiSlugFor(row.source);
+    if ((latest.get(slug)?.contest ?? 0) < row.contest) latest.set(slug, { contest: row.contest, date: row.date });
+  }
+  const newestDate = [...latest.values()].reduce<Date | null>((newest, entry) => !newest || entry.date > newest ? entry.date : newest, null);
+
+  // Carteiras do usuário: quantas já têm o sorteio na base.
+  const saved = session
+    ? await db.select({ target: portfolios.targetContest, source: lotteries.slug }).from(portfolios)
+      .innerJoin(lotteries, eq(portfolios.lotteryId, lotteries.id)).where(eq(portfolios.userId, session.user.id))
+    : [];
+  const ready = saved.filter((entry) => (entry.target ?? Infinity) <= (latest.get(uiSlugFor(entry.source))?.contest ?? 0)).length;
   return (
     <>
       <header className="dashboard-header">
@@ -27,14 +51,14 @@ export default async function DashboardPage() {
           <h1>Qual jogo vamos <em>analisar</em> hoje?</h1>
           <p>Escolha uma modalidade para consultar dados ou montar uma nova carteira.</p>
         </div>
-        <span className="status-pill"><i /> Base conectada</span>
+        <span className="status-pill"><i /> {newestDate ? `Base atualizada até ${formatDate(newestDate)}` : "Base conectada"}</span>
       </header>
 
       <section className="dashboard-games" aria-label="Modalidades">
         {games.map((game) => (
           <Link className={`dashboard-game ${game.color}`} href={`/app/analises?modalidade=${game.slug}`} key={game.slug}>
             <span className="dashboard-game-icon"><Image src={`/trevos-loterias/${game.icon}.svg`} alt="" width={27} height={27} /></span>
-            <div><strong>{game.name}</strong><small>{game.subtitle}</small></div>
+            <div><strong>{game.name}</strong><small>{latest.get(game.slug) ? `Concurso ${latest.get(game.slug)!.contest} · ${formatDate(latest.get(game.slug)!.date)}` : game.subtitle}</small></div>
             <span className="dashboard-game-arrow" aria-hidden="true">→</span>
           </Link>
         ))}
@@ -48,15 +72,15 @@ export default async function DashboardPage() {
       <section className="dashboard-grid">
         <article className="dashboard-card stat-card">
           <div className="dashboard-card-icon purple">✓</div>
-          <span>Apostas salvas</span>
-          <strong className="metric">0</strong>
-          <small>Suas primeiras apostas aparecerão aqui</small>
+          <span>Carteiras salvas</span>
+          <strong className="metric">{saved.length.toLocaleString("pt-BR")}</strong>
+          <small>{saved.length ? "Em Minhas apostas, para conferir depois" : "Suas primeiras carteiras aparecerão aqui"}</small>
         </article>
         <article className="dashboard-card stat-card">
-          <div className="dashboard-card-icon green">#</div>
-          <span>Modalidades</span>
-          <strong className="metric">{games.length}</strong>
-          <small>Com análises e geradores dedicados</small>
+          <div className="dashboard-card-icon green">↻</div>
+          <span>Prontas para conferir</span>
+          <strong className="metric">{ready.toLocaleString("pt-BR")}</strong>
+          <small>{ready ? "O sorteio delas já está na base" : "Nenhuma com sorteio pendente de conferência"}</small>
         </article>
         <article className="dashboard-card stat-card">
           <div className="dashboard-card-icon blue">∿</div>
@@ -65,14 +89,19 @@ export default async function DashboardPage() {
           <small>Históricos reunidos para análise</small>
         </article>
         <article className="dashboard-card action-card wide">
-          <div>
-            <span className="eyebrow">Comece pela Lotofácil</span>
-            <h2>Monte sua primeira carteira no <em>Nexo</em></h2>
-            <p>Use frequências, repetições e filtros para gerar jogos diversificados.</p>
-            <Link className="button button-primary" href="/app/analises?modalidade=lotofacil">Explorar análises <span>→</span></Link>
-          </div>
+          {ready > 0 ? <div>
+            <span className="eyebrow">Sorteio feito</span>
+            <h2>{ready === 1 ? "Uma carteira" : `${ready} carteiras`} esperando <em>conferência</em></h2>
+            <p>Os resultados já estão na base. Veja quanto você teria ganhado e o saldo de cada carteira.</p>
+            <Link className="button button-primary" href="/app/apostas">Conferir agora <span>→</span></Link>
+          </div> : <div>
+            <span className="eyebrow">Próximo passo</span>
+            <h2>Monte uma carteira e confira depois do <em>sorteio</em></h2>
+            <p>Gere jogos ou uma redução, salve em Minhas apostas e compare estratégias no Laboratório de Análises.</p>
+            <Link className="button button-primary" href="/app/gerador">Gerar jogos <span>→</span></Link>
+          </div>}
           <div className="action-balls" aria-hidden="true">
-            {[3, 7, 10, 15, 21].map((number) => <span key={number}>{String(number).padStart(2,"0")}</span>)}
+            {[3, 7, 10, 15, 21].map((number) => <span key={number}>{String(number).padStart(2, "0")}</span>)}
           </div>
         </article>
         <article className="dashboard-card responsible-card">

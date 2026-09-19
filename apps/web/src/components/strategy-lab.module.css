@@ -1,0 +1,64 @@
+/* --lab: cor da loteria; clareia no tema escuro para a barra manter contraste
+   com a superfície. Texto nunca usa a cor da barra. */
+.lab {
+  --lab: color-mix(in oklab, var(--analysis-accent, var(--brand)), white var(--lift));
+  --name-width: 210px;
+  display: grid;
+  gap: var(--gen-gap);
+}
+.lead h2 { margin: 10px 0 4px; font-family: var(--font-serif); font-size: 1.8rem; font-weight: 480; letter-spacing: -.025em; }
+.lead p { max-width: 720px; color: var(--muted); font-size: .88rem; line-height: 1.6; }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); }
+.segment { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); }
+.segment > span { padding: 0 8px 0 6px; color: var(--faint); font-family: var(--font-mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; }
+.segment button { min-width: 38px; min-height: 30px; padding: 0 10px; border: 0; border-radius: var(--r-sm); color: var(--muted); background: transparent; font-family: var(--font-mono); font-size: .76rem; cursor: pointer; }
+.segment button[aria-pressed="true"] { color: var(--ink); background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .1); font-weight: 600; }
+.run { min-height: 38px; margin-left: auto; padding: 0 16px; border: 0; border-radius: var(--r-md); color: var(--on-brand); background: var(--brand); font-size: .84rem; font-weight: 600; cursor: pointer; }
+.run:hover:not(:disabled) { background: var(--brand-dark); }
+.run:disabled { opacity: .6; cursor: wait; }
+.hint { color: var(--faint); font-size: .76rem; line-height: 1.5; }
+.error { color: var(--danger); font-size: .82rem; }
+
+.verdict { padding: 16px 18px; border: 1px solid var(--line); border-left: 3px solid var(--lab); border-radius: var(--r-md); background: var(--surface); }
+.verdict strong { display: block; font-size: 1rem; font-weight: 620; line-height: 1.45; }
+.verdict p { margin-top: 4px; color: var(--muted); font-size: .84rem; line-height: 1.55; }
+
+/* Barras horizontais: base reta à esquerda, ponta arredondada, 18px. */
+.chart { margin: 0; padding: 18px 18px 12px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); }
+.chart figcaption { margin-bottom: 14px; color: var(--faint); font-family: var(--font-mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; }
+.rows { position: relative; display: grid; gap: 10px; padding-bottom: 22px; }
+.row { display: grid; grid-template-columns: var(--name-width) minmax(0, 1fr); align-items: center; gap: 0; min-height: 30px; border-radius: var(--r-sm); outline: none; }
+.name { display: grid; padding-right: 14px; color: var(--ink); font-size: .82rem; font-weight: 550; line-height: 1.25; }
+.name small { color: var(--faint); font-family: var(--font-mono); font-size: .6rem; font-weight: 400; letter-spacing: .06em; text-transform: uppercase; }
+.track { position: relative; height: 30px; }
+.bar { position: absolute; top: 6px; left: 0; height: 18px; min-width: 2px; border-radius: 0 4px 4px 0; background: var(--lab); transition: filter .15s; }
+.value { position: absolute; top: 50%; padding-left: 8px; color: var(--ink); font-family: var(--font-mono); font-size: .76rem; font-weight: 600; transform: translateY(-50%); white-space: nowrap; }
+.row:hover .bar, .row:focus-visible .bar { filter: brightness(1.12); }
+.row:focus-visible { box-shadow: 0 0 0 2px var(--brand-line); }
+
+.tip { position: absolute; z-index: 5; bottom: calc(100% + 4px); left: 0; display: none; gap: 2px; min-width: 240px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-md); color: var(--muted); background: var(--surface); box-shadow: var(--shadow-pop); font-size: .74rem; line-height: 1.45; pointer-events: none; }
+.tip strong { color: var(--ink); font-size: .8rem; font-weight: 620; }
+.row:hover .tip, .row:focus-visible .tip { display: grid; }
+
+.breakEven { position: absolute; top: -6px; bottom: 0; width: 0; border-left: 1px dashed var(--muted); pointer-events: none; }
+.breakEven em { position: absolute; bottom: 0; left: 6px; color: var(--muted); font-family: var(--font-mono); font-size: .62rem; font-style: normal; white-space: nowrap; }
+
+.tableScroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); }
+.table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: .8rem; }
+.table th, .table td { padding: 10px 14px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.table thead th { color: var(--faint); background: var(--surface-2); font-family: var(--font-mono); font-size: .62rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+.table tbody th { color: var(--ink); font-weight: 600; text-align: left; }
+.table tbody th small { display: block; color: var(--faint); font-size: .7rem; font-weight: 400; }
+.table td { color: var(--muted); font-family: var(--font-mono); }
+.table tbody tr:last-child th, .table tbody tr:last-child td { border-bottom: 0; }
+.table thead th:first-child { text-align: left; }
+.table td.positive { color: var(--success); font-weight: 600; }
+.table td.negative { color: var(--danger); }
+
+@media (max-width: 640px) {
+  .lab { --name-width: 118px; }
+  .run { width: 100%; margin-left: 0; }
+  .name { font-size: .74rem; }
+  .tip { min-width: 200px; }
+}

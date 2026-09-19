@@ -1,0 +1,14 @@
+import pg from "pg";
+import { runStrategyLab } from "./src/lib/strategy-lab.ts";
+const c = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+await c.connect();
+const slug = process.argv[2] ?? "lotofacil";
+const rows = (await c.query(`select d.id, contest_number c, drawn_at, numbers, extras from draws d join lotteries l on l.id=d.lottery_id where l.slug = any($1) and d.status <> 'provisional' order by contest_number desc`, [slug === "dupla-sena" ? ["dupla-sena-1","dupla-sena-2"] : [slug]])).rows;
+const minC = [...new Set(rows.map(r=>r.c))][99];
+const pr = (await c.query(`select draw_id, label, hits, extra_hits, winners, prize from prize_tiers where draw_id = any($1)`, [rows.filter(r=>r.c>=minC).map(r=>r.id)])).rows;
+const draws = rows.map(r => ({ contest: r.c, date: r.drawn_at.toISOString().slice(0,10), numbers: r.numbers, extras: r.extras, prizes: pr.filter(p=>p.draw_id===r.id).map(p=>({label:p.label,hits:p.hits,extraHits:p.extra_hits,winners:p.winners,prize:p.prize===null?null:Number(p.prize)})) }));
+await c.end();
+const t0 = Date.now();
+const rep = runStrategyLab({ slug, draws, contests: 100, ticketsPerContest: 4, seed: 42 });
+console.log(slug, `${Date.now()-t0}ms`, rep.firstContest, rep.lastContest);
+for (const r of rep.results) console.log(r.label.padEnd(32), "custo", (r.costCents/100).toFixed(0).padStart(6), "prêmio", (r.prizeCents/100).toFixed(0).padStart(6), "retorno", `${Math.round(r.prizeCents/r.costCents*100)}%`.padStart(5), "concursos c/ prêmio", r.contestsWithPrize, "melhor", r.bestHits);
