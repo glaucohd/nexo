@@ -1,0 +1,16 @@
+[Unit]
+Description=Nexo (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=nexo
+WorkingDirectory=/opt/nexo/current
+EnvironmentFile=/opt/nexo/shared/deploy.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -H 0.0.0.0 -p ${PORT}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+[Unit]
+Description=Nexo: busca commits novos e publica
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/nexo-update
