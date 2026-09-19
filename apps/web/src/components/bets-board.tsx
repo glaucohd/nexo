@@ -66,6 +66,67 @@ export function BetsBoard({ portfolios }: { portfolios: SavedPortfolio[] }) {
   const waiting = visible.filter((portfolio) => !portfolio.drawn);
   const drawn = visible.filter((portfolio) => portfolio.drawn);
   const totalCost = portfolios.reduce((sum, portfolio) => sum + portfolioCost(portfolio), 0);
+  const router = useRouter();
+  // Estado de cada carteira fica aqui para os botões gerais (abrir, recolher e
+  // conferir todas) controlarem todos os cartões.
+  const [openIds, setOpenIds] = useState<Record<string, boolean>>({});
+  const [results, setResults] = useState<Record<string, CheckResult>>({});
+  const [checkingAll, setCheckingAll] = useState(false);
+  const isOpen = (portfolio: SavedPortfolio) => openIds[portfolio.id] ?? portfolio.tickets.length <= 4;
+  const setOpen = (ids: string[], open: boolean) => setOpenIds((current) => ({ ...current, ...Object.fromEntries(ids.map((id) => [id, open])) }));
+  const setResult = (id: string, result: CheckResult) => setResults((current) => ({ ...current, [id]: result }));
+
+  async function ask(id: string) {
+    const response = await fetch(`/api/apostas/${id}/conferir`, { method: "POST" });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error ?? "Não foi possível conferir.");
+    return payload as CheckResult;
+  }
+
+  // Confere uma carteira. Com `sync`, se o concurso ainda não estiver na base,
+  // busca os resultados na CAIXA e confere de novo antes de avisar que não saiu.
+  async function check(id: string, { sync = true } = {}) {
+    setResult(id, { status: "loading" });
+    setOpen([id], true);
+    try {
+      let payload = await ask(id);
+      if (payload.status === "pending" && sync) {
+        setResult(id, { status: "syncing", target: payload.target });
+        await fetch("/api/sync-caixa", { method: "POST" });
+        payload = await ask(id);
+        router.refresh();
+      }
+      setResult(id, payload);
+      return payload;
+    } catch (cause) {
+      setResult(id, { status: "error", message: cause instanceof Error ? cause.message : "Não foi possível conferir." });
+      return null;
+    }
+  }
+
+  // Confere todas as carteiras visíveis; a busca na CAIXA roda no máximo uma
+  // vez, só se alguma carteira estiver com o concurso ainda fora da base.
+  async function checkAll() {
+    setCheckingAll(true);
+    try {
+      const pending: string[] = [];
+      for (const portfolio of visible) {
+        const payload = await check(portfolio.id, { sync: false });
+        if (payload?.status === "pending") pending.push(portfolio.id);
+      }
+      if (pending.length) {
+        for (const id of pending) setResult(id, { status: "syncing", target: portfolios.find((entry) => entry.id === id)?.target ?? 0 });
+        await fetch("/api/sync-caixa", { method: "POST" });
+        router.refresh();
+        for (const id of pending) await check(id, { sync: false });
+      }
+    } finally { setCheckingAll(false); }
+  }
+
+  // Soma do que já foi conferido: quanto teria voltado e quanto teria custado.
+  const checked = visible.filter((portfolio) => results[portfolio.id]?.status === "done");
+  const checkedPrize = checked.reduce((sum, portfolio) => { const result = results[portfolio.id]; return sum + (result?.status === "done" ? result.totalCents : 0); }, 0);
+  const checkedCost = checked.reduce((sum, portfolio) => sum + portfolioCost(portfolio), 0);
 
   return <main className={styles.page}>
     <header className={styles.header}>
@@ -99,53 +160,38 @@ export function BetsBoard({ portfolios }: { portfolios: SavedPortfolio[] }) {
         </div>}
       </div>
 
+      {visible.length > 0 && <div className={styles.bulkBar}>
+        <button type="button" className={styles.bulkPrimary} disabled={checkingAll} onClick={checkAll}>{checkingAll ? "Conferindo…" : `Conferir todas (${visible.length})`}</button>
+        <button type="button" onClick={() => setOpen(visible.map((portfolio) => portfolio.id), true)}>Expandir todas</button>
+        <button type="button" onClick={() => setOpen(visible.map((portfolio) => portfolio.id), false)}>Recolher todas</button>
+      </div>}
+
+      {checked.length > 0 && <div className={styles.overall}>
+        <span>{checked.length === 1 ? "1 carteira conferida" : `${checked.length} carteiras conferidas`}: se tivesse apostado</span>
+        <strong>{checkedPrize > 0 ? money.format(checkedPrize / 100) : "Sem prêmio"}</strong>
+        <small className={checkedPrize - checkedCost >= 0 ? styles.positive : styles.negative}>Saldo: {money.format((checkedPrize - checkedCost) / 100)} (prêmios − {money.format(checkedCost / 100)} das apostas)</small>
+      </div>}
+
       {drawn.length > 0 && <section className={styles.group}>
         <h2>Já sorteadas <small>{drawn.length}</small></h2>
-        {drawn.map((portfolio) => <PortfolioCard key={portfolio.id} portfolio={portfolio} />)}
+        {drawn.map((portfolio) => <PortfolioCard key={portfolio.id} portfolio={portfolio} open={isOpen(portfolio)} onToggle={() => setOpen([portfolio.id], !isOpen(portfolio))} result={results[portfolio.id] ?? null} onCheck={() => check(portfolio.id)} />)}
       </section>}
       {waiting.length > 0 && <section className={styles.group}>
         <h2>Aguardando sorteio <small>{waiting.length}</small></h2>
-        {waiting.map((portfolio) => <PortfolioCard key={portfolio.id} portfolio={portfolio} />)}
+        {waiting.map((portfolio) => <PortfolioCard key={portfolio.id} portfolio={portfolio} open={isOpen(portfolio)} onToggle={() => setOpen([portfolio.id], !isOpen(portfolio))} result={results[portfolio.id] ?? null} onCheck={() => check(portfolio.id)} />)}
       </section>}
       {visible.length === 0 && <p className={styles.nothing}>Nenhuma carteira com esses filtros.</p>}
     </>}
   </main>;
 }
 
-function PortfolioCard({ portfolio }: { portfolio: SavedPortfolio }) {
+function PortfolioCard({ portfolio, open, onToggle, result, onCheck }: { portfolio: SavedPortfolio; open: boolean; onToggle: () => void; result: CheckResult | null; onCheck: () => void }) {
   const router = useRouter();
-  const [result, setResult] = useState<CheckResult | null>(null);
-  const [open, setOpen] = useState(portfolio.tickets.length <= 4);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const done = result?.status === "done" ? result : null;
   const drawnNumbers = new Set(done?.draws.flatMap((draw) => draw.numbers) ?? []);
-
-  async function ask() {
-    const response = await fetch(`/api/apostas/${portfolio.id}/conferir`, { method: "POST" });
-    const payload = await response.json();
-    if (!response.ok) throw new Error(payload.error ?? "Não foi possível conferir.");
-    return payload as CheckResult;
-  }
-
-  // Um clique só: confere e, se o concurso ainda não estiver na base, busca os
-  // resultados na CAIXA e confere de novo antes de avisar que não saiu.
-  async function check({ sync = true } = {}) {
-    setResult({ status: "loading" });
-    setOpen(true);
-    try {
-      let payload = await ask();
-      if (payload.status === "pending" && sync) {
-        setResult({ status: "syncing", target: payload.target });
-        await fetch("/api/sync-caixa", { method: "POST" });
-        payload = await ask();
-        router.refresh();
-      }
-      setResult(payload);
-    } catch (cause) {
-      setResult({ status: "error", message: cause instanceof Error ? cause.message : "Não foi possível conferir." });
-    }
-  }
+  const bestHits = done ? Math.max(...done.tickets.map((ticket) => ticket.hits)) : 0;
 
   async function remove() {
     setDeleting(true);
@@ -166,8 +212,8 @@ function PortfolioCard({ portfolio }: { portfolio: SavedPortfolio }) {
     </div>
 
     <div className={styles.actions}>
-      <button type="button" className={styles.primary} disabled={result?.status === "loading" || result?.status === "syncing"} onClick={() => check()}>{result?.status === "syncing" ? "Buscando resultado…" : result?.status === "loading" ? "Conferindo…" : "Conferir jogos"}</button>
-      <button type="button" onClick={() => setOpen((current) => !current)}>{open ? "Esconder jogos" : "Ver jogos"}</button>
+      <button type="button" className={styles.primary} disabled={result?.status === "loading" || result?.status === "syncing"} onClick={onCheck}>{result?.status === "syncing" ? "Buscando resultado…" : result?.status === "loading" ? "Conferindo…" : "Conferir jogos"}</button>
+      <button type="button" onClick={onToggle}>{open ? "Esconder jogos" : "Ver jogos"}</button>
       {confirming
         ? <><button type="button" className={styles.danger} disabled={deleting} onClick={remove}>{deleting ? "Excluindo…" : "Confirmar exclusão"}</button><button type="button" onClick={() => setConfirming(false)}>Cancelar</button></>
         : <button type="button" className={styles.ghostDanger} onClick={() => setConfirming(true)}>Excluir</button>}
@@ -177,7 +223,7 @@ function PortfolioCard({ portfolio }: { portfolio: SavedPortfolio }) {
     {result?.status === "syncing" && <p className={styles.pending}>Buscando o resultado do concurso <b>#{result.target}</b> na CAIXA…</p>}
     {result?.status === "pending" && <div className={styles.pending}>
       <p>O concurso <b>#{result.target}</b> ainda não saiu: mesmo depois de buscar na CAIXA, o último resultado disponível é o #{result.latest}.</p>
-      <button type="button" onClick={() => check()}>Tentar de novo</button>
+      <button type="button" onClick={onCheck}>Tentar de novo</button>
     </div>}
     {done && <div className={styles.outcome}>
       <div className={styles.outcomeDraws}>
@@ -190,7 +236,7 @@ function PortfolioCard({ portfolio }: { portfolio: SavedPortfolio }) {
         <span>Se tivesse apostado</span>
         <strong>{done.totalCents > 0 ? money.format(done.totalCents / 100) : "Sem prêmio"}</strong>
         <small className={done.totalCents - portfolioCost(portfolio) >= 0 ? styles.positive : styles.negative}>Saldo: {money.format((done.totalCents - portfolioCost(portfolio)) / 100)} (prêmio − {money.format(portfolioCost(portfolio) / 100)} das apostas)</small>
-        <small>Melhor jogo: {Math.max(...done.tickets.map((ticket) => ticket.hits))} acertos{done.unavailablePrizeUnits > 0 ? ` · ${done.unavailablePrizeUnits} prêmio(s) sem valor publicado` : ""}</small>
+        <small>Melhor jogo: {bestHits} {bestHits === 1 ? "acerto" : "acertos"}{done.unavailablePrizeUnits > 0 ? ` · ${done.unavailablePrizeUnits} prêmio(s) sem valor publicado` : ""}</small>
       </div>
     </div>}
 
