@@ -130,6 +130,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Ao focar um campo, o navegador rola deixando folga: o teclado virtual e a
    barra de navegação de baixo não ficam por cima dele. */
 input, select, textarea { scroll-margin-block: 96px 120px; }
+
+/* Em telas de toque, campo com fonte menor que 16px faz o Safari do iPhone
+   dar zoom sozinho ao focar — e o zoom não volta. O !important vence os
+   tamanhos definidos nos módulos de cada tela; é o jeito de cobrir todos os
+   campos num lugar só. */
+@media (pointer: coarse) {
+  input, select, textarea { font-size: 16px !important; }
+}
 ::selection { background: var(--brand-soft); }
 .container { width: min(1180px, calc(100% - 40px)); margin-inline: auto; }
 
