@@ -100,6 +100,29 @@ async function fetchJson(url) {
   }
 }
 
+// O endpoint de "último concurso" da CAIXA às vezes fica horas atrasado em
+// relação ao site, enquanto o concurso pedido pelo número já responde. Por
+// isso testamos os números seguintes até a API recusar (concurso ainda não
+// sorteado responde com erro). Uma tentativa por número, sem retentativas.
+async function newestContest(apiSlug, reported) {
+  let newest = reported;
+  for (let step = 0; step < 10; step += 1) {
+    const url = `${API}/${apiSlug}/${newest + 1}`;
+    let draw = null;
+    try {
+      const response = await fetch(url, { headers: { Accept: "application/json", "User-Agent": "Nexo/1.0" }, signal: AbortSignal.timeout(15000) });
+      if (response.ok) draw = await response.json();
+    } catch (error) {
+      if (error?.cause?.code === "ENOTFOUND") {
+        try { draw = await fetchCaixaWithDnsFallback(url); } catch { draw = null; }
+      }
+    }
+    if (draw?.numero !== newest + 1 || !draw.listaDezenas?.length) break;
+    newest += 1;
+  }
+  return newest;
+}
+
 function parseNumbers(rawDezenas, apiSlug, total, drawSize) {
   const positional = apiSlug === "supersete";
   const numbers = rawDezenas.map(Number);
@@ -172,8 +195,9 @@ let failures = 0;
 try {
   for (const apiSlug of selected) {
     const latest = await fetchJson(`${API}/${apiSlug}`);
-    const first = all ? 1 : (fromArg || (recentArg ? Math.max(1, latest.numero - recentArg + 1) : latest.numero));
-    const last = toArg || latest.numero;
+    const newest = await newestContest(apiSlug, latest.numero);
+    const first = all ? 1 : (fromArg || (recentArg ? Math.max(1, newest - recentArg + 1) : newest));
+    const last = toArg || newest;
     const existing = missingOnly
       ? new Set((await pool.query("select draws.contest_number from draws join lotteries on lotteries.id=draws.lottery_id where lotteries.slug=$1 and draws.contest_number between $2 and $3", [games[apiSlug][0], first, last])).rows.map((row) => row.contest_number))
       : new Set();
