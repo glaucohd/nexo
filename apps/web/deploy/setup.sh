@@ -57,13 +57,19 @@ echo "==> Serviços"
 install -m 755 "$ROOT/src/apps/web/deploy/update.sh" /usr/local/bin/nexo-update
 install -m 644 "$ROOT/src/apps/web/deploy/nexo.service" /etc/systemd/system/nexo.service
 install -m 644 "$ROOT/src/apps/web/deploy/nexo-update.service" /etc/systemd/system/nexo-update.service
-install -m 644 "$ROOT/src/apps/web/deploy/nexo-update.timer" /etc/systemd/system/nexo-update.timer
 systemctl daemon-reload
 
 echo "==> Primeiro build (alguns minutos)"
 FORCE=1 /usr/local/bin/nexo-update
 
-systemctl enable --now nexo.service nexo-update.timer
-systemctl restart nexo-update.timer
+systemctl enable --now nexo.service
+# Atualização é sob demanda (nexo-update); o timer só é ligado se pedido.
+if [ "${AUTO_UPDATE:-0}" = "1" ]; then
+  install -m 644 "$ROOT/src/apps/web/deploy/nexo-update.timer" /etc/systemd/system/nexo-update.timer
+  systemctl daemon-reload
+  systemctl enable --now nexo-update.timer
+else
+  systemctl disable --now nexo-update.timer 2>/dev/null || true
+fi
 echo
 echo "Pronto: abra $URL"

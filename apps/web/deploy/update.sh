@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Atualiza o Nexo quando há commit novo na branch configurada.
+# Atualiza o Nexo quando há commit novo na branch configurada. Roda sob
+# demanda (pct exec 104 -- nexo-update); o timer automático fica desligado.
 # Cada versão é montada numa pasta própria em /opt/nexo/releases; só depois
 # de instalar e compilar com sucesso o link /opt/nexo/current passa a apontar
 # para ela e o serviço reinicia. Se o build falhar, o site segue na versão
@@ -32,7 +33,7 @@ as_nexo git reset --quiet --hard "$TARGET"
 # é trocado por renomeação (novo arquivo), sem afetar a execução em curso.
 DEPLOY="$ROOT/src/apps/web/deploy"
 changed=0
-for unit in nexo.service nexo-update.service nexo-update.timer; do
+for unit in nexo.service nexo-update.service; do
   if ! cmp -s "$DEPLOY/$unit" "/etc/systemd/system/$unit"; then
     install -m 644 "$DEPLOY/$unit" "/etc/systemd/system/$unit"
     changed=1
@@ -44,7 +45,6 @@ if ! cmp -s "$DEPLOY/update.sh" /usr/local/bin/nexo-update; then
 fi
 if [ "$changed" = 1 ]; then
   systemctl daemon-reload
-  systemctl restart nexo-update.timer
 fi
 
 RELEASE="$ROOT/releases/$TARGET"
