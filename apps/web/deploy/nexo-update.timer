@@ -1,9 +1,12 @@
 [Unit]
 Description=Nexo: checa atualizações a cada 2 minutos
 
+# Agendamento de relógio (minutos pares), não relativo à última execução:
+# funciona mesmo que o serviço nunca tenha sido disparado pelo timer.
 [Timer]
-OnBootSec=1min
-OnUnitActiveSec=2min
+OnCalendar=*:0/2
+AccuracySec=10s
+Persistent=true
 
 [Install]
 WantedBy=timers.target

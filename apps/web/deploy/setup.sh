@@ -45,6 +45,10 @@ chmod 600 "$ROOT/shared/.env"
 echo "==> Código"
 if [ ! -d "$ROOT/src/.git" ]; then
   git clone --branch "$BRANCH" "$REPO_URL" "$ROOT/src"
+else
+  # Reinstalação: traz o código mais novo para os serviços abaixo também serem.
+  git -C "$ROOT/src" fetch --quiet origin "$BRANCH"
+  git -C "$ROOT/src" reset --quiet --hard "origin/$BRANCH"
 fi
 chown -R nexo:nexo "$ROOT"
 
@@ -59,5 +63,6 @@ echo "==> Primeiro build (alguns minutos)"
 FORCE=1 /usr/local/bin/nexo-update
 
 systemctl enable --now nexo.service nexo-update.timer
+systemctl restart nexo-update.timer
 echo
 echo "Pronto: abra $URL"

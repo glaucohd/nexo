@@ -28,6 +28,25 @@ fi
 echo "==> Atualizando para ${TARGET:0:7}"
 as_nexo git reset --quiet --hard "$TARGET"
 
+# Mantém serviços e este próprio script iguais aos do repositório. O script
+# é trocado por renomeação (novo arquivo), sem afetar a execução em curso.
+DEPLOY="$ROOT/src/apps/web/deploy"
+changed=0
+for unit in nexo.service nexo-update.service nexo-update.timer; do
+  if ! cmp -s "$DEPLOY/$unit" "/etc/systemd/system/$unit"; then
+    install -m 644 "$DEPLOY/$unit" "/etc/systemd/system/$unit"
+    changed=1
+  fi
+done
+if ! cmp -s "$DEPLOY/update.sh" /usr/local/bin/nexo-update; then
+  install -m 755 "$DEPLOY/update.sh" /usr/local/bin/nexo-update.new
+  mv /usr/local/bin/nexo-update.new /usr/local/bin/nexo-update
+fi
+if [ "$changed" = 1 ]; then
+  systemctl daemon-reload
+  systemctl restart nexo-update.timer
+fi
+
 RELEASE="$ROOT/releases/$TARGET"
 rm -rf "$RELEASE"
 as_nexo mkdir -p "$RELEASE"
