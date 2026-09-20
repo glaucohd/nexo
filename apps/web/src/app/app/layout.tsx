@@ -58,11 +58,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const initials = session.user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
 
-  const games = [
-    ["lotofacil", "Lotofácil"], ["mega", "Mega-Sena"], ["quina", "Quina"], ["milionaria", "+Milionária"], ["dia", "Dia de Sorte"],
-    ["lotomania", "Lotomania"], ["super-sete", "Super Sete"], ["dupla-sena", "Dupla Sena"], ["timemania", "Timemania"],
-  ];
-
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -85,12 +80,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
         <p className="sidebar-label">Meu Nexo</p>
         <AppNav />
-        <p className="sidebar-label games-label">Modalidades</p>
-        <ul className="sidebar-games" aria-label="Modalidades disponíveis">
-          {games.map(([key, label]) => (
-            <li key={key}><span className={`game-dot ${key}`} />{label}</li>
-          ))}
-        </ul>
         <div className="sidebar-footer">
           <div className="sidebar-user">
             <span className="sidebar-avatar" aria-hidden="true">{initials || "?"}</span>

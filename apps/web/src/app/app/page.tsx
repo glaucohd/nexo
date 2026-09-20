@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { count, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
 import { db } from "@/db";
@@ -24,8 +24,6 @@ const games = [
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  const [{ total: drawCount }] = await db.select({ total: count() }).from(draws);
-
   // Último concurso de cada loteria (na Dupla Sena, o maior entre os dois sorteios).
   const latestRows = await db.selectDistinctOn([lotteries.slug], { source: lotteries.slug, contest: draws.contestNumber, date: draws.drawnAt })
     .from(draws).innerJoin(lotteries, eq(draws.lotteryId, lotteries.id))
@@ -42,7 +40,8 @@ export default async function DashboardPage() {
     ? await db.select({ target: portfolios.targetContest, source: lotteries.slug }).from(portfolios)
       .innerJoin(lotteries, eq(portfolios.lotteryId, lotteries.id)).where(eq(portfolios.userId, session.user.id))
     : [];
-  const ready = saved.filter((entry) => (entry.target ?? Infinity) <= (latest.get(uiSlugFor(entry.source))?.contest ?? 0)).length;
+  const drawn = saved.filter((entry) => (entry.target ?? Infinity) <= (latest.get(uiSlugFor(entry.source))?.contest ?? 0)).length;
+  const waiting = saved.length - drawn;
   return (
     <>
       <header className="dashboard-header">
@@ -74,42 +73,36 @@ export default async function DashboardPage() {
           <div className="dashboard-card-icon purple">✓</div>
           <span>Carteiras salvas</span>
           <strong className="metric">{saved.length.toLocaleString("pt-BR")}</strong>
-          <small>{saved.length ? "Em Minhas apostas, para conferir depois" : "Suas primeiras carteiras aparecerão aqui"}</small>
+          <small>{saved.length ? "Em Minhas apostas" : "Suas primeiras carteiras aparecerão aqui"}</small>
+        </article>
+        <article className="dashboard-card stat-card">
+          <div className="dashboard-card-icon blue">…</div>
+          <span>Aguardando sorteio</span>
+          <strong className="metric">{waiting.toLocaleString("pt-BR")}</strong>
+          <small>{waiting ? "O resultado entra sozinho quando sair" : "Nenhuma carteira esperando"}</small>
         </article>
         <article className="dashboard-card stat-card">
           <div className="dashboard-card-icon green">↻</div>
-          <span>Prontas para conferir</span>
-          <strong className="metric">{ready.toLocaleString("pt-BR")}</strong>
-          <small>{ready ? "O sorteio delas já está na base" : "Nenhuma com sorteio pendente de conferência"}</small>
-        </article>
-        <article className="dashboard-card stat-card">
-          <div className="dashboard-card-icon blue">∿</div>
-          <span>Concursos na base</span>
-          <strong className="metric">{drawCount.toLocaleString("pt-BR")}</strong>
-          <small>Históricos reunidos para análise</small>
+          <span>Já sorteadas</span>
+          <strong className="metric">{drawn.toLocaleString("pt-BR")}</strong>
+          <small>{drawn ? "Com acertos e prêmios já calculados" : "Nenhuma carteira sorteada ainda"}</small>
         </article>
         <article className="dashboard-card action-card wide">
-          {ready > 0 ? <div>
-            <span className="eyebrow">Sorteio feito</span>
-            <h2>{ready === 1 ? "Uma carteira" : `${ready} carteiras`} esperando <em>conferência</em></h2>
-            <p>Os resultados já estão na base. Veja quanto você teria ganhado e o saldo de cada carteira.</p>
-            <Link className="button button-primary" href="/app/apostas">Conferir agora <span>→</span></Link>
+          {drawn > 0 ? <div>
+            <span className="eyebrow">Resultados</span>
+            <h2>Veja como foram seus <em>jogos</em></h2>
+            <p>Os resultados já estão na base e cada carteira foi conferida. Confira acertos, prêmios e o saldo de cada uma.</p>
+            <Link className="button button-primary" href="/app/apostas">Ver resultados <span>→</span></Link>
           </div> : <div>
             <span className="eyebrow">Próximo passo</span>
-            <h2>Monte uma carteira e confira depois do <em>sorteio</em></h2>
-            <p>Gere jogos ou uma redução, salve em Minhas apostas e compare estratégias no Laboratório de Análises.</p>
+            <h2>Monte uma carteira e acompanhe o <em>sorteio</em></h2>
+            <p>Gere jogos ou uma redução e salve em Minhas apostas. Quando o concurso sair, o resultado aparece lá sozinho.</p>
             <Link className="button button-primary" href="/app/gerador">Gerar jogos <span>→</span></Link>
           </div>}
-          <div className="action-balls" aria-hidden="true">
-            {[3, 7, 10, 15, 21].map((number) => <span key={number}>{String(number).padStart(2, "0")}</span>)}
-          </div>
-        </article>
-        <article className="dashboard-card responsible-card">
-          <span className="responsible-icon">!</span>
-          <h2>Aposte com consciência</h2>
-          <p>Dados históricos ajudam na organização, mas não preveem o próximo sorteio.</p>
         </article>
       </section>
+
+      <p className="dashboard-note"><b>Aposte com consciência.</b> Dados históricos ajudam na organização, mas não preveem o próximo sorteio.</p>
     </>
   );
 }

@@ -211,17 +211,15 @@ h1 em, h2 em { font-style: normal; color: var(--brand); }
 :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 
 /* ---------- Cores de identidade das loterias ---------- */
-.game-dot { width: 8px; height: 8px; border-radius: 50%; }
-.game-dot.lotofacil, .dashboard-game.purple { --game: #91278f; }
-.game-dot.mega, .dashboard-game.green { --game: #008b64; }
-.game-dot.quina, .dashboard-game.violet { --game: #5551ae; }
-.game-dot.milionaria, .dashboard-game.blue { --game: #3445a5; }
-.game-dot.dia, .dashboard-game.amber { --game: #9a6508; }
-.game-dot.lotomania, .dashboard-game.orange { --game: #d16b2d; }
-.game-dot.super-sete, .dashboard-game.lime { --game: #718c23; }
-.game-dot.dupla-sena, .dashboard-game.crimson { --game: #b5195a; }
-.game-dot.timemania, .dashboard-game.forest { --game: #00854a; }
-.game-dot { background: var(--game); }
+.dashboard-game.purple { --game: #91278f; }
+.dashboard-game.green { --game: #008b64; }
+.dashboard-game.violet { --game: #5551ae; }
+.dashboard-game.blue { --game: #3445a5; }
+.dashboard-game.amber { --game: #9a6508; }
+.dashboard-game.orange { --game: #d16b2d; }
+.dashboard-game.lime { --game: #718c23; }
+.dashboard-game.crimson { --game: #b5195a; }
+.dashboard-game.forest { --game: #00854a; }
 
 /* ==========================================================================
    Landing
@@ -464,10 +462,6 @@ h1 em, h2 em { font-style: normal; color: var(--brand); }
 .side-nav a:hover { color: var(--ink); background: var(--surface-2); }
 .side-nav a.active { color: var(--brand); background: var(--brand-soft); font-weight: 620; }
 .side-nav a.active::before { position: absolute; top: 9px; bottom: 9px; left: -14px; width: 3px; border-radius: 0 3px 3px 0; background: var(--brand); content: ""; }
-.games-label { margin-top: 26px; }
-.sidebar-games { display: grid; grid-template-columns: 1fr 1fr; gap: 0 4px; margin: 0 4px; list-style: none; }
-.sidebar-games li { display: flex; align-items: center; gap: 8px; min-height: 28px; padding: 0 6px; overflow: hidden; color: var(--muted); font-size: .74rem; white-space: nowrap; }
-.sidebar-games .game-dot { flex: none; }
 .sidebar-footer { display: grid; gap: 12px; margin-top: auto; padding: 16px 4px 0; border-top: 1px solid var(--line); }
 .sidebar-user { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 0 6px; }
 .sidebar-user > div { min-width: 0; }
@@ -564,7 +558,7 @@ h1 em, h2 em { font-style: normal; color: var(--brand); }
 
 .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .dashboard-card { min-height: 168px; padding: 22px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); }
-.dashboard-card.wide { grid-column: span 2; }
+.dashboard-card.wide { grid-column: 1 / -1; }
 .dashboard-card h2 { font-size: 1.1rem; font-weight: 620; letter-spacing: -.015em; }
 .dashboard-card p { color: var(--muted); font-size: .88rem; line-height: 1.6; }
 .dashboard-card-icon { display: grid; width: 32px; height: 32px; place-items: center; margin-bottom: 20px; border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--muted); font-family: var(--font-mono); font-size: .85rem; }
@@ -574,19 +568,15 @@ h1 em, h2 em { font-style: normal; color: var(--brand); }
 .stat-card > span { color: var(--faint); font-family: var(--font-mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; }
 .stat-card strong.metric { display: block; margin: 6px 0 4px; font-family: var(--font-mono); font-size: 2.4rem; font-weight: 500; letter-spacing: -.04em; }
 .stat-card small { color: var(--faint); font-size: .76rem; }
+.dashboard-note { max-width: 640px; margin: 18px 2px 0; color: var(--faint); font-size: .78rem; line-height: 1.6; }
+.dashboard-note b { color: var(--muted); font-weight: 600; }
 
-.action-card { position: relative; display: grid; overflow: hidden; grid-template-columns: 1fr auto; align-items: center; border-color: var(--brand-line); background: linear-gradient(135deg, var(--brand-soft), transparent 60%), var(--surface); }
+.action-card { position: relative; display: grid; overflow: hidden; align-items: center; border-color: var(--brand-line); background: linear-gradient(135deg, var(--brand-soft), transparent 60%), var(--surface); }
 .action-card > div { position: relative; z-index: 1; }
 .action-card .eyebrow { color: var(--brand); }
 .action-card h2 { max-width: 440px; margin: 12px 0 8px; font-family: var(--font-serif); font-size: 1.7rem; font-weight: 700; letter-spacing: -.015em; }
 .action-card p { max-width: 460px; margin-bottom: 20px; }
-.action-balls { display: flex; width: 150px; flex-wrap: wrap; justify-content: center; gap: 7px; }
-.action-balls span { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 50%; color: var(--on-brand); background: var(--brand); font-family: var(--font-mono); font-size: .76rem; font-weight: 600; }
-.action-balls span:nth-child(2n) { color: var(--ink); background: var(--surface-3); }
 
-.responsible-card { border-color: var(--warn-line); background: var(--warn-soft); }
-.responsible-icon { display: grid; width: 32px; height: 32px; place-items: center; margin-bottom: 20px; border: 1px solid var(--warn-line); border-radius: 50%; color: var(--warn); font-family: var(--font-mono); font-weight: 700; }
-.responsible-card h2 { margin-bottom: 8px; }
 
 .empty-page { display: grid; min-height: 60vh; place-items: center; text-align: center; }
 .empty-page div { max-width: 520px; padding: 44px; border: 1px dashed var(--line-strong); border-radius: var(--r-lg); background: var(--surface); }
@@ -775,8 +765,6 @@ h1 em, h2 em { font-style: normal; color: var(--brand); }
   .dashboard-section-heading { align-items: flex-start; flex-direction: column; gap: 10px; }
   .dashboard-grid { grid-template-columns: 1fr; }
   .dashboard-card.wide { grid-column: auto; }
-  .action-card { grid-template-columns: 1fr; }
-  .action-balls { display: none; }
 }
 
 @media (max-width: 600px) {
