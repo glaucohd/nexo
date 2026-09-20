@@ -17,9 +17,9 @@ const lotteries = [
 ];
 
 const features = [
-  { number: "01", title: "Entenda o histórico", text: "Veja frequências, atrasos, repetições e distribuições sem se perder em planilhas." },
+  { number: "01", title: "Entenda o histórico", text: "Veja dezenas quentes, neutras e frias, atrasos, pares e ímpares, moldura e miolo sem se perder em planilhas." },
   { number: "02", title: "Monte seus jogos", text: "Use recomendações, filtros gerais, ajustes por cartela e modos especiais de geração." },
-  { number: "03", title: "Salve e confira", text: "Organize apostas por concurso e descubra automaticamente quantos pontos cada jogo fez." },
+  { number: "03", title: "Salve e confira", text: "Organize apostas por concurso: o resultado é buscado na CAIXA e cada jogo é conferido sozinho, com filtro de premiadas." },
 ];
 
 export default function Home() {
