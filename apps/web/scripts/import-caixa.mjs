@@ -68,7 +68,8 @@ async function fetchCaixaWithDnsFallback(url) {
   return new Promise((resolve, reject) => {
     const request = https.get(url, {
       headers: { Accept: "application/json", "User-Agent": "Nexo/1.0" },
-      lookup: (_hostname, _options, callback) => callback(null, ip, 4),
+      // O Node pode pedir todos os endereços (`all: true`) e então espera uma lista.
+      lookup: (_hostname, options, callback) => options?.all ? callback(null, [{ address: ip, family: 4 }]) : callback(null, ip, 4),
       timeout: 15000,
     }, (response) => {
       if (response.statusCode !== 200) { response.resume(); reject(new Error(`${response.statusCode} em ${url}`)); return; }
