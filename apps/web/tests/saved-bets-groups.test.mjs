@@ -42,3 +42,15 @@ test("ordena: aguardando primeiro (mais próximo antes), depois sorteados do mai
 test("melhor acerto é zero quando a carteira ainda não foi conferida", () => {
   assert.equal(portfolioBestHits(portfolio("a", "quina", 1)), 0);
 });
+
+test("o concurso é premiado quando algum jogo ganhou, mesmo sem o valor do prêmio na base", () => {
+  const unknownValue = { draws: [draw], result: { totalCents: 0, unavailablePrizeUnits: 1, tickets: [{ position: 1, hits: 11, prizeCents: 0, prizeDraws: 1 }] } };
+  const groups = groupByContest([
+    portfolio("a", "lotofacil", 3783, won(12, 0)),
+    portfolio("bb", "quina", 7121, won(4, 500)),
+    portfolio("ccc", "mega-sena", 2900, unknownValue),
+    portfolio("dddd", "lotomania", 2800),
+  ]);
+  const prized = (slug) => groups.find((group) => group.slug === slug).prized;
+  assert.deepEqual([prized("lotofacil"), prized("quina"), prized("mega-sena"), prized("lotomania")], [false, true, true, false]);
+});

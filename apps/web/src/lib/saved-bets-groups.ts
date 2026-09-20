@@ -43,6 +43,8 @@ export type ContestGroup = {
   ticketCount: number;
   costCents: number;
   prizeCents: number;
+  /** Algum jogo do concurso ganhou prêmio (mesmo que o valor ainda não esteja na base). */
+  prized: boolean;
   bestHits: number;
 };
 
@@ -71,7 +73,7 @@ export function groupByContest(portfolios: SavedPortfolio[]): ContestGroup[] {
       group = {
         key, slug: portfolio.slug, gameName: portfolio.gameName, color: portfolio.color, target: portfolio.target,
         drawn: portfolio.draws.length > 0, latest: portfolio.latest, draws: portfolio.draws,
-        portfolios: [], ticketCount: 0, costCents: 0, prizeCents: 0, bestHits: 0,
+        portfolios: [], ticketCount: 0, costCents: 0, prizeCents: 0, prized: false, bestHits: 0,
       };
       groups.set(key, group);
     }
@@ -79,6 +81,7 @@ export function groupByContest(portfolios: SavedPortfolio[]): ContestGroup[] {
     group.ticketCount += portfolio.tickets.length;
     group.costCents += portfolio.costCents;
     group.prizeCents += portfolio.result?.totalCents ?? 0;
+    group.prized ||= (portfolio.result?.totalCents ?? 0) > 0 || (portfolio.result?.unavailablePrizeUnits ?? 0) > 0;
     group.bestHits = Math.max(group.bestHits, portfolioBestHits(portfolio));
   }
   for (const group of groups.values()) group.portfolios.sort((a, b) => b.createdAt.localeCompare(a.createdAt));

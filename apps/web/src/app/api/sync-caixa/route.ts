@@ -1,25 +1,23 @@
-import { execFile } from "node:child_process";
-import path from "node:path";
-import { promisify } from "node:util";
-
 import { headers } from "next/headers";
+import { z } from "zod";
 
 import { auth } from "@/lib/auth";
+import { syncCaixa } from "@/lib/sync-caixa";
+import { lotterySlugSchema } from "@/lib/ticket-validation";
 
-const run = promisify(execFile);
+// `slugs` opcional: a tela de apostas pede só as modalidades com jogo pendente.
+const bodySchema = z.object({ slugs: z.array(lotterySlugSchema).max(9).optional() }).strict();
 
-export async function POST() {
+export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return Response.json({ error: "Entre na sua conta para atualizar a base." }, { status: 401 });
 
-  const scriptPath = path.join(process.cwd(), "scripts", "import-caixa.mjs");
+  const parsed = bodySchema.safeParse(await request.json().catch(() => ({})));
+  if (!parsed.success) return Response.json({ error: "Pedido de atualização inválido." }, { status: 400 });
+
   try {
-    const { stdout, stderr } = await run("node", [scriptPath, "--missing", "--recent=30"], {
-      cwd: process.cwd(),
-      timeout: 120_000,
-      maxBuffer: 4 * 1024 * 1024,
-    });
-    return Response.json({ output: stdout.trim(), warnings: stderr.trim() || null });
+    const result = await syncCaixa({ slugs: parsed.data.slugs });
+    return Response.json(result);
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : "Falha desconhecida.";
     console.error("Atualização da base falhou:", message);

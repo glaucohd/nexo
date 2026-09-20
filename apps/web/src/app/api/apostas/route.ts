@@ -7,6 +7,7 @@ import { lotteries, portfolios, tickets as ticketRows } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { drawSourceSlugs } from "@/lib/lottery-generator";
 import { latestContest, ticketExtras } from "@/lib/saved-bets";
+import { syncCaixa } from "@/lib/sync-caixa";
 import { lotterySlugSchema, ticketSchema, ticketsFitLottery } from "@/lib/ticket-validation";
 
 const bodySchema = z.object({
@@ -32,6 +33,10 @@ export async function POST(request: Request) {
     // olha os dois sorteios do concurso.
     const [lottery] = await db.select({ id: lotteries.id }).from(lotteries).where(eq(lotteries.slug, drawSourceSlugs(slug)[0]));
     if (!lottery) return Response.json({ error: "Modalidade não cadastrada na base." }, { status: 400 });
+    // Se o último sorteio ainda não entrou na base, o "próximo concurso" sairia
+    // errado (um que já aconteceu). Atualiza antes; se a CAIXA não responder,
+    // segue com o que a base tem.
+    await syncCaixa({ slugs: [slug], timeoutMs: 20_000 }).catch(() => null);
     const targetContest = (await latestContest(slug)) + 1;
     const id = await db.transaction(async (tx) => {
       const [portfolio] = await tx.insert(portfolios).values({ userId: session.user.id, lotteryId: lottery.id, name, mode, targetContest }).returning({ id: portfolios.id });
