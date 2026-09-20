@@ -495,6 +495,7 @@ h1 em, h2 em { font-style: normal; color: var(--brand); }
 .sync-caixa { display: grid; }
 .sync-caixa-message, .sync-caixa-error { display: block; padding: 2px 10px 6px 37px; font-size: .72rem; line-height: 1.4; }
 .sync-caixa-message { color: var(--faint); }
+.topbar .sync-caixa-message { color: var(--ink); }
 .sync-caixa-error { color: var(--danger); }
 
 .theme-toggle { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); }
@@ -721,9 +722,9 @@ h1 em, h2 em { font-style: normal; color: var(--brand); }
   }
   .topbar-actions { display: flex; align-items: center; gap: 4px; }
   .topbar .sidebar-action { width: 40px; min-height: 40px; justify-content: center; padding: 0; border-radius: 50%; }
-  .topbar .sidebar-action span, .topbar .sync-caixa-message { display: none; }
+  .topbar .sidebar-action span { display: none; }
   .topbar .sync-caixa { position: relative; }
-  .topbar .sync-caixa-error { position: absolute; top: 46px; right: 0; z-index: 5; width: 230px; padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); box-shadow: var(--shadow-pop); }
+  .topbar .sync-caixa-message, .topbar .sync-caixa-error { position: absolute; top: 46px; right: 0; z-index: 5; width: 230px; padding: 9px 11px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); box-shadow: var(--shadow-pop); }
   .avatar-button { width: 36px; height: 36px; margin-left: 4px; padding: 0; border: 0; font-size: .74rem; cursor: pointer; }
 
   /* Barra de abas: de ponta a ponta, com a área segura do iPhone embaixo. Some
@@ -823,3 +824,58 @@ h1 em, h2 em { font-style: normal; color: var(--brand); }
 .guarantee-summary td:last-child { font-family: var(--font-mono); font-size: .74rem; white-space: nowrap; }
 .guarantee-summary.guarantee-summary .guarantee-summary-note { color: var(--muted); font-size: .74rem; }
 @media (max-width: 520px) { .guarantee-summary th:last-child, .guarantee-summary td:last-child { white-space: normal; } }
+
+/* ==========================================================================
+   Tema por loteria. Ao escolher uma modalidade, o sistema todo assume a cor
+   dela: destaques, botões, menu ativo, fundo e o trevo ao fundo.
+   --lottery é a cor oficial (fundos, faixas, marca d'água); --lottery-ink é a
+   versão com contraste para texto e botões sobre fundo claro.
+   ========================================================================== */
+.app-shell[data-lottery="lotofacil"] { --lottery: #93008a; --lottery-ink: #93008a; --clover: url("/trevos-loterias/lotofacil.svg"); }
+.app-shell[data-lottery="mega-sena"] { --lottery: #219869; --lottery-ink: #0a7a56; --clover: url("/trevos-loterias/mega-sena.svg"); }
+.app-shell[data-lottery="quina"] { --lottery: #260085; --lottery-ink: #3a17a6; --clover: url("/trevos-loterias/quina.svg"); }
+.app-shell[data-lottery="mais-milionaria"] { --lottery: #2d317a; --lottery-ink: #2d317a; --clover: url("/trevos-loterias/mais-milionaria.svg"); }
+.app-shell[data-lottery="dia-de-sorte"] { --lottery: #cb852c; --lottery-ink: #966008; --clover: url("/trevos-loterias/dia-de-sorte.svg"); }
+.app-shell[data-lottery="lotomania"] { --lottery: #f78100; --lottery-ink: #b85419; --clover: url("/trevos-loterias/lotomania.svg"); }
+.app-shell[data-lottery="super-sete"] { --lottery: #a8cf44; --lottery-ink: #5d7a16; --clover: url("/trevos-loterias/super-sete.svg"); }
+.app-shell[data-lottery="dupla-sena"] { --lottery: #a61424; --lottery-ink: #a61424; --clover: url("/trevos-loterias/dupla-sena.svg"); }
+.app-shell[data-lottery="timemania"] { --lottery: #23b963; --lottery-ink: #007a42; --clover: url("/trevos-loterias/timemania.svg"); }
+
+.app-shell[data-lottery] {
+  --brand: color-mix(in oklab, var(--lottery-ink), white var(--lift));
+  --brand-dark: color-mix(in oklab, var(--lottery-ink), black 16%);
+  --brand-soft: color-mix(in srgb, var(--lottery) 11%, transparent);
+  --brand-line: color-mix(in srgb, var(--lottery) 36%, transparent);
+  background: color-mix(in srgb, var(--lottery) 3.5%, var(--paper));
+  transition: background-color .25s;
+}
+[data-theme="dark"] .app-shell[data-lottery] {
+  --brand-dark: color-mix(in oklab, var(--lottery-ink), white 55%);
+  background: color-mix(in srgb, var(--lottery) 9%, var(--paper));
+}
+/* Faixa da cor da loteria no topo do menu lateral e da barra do celular. */
+.app-shell[data-lottery] .sidebar { box-shadow: inset 0 3px 0 var(--lottery); }
+.app-shell[data-lottery] .topbar { box-shadow: inset 0 3px 0 var(--lottery); }
+.app-shell[data-lottery] .sidebar-avatar, .app-shell[data-lottery] .avatar-button, .app-shell[data-lottery] .avatar-large {
+  background: linear-gradient(145deg, color-mix(in oklab, var(--lottery-ink), white 22%), var(--lottery-ink));
+}
+/* Trevo da loteria, bem suave, no canto do conteúdo. */
+.app-shell[data-lottery] .app-content::after {
+  position: absolute;
+  top: 8px;
+  right: clamp(8px, 3vw, 40px);
+  z-index: -1;
+  width: clamp(150px, 22vw, 300px);
+  aspect-ratio: 1;
+  background: var(--clover) center / contain no-repeat;
+  content: "";
+  opacity: .08;
+  pointer-events: none;
+}
+[data-theme="dark"] .app-shell[data-lottery] .app-content::after { opacity: .12; }
+@media (prefers-reduced-motion: reduce) { .app-shell[data-lottery] { transition: none; } }
+/* No celular o trevo ficaria atrás do título e pareceria uma mancha; só aparece
+   quando há espaço ao lado do conteúdo. */
+@media (max-width: 900px) {
+  .app-shell[data-lottery] .app-content::after { display: none; }
+}

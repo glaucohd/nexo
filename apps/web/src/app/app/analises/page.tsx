@@ -1,10 +1,12 @@
 import { desc, eq } from "drizzle-orm";
+import { cookies } from "next/headers";
 
 import { AnalysisExplorer } from "@/components/analysis-explorer";
 import { db } from "@/db";
 import { draws, lotteries } from "@/db/schema";
 import type { AnalysisDraw } from "@/lib/lottery-analysis";
 import { uiSlugFor } from "@/lib/lottery-generator";
+import { LOTTERY_COOKIE, pickLottery } from "@/lib/selected-lottery";
 
 export const dynamic = "force-dynamic";
 
@@ -26,5 +28,5 @@ export default async function AnalysesPage({ searchParams }: { searchParams: Pro
     });
   }
 
-  return <AnalysisExplorer histories={histories} initialSlug={modalidade} />;
+  return <AnalysisExplorer histories={histories} initialSlug={pickLottery(modalidade, (await cookies()).get(LOTTERY_COOKIE)?.value)} />;
 }

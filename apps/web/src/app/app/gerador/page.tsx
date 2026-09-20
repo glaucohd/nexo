@@ -1,9 +1,11 @@
 import { desc, eq } from "drizzle-orm";
+import { cookies } from "next/headers";
 
 import { LotteryGenerator } from "@/components/lottery-generator";
 import { db } from "@/db";
 import { draws, lotteries } from "@/db/schema";
 import { uiSlugFor } from "@/lib/lottery-generator";
+import { LOTTERY_COOKIE, pickLottery } from "@/lib/selected-lottery";
 
 export const dynamic = "force-dynamic";
 
@@ -19,5 +21,5 @@ export default async function GeneratorPage({ searchParams }: { searchParams: Pr
   const histories: Record<string, { contest: number; numbers: number[] }[]> = {};
   for (const row of rows) (histories[uiSlugFor(row.slug)] ??= []).push({ contest: row.contest, numbers: row.numbers });
 
-  return <LotteryGenerator histories={histories} initialSlug={modalidade} />;
+  return <LotteryGenerator histories={histories} initialSlug={pickLottery(modalidade, (await cookies()).get(LOTTERY_COOKIE)?.value)} />;
 }

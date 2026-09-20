@@ -1,6 +1,10 @@
 .page {
   --acc: color-mix(in oklab, var(--analysis-accent), white var(--lift));
   --ring: color-mix(in srgb, var(--acc) 45%, transparent);
+  --hot: #c8461f;
+  --neutral: #6b6880;
+  --cold: #2168b4;
+  --late: #b45309;
   display: grid;
   gap: var(--gen-gap);
   padding-bottom: 54px;
@@ -47,12 +51,15 @@
 .matrix thead th { position: sticky; z-index: 2; top: 0; height: 34px; color: var(--ink); background: var(--surface-2); font-weight: 600; }
 .matrix thead tr:nth-child(2) th { top: 34px; }
 .matrix thead tr:nth-child(3) th { top: 66px; }
+.matrix thead tr:nth-child(4) th { top: 96px; }
 .matrix .stickyColumn { position: sticky; z-index: 3; left: 0; width: 85px; min-width: 85px; padding-inline: 10px; border-right: 1px solid var(--line-strong); background: var(--surface); text-align: left; font-weight: 600; }
 .matrix thead .stickyColumn { z-index: 4; background: var(--surface-2); }
 .matrix tbody tr:hover td, .matrix tbody tr:hover .stickyColumn { box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--analysis-accent) 7%, transparent); }
 .matrix tbody tr:last-child td, .matrix tbody tr:last-child th { border-bottom: 0; }
 .matrix .frequencyRow th { height: 32px; color: var(--acc); background: color-mix(in srgb, var(--analysis-accent) var(--heat, 8%), var(--surface)); }
 .matrix .frequencyRow .stickyColumn { background: var(--surface-2); }
+.matrix .delayRow th { height: 30px; color: var(--muted); background: var(--surface-2); font-size: .58rem; font-weight: 500; }
+.matrix .delayRow th.lateCell { color: #fff; background: var(--late); font-weight: 700; }
 .matrix .percentageRow th { height: 30px; color: var(--muted); background: var(--surface-2); font-size: .58rem; font-weight: 500; }
 /* Dezena sorteada = bolinha (círculo que acompanha o tamanho da célula), como na cartela. */
 .matrix .matrixHit { color: #fff; background: radial-gradient(circle closest-side at 50% 50%, var(--analysis-accent) 82%, transparent calc(82% + 1px)); font-weight: 650; }
@@ -131,3 +138,17 @@
 .panelExpanded .denseMatrix thead tr:nth-child(2) th { top: 26px; height: 26px; }
 .panelExpanded .denseMatrix thead tr:nth-child(3) th { top: 52px; height: 30px; }
 .panelExpanded .denseMatrix [colspan] { overflow: hidden; text-overflow: ellipsis; font-size: .5rem; }
+
+/* Quentes, neutras e frias: a cor vai no cabeçalho (faixa embaixo) e nas dezenas sorteadas. */
+.tHot { --tone: var(--hot); }
+.tNeutral { --tone: var(--neutral); }
+.tCold { --tone: var(--cold); }
+.matrix thead tr:first-child th.tHot, .matrix thead tr:first-child th.tNeutral, .matrix thead tr:first-child th.tCold { box-shadow: inset 0 -3px 0 var(--tone); }
+.matrix .matrixHit.tHot, .matrix .matrixHit.tNeutral, .matrix .matrixHit.tCold { background: var(--tone); }
+.legendHit.tHot, .legendHit.tNeutral, .legendHit.tCold { background: var(--tone); }
+.rangeBar .colorToggle { margin-left: auto; font-family: var(--font-sans); font-size: .78rem; font-weight: 600; color: var(--ink); }
+.rangeBar .colorToggle + .expandButton { margin-left: 0; }
+.panelExpanded .matrix thead tr:nth-child(4) th { top: 72px; height: 24px; }
+.panelExpanded .denseMatrix thead tr:nth-child(4) th { top: 82px; height: 30px; }
+.panelExpanded .matrix .statCell { width: 40px; }
+.legendHit.legendLate { background: var(--late); }

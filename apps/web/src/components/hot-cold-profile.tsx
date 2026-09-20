@@ -1,12 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { HistoricalBacktest } from "@/components/historical-backtest";
 import { SaveBetsButton } from "@/components/save-bets-button";
 import { buildProfile, generateProfileTickets, preferredComposition, type Composition, type ProfileDraw, type ProfileTicket, type Temperature } from "@/lib/hot-cold-profile";
 import { lotteryGames, type LotterySlug } from "@/lib/lottery-generator";
 
 import styles from "./hot-cold-profile.module.css";
+
+// Modalidades com perfil de quentes, neutras e frias (dezenas em sequência e volante em colunas).
+export const profileSlugs: ReadonlySet<string> = new Set(["lotofacil", "mega-sena", "quina", "mais-milionaria", "dia-de-sorte", "dupla-sena"]);
 
 const windows = [15, 30, 50, 100] as const;
 const pad = (number: number) => String(number).padStart(2, "0");
@@ -14,7 +19,7 @@ const temperatureLabel: Record<Temperature, string> = { hot: "Quentes", neutral:
 const temperatureSingular: Record<Temperature, string> = { hot: "quente", neutral: "neutra", cold: "fria" };
 const temperatureClass: Record<Temperature, string> = { hot: styles.hot, neutral: styles.neutral, cold: styles.cold };
 const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
-const compositionText = ({ hot, neutral, cold }: Composition) => `${hot} quentes · ${neutral} neutras · ${cold} frias`;
+const compositionText = ({ hot, neutral, cold }: Composition) => `${plural(hot, "quente", "quentes")} · ${plural(neutral, "neutra", "neutras")} · ${plural(cold, "fria", "frias")}`;
 
 function Distribution({ rows, label, format, curve }: { rows: { value: number; count: number }[]; label: string; format: (value: number) => string; curve: number[] }) {
   const total = rows.reduce((sum, row) => sum + row.count, 0);
@@ -26,7 +31,8 @@ function Distribution({ rows, label, format, curve }: { rows: { value: number; c
   </div>)}</div>;
 }
 
-export function HotColdProfile({ slug, history }: { slug: LotterySlug; history: ProfileDraw[] }) {
+// `compact`: só a janela e os jogos (com o teste nos concursos anteriores), para a tela do gerador.
+export function HotColdProfile({ slug, history, compact = false }: { slug: LotterySlug; history: ProfileDraw[]; compact?: boolean }) {
   const game = lotteryGames[slug];
   const [contests, setContests] = useState<(typeof windows)[number]>(30);
   const [round, setRound] = useState<{ id: number; tickets: ProfileTicket[]; copied: boolean } | null>(null);
@@ -34,6 +40,8 @@ export function HotColdProfile({ slug, history }: { slug: LotterySlug; history: 
   const wanted = preferredComposition(game.drawSize);
   const delayed = [...profile.delays].sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 10);
   const frameSize = profile.frame.size;
+  const lateSet = new Set(profile.late);
+  const isLate = (number: number) => lateSet.has(number);
   const isDupla = slug === "dupla-sena";
   const { curve, timeline } = profile;
   const percentOf = (part: number) => (curve.total ? Math.round((part / curve.total) * 100) : 0);
@@ -64,6 +72,15 @@ export function HotColdProfile({ slug, history }: { slug: LotterySlug; history: 
   if (!profile.draws) return <div className={styles.empty}>Ainda não há concursos suficientes para montar o perfil.</div>;
 
   return <div className={styles.profile}>
+    {compact && <section className={styles.panel}>
+      <div className={styles.lead}>
+        <div><span className="eyebrow">Gerador</span><h2>Jogos por quentes, neutras e frias</h2><p>Escolha quantos concursos recentes definem o que é quente, neutro e frio. Os jogos saem já com o teste nos concursos anteriores logo abaixo.</p></div>
+        <Link className={styles.ghost} href={`/app/analises?modalidade=${slug}`}>Ver a análise completa →</Link>
+      </div>
+      <div className={styles.rangeBar}><span>Últimos:</span>{windows.map((size) => <button key={size} type="button" aria-pressed={contests === size} onClick={() => { setContests(size); setRound(null); }}>{size}</button>)}<span className={styles.rangeNote}>concursos</span></div>
+    </section>}
+
+    {!compact && <>
     <section className={styles.panel}>
       <div className={styles.lead}>
         <div><span className="eyebrow">Perfil dos últimos concursos</span><h2>Quentes, neutras e frias</h2><p>As {game.total} dezenas são divididas em três grupos pela frequência nos últimos {profile.contests} concursos{isDupla ? " (contando os dois sorteios de cada um)" : ""}: o terço que mais saiu é quente, o que menos saiu é frio e o meio é neutro.</p></div>
@@ -71,19 +88,19 @@ export function HotColdProfile({ slug, history }: { slug: LotterySlug; history: 
       <div className={styles.rangeBar}><span>Últimos:</span>{windows.map((size) => <button key={size} type="button" aria-pressed={contests === size} onClick={() => { setContests(size); setRound(null); }}>{size}</button>)}<span className={styles.rangeNote}>concursos</span></div>
       <div className={styles.groups}>{(["hot", "neutral", "cold"] as const).map((kind) => <article key={kind} className={`${styles.group} ${temperatureClass[kind]}`}>
         <header><h3>{temperatureLabel[kind]}</h3><span>{profile[kind].length} dezenas</span></header>
-        <div className={styles.balls}>{profile[kind].map((number) => <span key={number} className={styles.ball} title={`Dezena ${pad(number)} · ${profile.frequencies.get(number)}× nos últimos ${profile.contests} · atraso ${profile.delays.get(number)}`}>{pad(number)}<small>{profile.frequencies.get(number)}×</small></span>)}</div>
+        <div className={styles.balls}>{profile[kind].map((number) => <span key={number} className={`${styles.ball} ${isLate(number) ? styles.late : ""}`} title={`Dezena ${pad(number)} · ${profile.frequencies.get(number)}× nos últimos ${profile.contests} · atraso ${profile.delays.get(number)}${isLate(number) ? " · atrasada" : ""}`}>{pad(number)}<small>{profile.frequencies.get(number)}×</small></span>)}</div>
       </article>)}</div>
-      <p className={styles.note}>O número pequeno é quantas vezes a dezena saiu na janela. Empates são resolvidos a favor de quem saiu mais recentemente.</p>
+      <p className={styles.note}>O número pequeno é quantas vezes a dezena saiu na janela. Empates são resolvidos a favor de quem saiu mais recentemente. O ponto laranja marca as dezenas <b>atrasadas</b>.</p>
     </section>
 
     <div className={styles.twoColumns}>
       <section className={styles.panel}>
-        <span className="eyebrow">Atrasos</span><h2>Dezenas há mais tempo sem sair</h2>
-        <p className={styles.sub}>Concursos desde a última aparição, contando todo o histórico da base.</p>
-        <ol className={styles.delays}>{delayed.map(([number, delay]) => <li key={number} className={temperatureClass[profile.temperature.get(number)!]}>
+        <span className="eyebrow">Atrasadas</span><h2>{profile.late.length ? `${profile.late.length} ${profile.late.length === 1 ? "dezena atrasada" : "dezenas atrasadas"} agora` : "Nenhuma dezena atrasada agora"}</h2>
+        <p className={styles.sub}>Atrasada é a que está há {profile.lateThreshold} ou mais concursos sem sair, o dobro do intervalo normal ({profile.expectedGap.toFixed(1).replace(".", ",")}). Abaixo, as 10 há mais tempo sem sair, contando todo o histórico.</p>
+        <ol className={styles.delays}>{delayed.map(([number, delay]) => <li key={number} className={`${temperatureClass[profile.temperature.get(number)!]} ${isLate(number) ? styles.lateRow : ""}`}>
           <span className={styles.ball}>{pad(number)}</span>
           <span>{delay === 0 ? "saiu no último" : `${delay} ${delay === 1 ? "concurso" : "concursos"} sem sair`}</span>
-          <em>{temperatureSingular[profile.temperature.get(number)!]}</em>
+          <em>{isLate(number) ? "atrasada · " : ""}{temperatureSingular[profile.temperature.get(number)!]}</em>
         </li>)}</ol>
         <p className={styles.note}>Atraso descreve o passado; não torna a dezena mais provável no próximo sorteio.</p>
       </section>
@@ -117,6 +134,8 @@ export function HotColdProfile({ slug, history }: { slug: LotterySlug; history: 
       <p className={styles.note}>Cada quadrado é um sorteio, do mais antigo (esquerda) ao mais recente (direita). Passe o mouse ou toque para ver o concurso. Estar fora da curva descreve o passado; não torna esse tipo de sorteio mais provável no próximo.</p>
     </section>
 
+    </>}
+
     <section className={styles.panel}>
       <div className={styles.lead}>
         <div><span className="eyebrow">Jogos do perfil</span><h2>10 jogos com base nesses dados</h2><p><strong>4 preferenciais</strong> na composição de {compositionText(wanted)}. <strong>4 de perfil médio</strong>, na composição média dos últimos {profile.contests} concursos ({compositionText(profile.averageComposition)}). Esses 8 tentam ficar na curva. <strong>2 fora da curva</strong>: pares/ímpares ou moldura fora do padrão, com composição extrema que já saiu na janela ({compositionText(profile.compositionExtremes.coldHeavy)} e {compositionText(profile.compositionExtremes.hotHeavy)}).</p></div>
@@ -125,9 +144,10 @@ export function HotColdProfile({ slug, history }: { slug: LotterySlug; history: 
       {round && <>
         <ol className={styles.tickets}>{round.tickets.map((ticket, index) => <li key={`${round.id}-${index}`} className={ticket.kind === "preferred" ? styles.preferred : ticket.kind === "outlier" ? styles.outlier : ""}>
           <div className={styles.ticketHead}><strong>Jogo {index + 1}</strong>{ticket.kind === "preferred" ? <span className={styles.badge}>Preferencial</span> : ticket.kind === "outlier" ? <span className={styles.badgeOut}>Fora da curva</span> : <span className={styles.badgeQuiet}>Perfil médio</span>}</div>
-          <div className={styles.balls}>{ticket.numbers.map((number) => <span key={number} className={`${styles.ball} ${temperatureClass[profile.temperature.get(number)!]}`} title={temperatureLabel[profile.temperature.get(number)!]}>{pad(number)}</span>)}</div>
-          <p className={styles.meta}>{compositionText(ticket.composition)} · {ticket.pairs} pares · {ticket.frame} moldura{ticket.outsideParity || ticket.outsideFrame ? ` · fora da curva em ${[ticket.outsideParity && "pares/ímpares", ticket.outsideFrame && "moldura"].filter(Boolean).join(" e ")}` : ""}{ticket.month ? ` · mês ${ticket.month}` : ""}{ticket.trevos ? ` · trevos ${ticket.trevos.join(" e ")}` : ""}</p>
+          <div className={styles.balls}>{ticket.numbers.map((number) => <span key={number} className={`${styles.ball} ${temperatureClass[profile.temperature.get(number)!]} ${isLate(number) ? styles.late : ""}`} title={`${temperatureLabel[profile.temperature.get(number)!]}${isLate(number) ? " · atrasada" : ""}`}>{pad(number)}</span>)}</div>
+          <p className={styles.meta}>{compositionText(ticket.composition)} · {ticket.pairs} pares · {ticket.frame} moldura{ticket.numbers.filter(isLate).length ? ` · ${plural(ticket.numbers.filter(isLate).length, "atrasada", "atrasadas")}` : ""}{ticket.outsideParity || ticket.outsideFrame ? ` · fora da curva em ${[ticket.outsideParity && "pares/ímpares", ticket.outsideFrame && "moldura"].filter(Boolean).join(" e ")}` : ""}{ticket.month ? ` · mês ${ticket.month}` : ""}{ticket.trevos ? ` · trevos ${ticket.trevos.join(" e ")}` : ""}</p>
         </li>)}</ol>
+        <HistoricalBacktest key={JSON.stringify(round.tickets)} slug={slug} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers, ...(ticket.month ? { month: ticket.month } : {}), ...(ticket.trevos ? { trevos: ticket.trevos } : {}) }))} availableContests={history.length} />
         <div className={styles.actions}>
           <SaveBetsButton slug={slug} strategy={`Quentes/neutras/frias · últimos ${profile.contests} concursos · 4 preferenciais, 4 perfil médio, 2 fora da curva`} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers, ...(ticket.month ? { month: ticket.month } : {}), ...(ticket.trevos ? { trevos: ticket.trevos } : {}) }))} name={`${game.name} · quentes, neutras e frias`} />
           <button type="button" className={styles.ghost} onClick={copy}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>

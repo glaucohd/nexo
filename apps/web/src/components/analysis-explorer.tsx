@@ -10,12 +10,14 @@ import {
 } from "@/lib/lottery-analysis";
 
 import { LotteryPicker } from "@/components/lottery-picker";
-import { HotColdProfile } from "@/components/hot-cold-profile";
+import { HotColdProfile, profileSlugs } from "@/components/hot-cold-profile";
+import { buildProfile, type Profile, type Temperature } from "@/lib/hot-cold-profile";
 import { StrategyLab } from "@/components/strategy-lab";
 
 import styles from "./analysis-explorer.module.css";
 import { validSuperSeteDraw } from "@/lib/super-sete";
-import type { LotterySlug } from "@/lib/lottery-generator";
+import { rememberLottery } from "@/lib/selected-lottery";
+import { lotteryGames, type LotterySlug } from "@/lib/lottery-generator";
 
 const games = [
   { slug: "lotofacil", name: "Lotofácil", total: 25, start: 1, color: "#91278f" },
@@ -31,9 +33,6 @@ const games = [
 
 type View = "matrix" | "profile" | "cycles" | "strategies";
 type WindowSize = 15 | 30 | 50 | 100 | "all";
-
-// Modalidades com perfil de quentes, neutras e frias (dezenas de 1 a N e volante em colunas).
-const profileSlugs = new Set<string>(["lotofacil", "mega-sena", "quina", "mais-milionaria", "dia-de-sorte", "dupla-sena"]);
 
 const numberLabel = (number: number) => String(number).padStart(2, "0");
 
@@ -51,27 +50,36 @@ function SuperSeteAnalysis({ draws, windowSize, setWindowSize }: { draws: Analys
   </> : <div className={styles.empty}><h2>Ainda não há concursos válidos da Super Sete na base.</h2><p>Importe os resultados da CAIXA para habilitar as análises.</p></div>;
 }
 
-function Matrix({ draws, allDraws, total, start, frequencies }: { draws: AnalysisDraw[]; allDraws: AnalysisDraw[]; total: number; start: number; frequencies: number[] }) {
+const tempClass: Record<Temperature, string> = { hot: styles.tHot, neutral: styles.tNeutral, cold: styles.tCold };
+const tempName: Record<Temperature, string> = { hot: "quente", neutral: "neutra", cold: "fria" };
+
+function Matrix({ draws, allDraws, total, start, frequencies, delays, lateThreshold, profile, byTemperature }: { draws: AnalysisDraw[]; allDraws: AnalysisDraw[]; total: number; start: number; frequencies: number[]; delays: ReadonlyMap<number, number>; lateThreshold: number; profile: Profile; byTemperature: boolean }) {
   const sample = [...draws].reverse();
   const previous = new Map(allDraws.map((draw, index) => [draw.contest, allDraws[index + 1]]));
   const numbers = Array.from({ length: total }, (_, index) => index + start);
+  const group = (number: number) => profile.temperature.get(number)!;
 
   return <div className={styles.tableScroll} tabIndex={0} aria-label="Matriz de concursos e dezenas; role horizontalmente para ver todas as colunas">
     <table className={`${styles.matrix} ${total > 60 ? styles.denseMatrix : ""}`}>
       <thead>
-        <tr><th className={styles.stickyColumn}>Concurso</th>{numbers.map((number) => <th key={number}>{numberLabel(number)}</th>)}<th>Σ</th><th>P</th><th>R</th></tr>
-        <tr className={styles.frequencyRow}><th className={styles.stickyColumn}>Vezes</th>{numbers.map((number) => <th key={number} style={{ "--heat": `${8 + Math.round(frequencies[number] / draws.length * 23)}%` } as React.CSSProperties}>{frequencies[number]}</th>)}<th colSpan={3}>na amostra</th></tr>
-        <tr className={styles.percentageRow}><th className={styles.stickyColumn}>%</th>{numbers.map((number) => <th key={number}>{Math.round(frequencies[number] / draws.length * 100)}%</th>)}<th colSpan={3}>frequência</th></tr>
+        <tr><th className={styles.stickyColumn}>Concurso</th>{numbers.map((number) => <th key={number} className={tempClass[group(number)]} title={`Dezena ${numberLabel(number)}: ${tempName[group(number)]}`}>{numberLabel(number)}</th>)}<th>Σ</th><th>P</th><th>R</th><th>Q·N·F</th><th>M</th></tr>
+        <tr className={styles.frequencyRow}><th className={styles.stickyColumn}>Vezes</th>{numbers.map((number) => <th key={number} style={{ "--heat": `${8 + Math.round(frequencies[number] / draws.length * 23)}%` } as React.CSSProperties}>{frequencies[number]}</th>)}<th colSpan={5}>na amostra</th></tr>
+        <tr className={styles.percentageRow}><th className={styles.stickyColumn}>%</th>{numbers.map((number) => <th key={number}>{Math.round(frequencies[number] / draws.length * 100)}%</th>)}<th colSpan={5}>frequência</th></tr>
+        <tr className={styles.delayRow}><th className={styles.stickyColumn}>Atraso</th>{numbers.map((number) => { const delay = delays.get(number) ?? 0; return <th key={number} className={delay >= lateThreshold ? styles.lateCell : ""} title={`${delay} ${delay === 1 ? "concurso" : "concursos"} sem sair${delay >= lateThreshold ? " · atrasada" : ""}`}>{delay}</th>; })}<th colSpan={5}>concursos sem sair</th></tr>
       </thead>
       <tbody>{sample.map((draw) => {
         const selected = new Set(draw.numbers);
         const prior = previous.get(draw.contest);
+        const counts = { hot: 0, neutral: 0, cold: 0 };
+        for (const number of draw.numbers) counts[group(number)] += 1;
         return <tr key={draw.contest} className={draw === allDraws[0] ? styles.latestRow : ""}>
           <th className={styles.stickyColumn} scope="row">{draw.contest}</th>
-          {numbers.map((number) => <td key={number} title={`Concurso ${draw.contest} · dezena ${numberLabel(number)}`} className={selected.has(number) ? styles.matrixHit : styles.matrixMiss}>{selected.has(number) ? numberLabel(number) : ""}</td>)}
+          {numbers.map((number) => <td key={number} title={`Concurso ${draw.contest} · dezena ${numberLabel(number)}${selected.has(number) ? ` · ${tempName[group(number)]}` : ""}`} className={selected.has(number) ? (byTemperature ? `${styles.matrixHit} ${tempClass[group(number)]}` : styles.matrixHit) : styles.matrixMiss}>{selected.has(number) ? numberLabel(number) : ""}</td>)}
           <td className={styles.statCell}>{draw.numbers.reduce((sum, number) => sum + number, 0)}</td>
           <td className={styles.statCell}>{draw.numbers.filter((number) => number % 2 === 0).length}</td>
           <td className={styles.statCell}>{prior ? countRepeated(draw.numbers, prior.numbers) : "—"}</td>
+          <td className={styles.statCell} title={`${counts.hot} ${counts.hot === 1 ? "quente" : "quentes"}, ${counts.neutral} ${counts.neutral === 1 ? "neutra" : "neutras"}, ${counts.cold} ${counts.cold === 1 ? "fria" : "frias"}`}>{counts.hot}·{counts.neutral}·{counts.cold}</td>
+          <td className={styles.statCell}>{draw.numbers.filter((number) => profile.frame.has(number)).length}</td>
         </tr>;
       })}</tbody>
     </table>
@@ -92,12 +100,14 @@ export function AnalysisExplorer({ histories, initialSlug }: { histories: Record
   const [view, setView] = useState<View>("matrix");
   const [windowSize, setWindowSize] = useState<WindowSize>(15);
   const [matrixExpanded, setMatrixExpanded] = useState(false);
+  const [byTemperature, setByTemperature] = useState(true);
   const game = games.find((entry) => entry.slug === slug) ?? games[0];
   const draws = histories[game.slug] ?? [];
   // Com 100 dezenas e 20 sorteadas, a matriz da Lotomania vira um borrão sem
   // leitura útil; ela abre direto nos parâmetros.
   const hasMatrix = game.slug !== "lotomania";
   const hasProfile = profileSlugs.has(game.slug);
+  useEffect(() => { rememberLottery(slug); }, [slug]);
   const activeView: View = !hasMatrix ? "cycles" : view === "profile" && !hasProfile ? "matrix" : view;
 
   // Em tela cheia, Esc fecha a matriz expandida.
@@ -109,6 +119,10 @@ export function AnalysisExplorer({ histories, initialSlug }: { histories: Record
   }, [matrixExpanded]);
   const limit = windowSize === "all" ? draws.length : windowSize;
   const analysis = analyzeDraws(draws, game.total, limit);
+  // Quente, neutra e fria dentro da própria janela da matriz.
+  // O atraso conta todo o histórico (e concursos, não sorteios, na Dupla Sena).
+  const delayProfile = activeView === "matrix" && game.slug !== "super-sete" && draws.length ? buildProfile(draws, lotteryGames[game.slug as LotterySlug], 1) : null;
+  const profile = activeView === "matrix" && game.slug !== "super-sete" && analysis.sample.length ? buildProfile(analysis.sample, lotteryGames[game.slug as LotterySlug], Infinity) : null;
   const frequencyRank = Array.from({ length: game.total }, (_, index) => index + game.start).sort((a, b) => analysis.frequencies[b] - analysis.frequencies[a] || a - b);
   const delayRank = Array.from({ length: game.total }, (_, index) => index + game.start).sort((a, b) => analysis.delays[b] - analysis.delays[a] || a - b);
 
@@ -121,7 +135,7 @@ export function AnalysisExplorer({ histories, initialSlug }: { histories: Record
 
       <div className={styles.tabBar} role="tablist" aria-label="Tipos de análise">{([ ["matrix", "Matriz dos concursos"], ["profile", "Quentes e frias"], ["cycles", "Ciclos"], ["strategies", "Estratégias"] ] as const).filter(([id]) => (hasMatrix || id !== "matrix") && (hasProfile || id !== "profile")).map(([id, label]) => <button role="tab" aria-selected={activeView === id} className={activeView === id ? styles.activeTab : ""} key={id} type="button" onClick={() => setView(id)}>{label}</button>)}</div>
 
-      {activeView === "matrix" && <section className={`${styles.panel} ${matrixExpanded ? styles.panelExpanded : ""}`}><div className={styles.sectionLead}><div><span className="eyebrow">Concurso × dezena</span><h2>Matriz de resultados</h2><p>Coluna = dezena. Linha = concurso. Uma célula preenchida indica que a dezena saiu naquele sorteio.</p></div><span className={styles.latestChip}>Último: {draws[0].contest}</span></div><div className={styles.rangeBar}><span>Janela:</span>{([15, 30, 50, 100, "all"] as const).map((size) => <button key={size} className={windowSize === size ? styles.rangeActive : ""} type="button" onClick={() => setWindowSize(size)}>{size === "all" ? `Todos (${draws.length})` : size}</button>)}<button type="button" className={styles.expandButton} aria-pressed={matrixExpanded} onClick={() => setMatrixExpanded((current) => !current)}>{matrixExpanded ? "Fechar tela cheia ✕" : "Expandir matriz ⤢"}</button></div><Matrix draws={analysis.sample} allDraws={draws} total={game.total} start={game.start} frequencies={analysis.frequencies} /><div className={styles.matrixFooter}><span><i className={styles.legendHit} /> Dezena sorteada</span><span>Σ soma</span><span>P pares</span><span>R repetidas do anterior</span></div><p className={styles.methodNote}>As linhas “Vezes” e “%” consideram apenas os {analysis.sample.length} concursos selecionados. Frequência e atraso descrevem o passado; não mudam a chance de cada dezena no próximo sorteio.</p></section>}
+      {activeView === "matrix" && profile && delayProfile && <section className={`${styles.panel} ${matrixExpanded ? styles.panelExpanded : ""}`}><div className={styles.sectionLead}><div><span className="eyebrow">Concurso × dezena</span><h2>Matriz de resultados</h2><p>Coluna = dezena. Linha = concurso. Uma célula preenchida indica que a dezena saiu naquele sorteio.</p></div><span className={styles.latestChip}>Último: {draws[0].contest}</span></div><div className={styles.rangeBar}><span>Janela:</span>{([15, 30, 50, 100, "all"] as const).map((size) => <button key={size} className={windowSize === size ? styles.rangeActive : ""} type="button" onClick={() => setWindowSize(size)}>{size === "all" ? `Todos (${draws.length})` : size}</button>)}<button type="button" className={styles.colorToggle} aria-pressed={byTemperature} onClick={() => setByTemperature((current) => !current)}>{byTemperature ? "Cores: quentes e frias" : "Cor da loteria"}</button><button type="button" className={styles.expandButton} aria-pressed={matrixExpanded} onClick={() => setMatrixExpanded((current) => !current)}>{matrixExpanded ? "Fechar tela cheia ✕" : "Expandir matriz ⤢"}</button></div><Matrix draws={analysis.sample} allDraws={draws} total={game.total} start={game.start} frequencies={analysis.frequencies} delays={delayProfile.delays} lateThreshold={delayProfile.lateThreshold} profile={profile} byTemperature={byTemperature} /><div className={styles.matrixFooter}>{byTemperature ? <><span><i className={`${styles.legendHit} ${styles.tHot}`} /> Quente</span><span><i className={`${styles.legendHit} ${styles.tNeutral}`} /> Neutra</span><span><i className={`${styles.legendHit} ${styles.tCold}`} /> Fria</span></> : <span><i className={styles.legendHit} /> Dezena sorteada</span>}<span>Σ soma</span><span>P pares</span><span>R repetidas do anterior</span><span><i className={`${styles.legendHit} ${styles.legendLate}`} /> Atrasada ({delayProfile.lateThreshold}+ concursos sem sair)</span><span>Q·N·F quentes·neutras·frias</span><span>M na moldura</span></div><p className={styles.methodNote}>Quente, neutra e fria dividem as {game.total} dezenas em terços pela frequência nos {analysis.sample.length} concursos selecionados. “Vezes” e “%” usam essa mesma janela; “Atraso” conta todo o histórico. Frequência e atraso descrevem o passado; não mudam a chance de cada dezena no próximo sorteio.</p></section>}
 
 
       {activeView === "profile" && <HotColdProfile key={game.slug} slug={game.slug as LotterySlug} history={draws} />}

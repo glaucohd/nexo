@@ -31,43 +31,34 @@
 .error { margin-top: 10px; color: var(--danger); font-size: .8rem; font-weight: 550; }
 
 .report { display: grid; gap: 18px; margin-top: 14px; padding: 20px; border: 1px solid var(--line); border-radius: var(--gen-radius-card); background: var(--surface); scroll-margin-top: 24px; }
-.heading h3 { margin: 8px 0 4px; font-family: var(--font-serif); font-size: 1.7rem; font-weight: 700; letter-spacing: -.015em; }
-.heading p { color: var(--muted); font-size: .78rem; line-height: 1.55; }
+.heading h3 { margin: 8px 0 6px; font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; line-height: 1.2; letter-spacing: -.015em; }
+.heading h3 em { color: var(--acc); font-style: normal; }
+.heading p { color: var(--muted); font-size: .82rem; line-height: 1.55; }
 
-.lotofacilHits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.lotofacilHits > div { display: grid; gap: 3px; min-width: 0; padding: 14px; border: 1px solid color-mix(in srgb, var(--fill) 28%, var(--line)); border-radius: var(--gen-radius-control); background: color-mix(in srgb, var(--fill) 6%, var(--surface)); }
-.lotofacilHits span, .lotofacilHits small { color: var(--muted); font-size: .72rem; }
-.lotofacilHits strong { color: var(--acc); font-family: var(--font-mono); font-size: 1.6rem; font-weight: 600; letter-spacing: -.03em; }
 
 /* Métricas em faixa única, separadas por linhas finas. */
-.summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; border: 1px solid var(--line); border-radius: var(--gen-radius-control); }
-.summary > div { display: grid; align-content: start; gap: 4px; min-width: 0; padding: 14px 16px; background: var(--surface); }
-.summary > div + div { border-left: 1px solid var(--line); }
+.summary { display: flex; flex-wrap: wrap; overflow: hidden; border: 1px solid var(--line); border-radius: var(--gen-radius-control); }
+.summary > div { display: grid; flex: 1 1 170px; align-content: start; gap: 4px; min-width: 0; padding: 14px 16px; background: var(--surface); }
+.summary > div { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 0 -1px -1px 0; }
 .summary span { color: var(--faint); font-family: var(--font-mono); font-size: .64rem; letter-spacing: .08em; text-transform: uppercase; }
 .summary small { color: var(--muted); font-size: .72rem; }
-.summary strong { overflow-wrap: anywhere; font-family: var(--font-mono); font-size: clamp(1rem, 1.5vw, 1.35rem); font-weight: 600; letter-spacing: -.03em; }
+.summary strong { overflow-wrap: anywhere; font-family: var(--font-mono); font-size: clamp(1.15rem, 1.7vw, 1.5rem); font-weight: 600; letter-spacing: -.03em; }
 .notice { padding: 10px 12px; border: 1px solid var(--warn-line); border-radius: var(--r-sm); color: var(--ink); background: var(--warn-soft); font-size: .78rem; }
 
 .simulation { display: grid; gap: 12px; padding: 18px; border: 1px dashed var(--line-strong); border-radius: var(--gen-radius-control); }
-.simulation > strong { font-size: .86rem; font-weight: 620; line-height: 1.4; }
 .simulation > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .simulation span { display: grid; gap: 3px; min-width: 0; padding: 12px; border-radius: var(--gen-radius-control); color: var(--muted); background: var(--surface-2); font-size: .72rem; }
 .simulation span b { color: var(--ink); font-family: var(--font-mono); font-size: 1.1rem; font-weight: 600; }
 .simulation span small { color: var(--faint); font-size: .68rem; }
 .simulation > p { margin: 0; color: var(--muted); font-size: .74rem; line-height: 1.5; }
 
-.distribution h4 { margin-bottom: 9px; font-size: .86rem; font-weight: 620; }
-.distribution > div { display: flex; flex-wrap: wrap; gap: 6px; }
-.distribution span { display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-family: var(--font-mono); font-size: .7rem; }
-.distribution span b { font-weight: 500; }
-.distribution span strong { color: var(--acc); font-weight: 600; }
 
 /* Ranking: uma linha por cartela; os detalhes abrem sob demanda. */
 .rankingIntro { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .rankingIntro h4 { font-size: .9rem; font-weight: 620; }
 .rankingIntro small { color: var(--faint); font-size: .74rem; }
 .ranking { overflow: hidden; border: 1px solid var(--line); border-radius: var(--gen-radius-control); }
-.rankingHead, .rankRow > summary { display: grid; grid-template-columns: 34px minmax(90px, 1.2fr) 80px 64px 84px minmax(110px, 1fr) 18px; align-items: center; gap: 12px; padding: 0 16px; }
+.rankingHead, .rankRow > summary { display: grid; grid-template-columns: 34px minmax(80px, 1fr) 84px 130px minmax(110px, 1fr) 18px; align-items: center; gap: 12px; padding: 0 16px; }
 .rankingHead { min-height: 34px; color: var(--faint); background: var(--surface-2); font-family: var(--font-mono); font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; }
 .rankingHead span:nth-child(n + 3) { text-align: right; }
 .rankRow { border-top: 1px solid var(--line); }
@@ -96,20 +87,42 @@
 .method { padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: .78rem; line-height: 1.55; }
 
 @media (max-width: 820px) {
-  .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .summary > div:nth-child(3) { border-left: 0; }
-  .summary > div:nth-child(n + 3) { border-top: 1px solid var(--line); }
 }
 @media (max-width: 640px) {
   .rankingHead { display: none; }
   .rankRow > summary { grid-template-columns: 26px 1fr auto 18px; row-gap: 4px; padding: 10px 14px; }
-  .rankRow > summary > span[data-label]:not(.rankBest):not(.rankMoney) { display: none; }
-  .rankRow > summary > .rankMoney { grid-row: 2; grid-column: 2 / 4; text-align: left; font-size: .74rem; }
+  .rankRow > summary > span[data-label="Premiado em"] { grid-row: 2; grid-column: 2; text-align: left; font-size: .74rem; }
+  .rankRow > summary > .rankMoney { grid-row: 2; grid-column: 3 / 5; text-align: right; font-size: .74rem; }
   .rankRow > summary > .rankMoney::before { content: "Prêmios "; color: var(--faint); font-weight: 400; }
   .rankDetails { grid-template-columns: 1fr; padding-left: 14px; }
 }
 @media (max-width: 480px) {
   .controls > div, .controls label, .controls button { width: 100%; }
   .report { padding: 14px; }
-  .lotofacilHits { grid-template-columns: 1fr; }
+  }
+
+/* Barras horizontais: base reta à esquerda, ponta arredondada. */
+.blockHead { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 10px; }
+.blockHead h4 { font-size: .9rem; font-weight: 620; }
+.blockHead small { color: var(--faint); font-size: .74rem; }
+.bars { display: grid; gap: 6px; }
+.barRow { display: grid; grid-template-columns: 76px minmax(0, 1fr) 70px; align-items: center; gap: 12px; min-height: 26px; font-size: .8rem; }
+.barName { color: var(--muted); }
+.barTrack { height: 16px; }
+.barTrack i { display: block; height: 100%; min-width: 2px; border-radius: 0 4px 4px 0; background: var(--fill); }
+.barValue { color: var(--ink); font-family: var(--font-mono); font-size: .76rem; font-weight: 600; text-align: right; }
+.link { margin-top: 8px; padding: 0; border: 0; color: var(--acc); background: none; font: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; }
+.link:hover { text-decoration: underline; }
+.link:focus-visible, .fold > summary:focus-visible { outline: 2px solid var(--fill); outline-offset: 2px; }
+
+/* Blocos recolhidos: simulação e método. */
+.fold { border: 1px solid var(--line); border-radius: var(--gen-radius-control); }
+.fold > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; font-size: .84rem; font-weight: 600; cursor: pointer; list-style: none; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::after { width: 8px; height: 8px; border-right: 1.5px solid var(--faint); border-bottom: 1.5px solid var(--faint); transform: rotate(45deg) translateY(-2px); transition: transform .15s; content: ""; }
+.fold[open] > summary::after { transform: rotate(225deg) translateY(-2px); }
+.fold > .simulation { margin: 0 14px 14px; border: 0; padding: 0; }
+.fold > .method { margin: 0; padding: 0 14px 14px; border: 0; }
+@media (max-width: 480px) {
+  .barRow { grid-template-columns: 64px minmax(0, 1fr) 58px; gap: 8px; }
 }

@@ -11,6 +11,7 @@ import { NumberWheelGenerator } from "@/components/number-wheel-generator";
 import { MilionariaWheelGenerator } from "@/components/milionaria-wheel-generator";
 import { LotomaniaWheelGenerator } from "@/components/lotomania-wheel-generator";
 import { HistoricalBacktest } from "@/components/historical-backtest";
+import { HotColdProfile, profileSlugs } from "@/components/hot-cold-profile";
 import { NumberInsightPicker } from "@/components/number-insight-picker";
 import { SaveBetsButton } from "@/components/save-bets-button";
 import {
@@ -35,6 +36,8 @@ import {
   type GeneratorMode,
   type LotterySlug,
 } from "@/lib/lottery-generator";
+
+import { rememberLottery } from "@/lib/selected-lottery";
 
 import styles from "./lottery-generator.module.css";
 
@@ -102,11 +105,14 @@ const wheelLabels: Partial<Record<LotterySlug, string>> = {
 
 export function LotteryGenerator({ histories, initialSlug }: { histories: Record<string, DrawNumbers[]>; initialSlug?: string }) {
   const [slug, setSlug] = useState<LotterySlug>(slugs.includes(initialSlug as LotterySlug) ? initialSlug as LotterySlug : "lotofacil");
-  const [tool, setTool] = useState<"generator" | "wheel">("generator");
+  const [tool, setTool] = useState<"generator" | "wheel" | "profile">("generator");
+  useEffect(() => { rememberLottery(slug); }, [slug]);
+  const hasTool = (entry: LotterySlug, wanted: "wheel" | "profile") => wanted === "wheel" ? wheelSlugs.has(entry) : profileSlugs.has(entry);
   return <div className={styles.hub} style={{ "--generator-accent": lotteryGames[slug].color } as CSSProperties}>
-    <LotteryPicker games={pickerGames} value={slug} onChange={(next) => { setSlug(next as LotterySlug); setTool("generator"); }} />
-    {wheelSlugs.has(slug) && <div className={styles.toolTabs} role="group" aria-label="Ferramenta"><button type="button" aria-pressed={tool === "generator"} onClick={() => setTool("generator")}>Gerador</button><button type="button" aria-pressed={tool === "wheel"} onClick={() => setTool("wheel")}>{wheelLabels[slug]}</button></div>}
-    {slug === "mais-milionaria" && tool === "wheel" ? <MilionariaWheelGenerator history={histories[slug] ?? []} />
+    <LotteryPicker games={pickerGames} value={slug} onChange={(next) => { setSlug(next as LotterySlug); setTool((current) => current !== "generator" && hasTool(next as LotterySlug, current) ? current : "generator"); }} />
+    {(wheelSlugs.has(slug) || profileSlugs.has(slug)) && <div className={styles.toolTabs} role="group" aria-label="Ferramenta"><button type="button" aria-pressed={tool === "generator"} onClick={() => setTool("generator")}>Gerador</button>{profileSlugs.has(slug) && <button type="button" aria-pressed={tool === "profile"} onClick={() => setTool("profile")}>Quentes e frias</button>}{wheelSlugs.has(slug) && <button type="button" aria-pressed={tool === "wheel"} onClick={() => setTool("wheel")}>{wheelLabels[slug]}</button>}</div>}
+    {tool === "profile" && profileSlugs.has(slug) ? <main className={styles.page}><HotColdProfile key={slug} slug={slug} history={histories[slug] ?? []} compact /></main>
+      : slug === "mais-milionaria" && tool === "wheel" ? <MilionariaWheelGenerator history={histories[slug] ?? []} />
       : slug === "mais-milionaria" ? <MilionariaGenerator history={histories[slug] ?? []} />
         : slug === "super-sete" ? <SuperSeteGenerator history={histories[slug] ?? []} />
           : slug === "lotofacil" && tool === "wheel" ? <LotofacilWheelGenerator history={histories[slug] ?? []} />

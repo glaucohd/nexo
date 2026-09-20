@@ -1,12 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function SyncCaixaButton({ iconOnly = false }: { iconOnly?: boolean }) {
   const router = useRouter();
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
+
+  // A mensagem some sozinha depois de alguns segundos.
+  useEffect(() => {
+    if (state !== "done" && state !== "error") return;
+    const timer = setTimeout(() => { setMessage(null); setState("idle"); }, state === "error" ? 9000 : 6000);
+    return () => clearTimeout(timer);
+  }, [state]);
 
   async function sync() {
     setState("loading");
@@ -30,6 +37,6 @@ export function SyncCaixaButton({ iconOnly = false }: { iconOnly?: boolean }) {
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={state === "loading" ? "spin" : ""}><path d="M16 10a6 6 0 0 1-10.2 4.3M4 10a6 6 0 0 1 10.2-4.3M14.5 2.8v3.1h-3.1M5.5 17.2v-3.1h3.1" /></svg>
       <span>{state === "loading" ? "Atualizando…" : "Atualizar base"}</span>
     </button>
-    {message && <small className={state === "error" ? "sync-caixa-error" : "sync-caixa-message"}>{message}</small>}
+    {message && <small role="status" className={state === "error" ? "sync-caixa-error" : "sync-caixa-message"}>{message}</small>}
   </div>;
 }

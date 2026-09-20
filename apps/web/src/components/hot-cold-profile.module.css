@@ -9,6 +9,7 @@
   --out-parity: color-mix(in oklab, #c07a10, white var(--lift));
   --out-frame: color-mix(in oklab, #a8479a, white var(--lift));
   --out-both: color-mix(in oklab, #b3243f, white var(--lift));
+  --late: #b45309;
   display: grid;
   gap: var(--gen-gap);
 }
@@ -116,3 +117,9 @@
 @media (max-width: 720px) {
   .curveStats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Atrasada: ponto laranja no canto da dezena. */
+.ball.late::before { position: absolute; top: -3px; left: -3px; width: 11px; height: 11px; border: 2px solid var(--surface); border-radius: 50%; background: var(--late); content: ""; }
+.delays li.lateRow { border-color: color-mix(in srgb, var(--late) 45%, var(--line)); background: color-mix(in srgb, var(--late) 6%, var(--surface)); }
+.delays li.lateRow em { color: var(--late); font-weight: 600; }
+.legend .ball.late::before { display: none; }

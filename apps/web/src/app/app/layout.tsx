@@ -1,4 +1,4 @@
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { AccountSheet } from "@/components/account-sheet";
@@ -8,6 +8,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { SyncCaixaButton } from "@/components/sync-caixa-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { auth } from "@/lib/auth";
+import { LOTTERY_COOKIE, validLottery } from "@/lib/selected-lottery";
 
 import styles from "./layout.module.css";
 
@@ -58,8 +59,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const initials = session.user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
 
+  const lottery = validLottery((await cookies()).get(LOTTERY_COOKIE)?.value);
+
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-lottery={lottery}>
       <header className="topbar">
         <Brand />
         <div className="topbar-actions">

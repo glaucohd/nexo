@@ -16,6 +16,11 @@ export type Profile = {
   totalContests: number;
   frequencies: Map<number, number>;
   delays: Map<number, number>;
+  // Atrasada: sem sair há mais de 2 vezes o intervalo normal da dezena. Só descreve
+  // o passado; não torna a dezena mais provável.
+  expectedGap: number;
+  lateThreshold: number;
+  late: number[];
   temperature: Map<number, Temperature>;
   hot: number[];
   neutral: number[];
@@ -118,6 +123,14 @@ export function buildProfile(history: readonly ProfileDraw[], game: ProfileGame,
     for (const number of draw.numbers) if (delays.get(number)! > age) delays.set(number, age);
   }
 
+  // Intervalo normal: 1 ÷ chance de a dezena sair em um concurso (a Dupla Sena sorteia duas vezes).
+  const perContest = Math.max(1, Math.round(ordered.length / Math.max(1, rank.size)));
+  const chancePerContest = 1 - (1 - game.drawSize / game.total) ** perContest;
+  const expectedGap = 1 / chancePerContest;
+  // A tolerância evita que erro de arredondamento (10,000000000000002) empurre o limite para cima.
+  const lateThreshold = Math.ceil(2 * expectedGap - 1e-9);
+  const late = universe.filter((number) => delays.get(number)! >= lateThreshold).sort((a, b) => delays.get(b)! - delays.get(a)! || a - b);
+
   // Terços: as mais frequentes são quentes, as menos frequentes são frias.
   // Empates saem na frente as que apareceram mais recentemente.
   const ranked = [...universe].sort((a, b) => frequencies.get(b)! - frequencies.get(a)! || delays.get(a)! - delays.get(b)! || a - b);
@@ -168,6 +181,9 @@ export function buildProfile(history: readonly ProfileDraw[], game: ProfileGame,
     totalContests: rank.size,
     frequencies,
     delays,
+    expectedGap,
+    lateThreshold,
+    late,
     temperature,
     hot,
     neutral,

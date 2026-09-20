@@ -186,3 +186,40 @@ test("sem concursos não há perfil para gerar", () => {
   const profile = buildProfile([], lotofacil, 30);
   assert.throws(() => generateProfileTickets({ profile, game: lotofacil }), RangeError);
 });
+
+test("a dezena atrasada está há mais de 2 vezes o intervalo normal sem sair", () => {
+  // Lotofácil: chance de 60% por concurso → intervalo 1,67 → atrasada com 4 ou mais.
+  // As dezenas 1 a 15 saem em todos os concursos; as 16 a 25 nunca saem.
+  const history = Array.from({ length: 20 }, (_, index) => ({ contest: 20 - index, numbers: Array.from({ length: 15 }, (_, n) => n + 1) }));
+  // A 24 saiu uma vez, no concurso mais antigo (atraso 19; as que nunca saíram têm 20).
+  history[19].numbers = [...history[19].numbers.slice(0, 14), 24];
+  const profile = buildProfile(history, lotofacil, 10);
+  assert.equal(profile.lateThreshold, 4);
+  assert.ok(Math.abs(profile.expectedGap - 5 / 3) < 1e-9);
+  assert.equal(profile.late.length, 10);
+  assert.equal(profile.late.at(-1), 24);
+  assert.ok(profile.late.every((number) => number >= 16 && profile.delays.get(number) >= 4));
+  assert.ok(![1, 2, 3, 15].some((number) => profile.late.includes(number)));
+});
+
+test("só é atrasada a dezena que chega ao limite", () => {
+  // Concurso mais recente sem a dezena 25, e ela saiu no 5º mais recente: atraso 4 = limite.
+  const history = Array.from({ length: 12 }, (_, index) => ({ contest: 12 - index, numbers: index === 4 ? [...Array.from({ length: 14 }, (_, n) => n + 1), 25] : Array.from({ length: 15 }, (_, n) => n + 1) }));
+  const profile = buildProfile(history, lotofacil, 10);
+  assert.equal(profile.delays.get(25), 4);
+  assert.ok(profile.late.includes(25));
+  history[3].numbers = [...Array.from({ length: 14 }, (_, n) => n + 1), 25];
+  assert.equal(buildProfile(history, lotofacil, 10).delays.get(25), 3);
+  assert.ok(!buildProfile(history, lotofacil, 10).late.includes(25));
+});
+
+test("o intervalo normal muda com a modalidade e com os dois sorteios da Dupla Sena", () => {
+  const mega = { total: 60, start: 1, columns: 10, drawSize: 6 };
+  assert.equal(buildProfile(fakeHistory(10, mega, seeded(1)), mega, 5).lateThreshold, 20);
+  const dupla = { total: 50, start: 1, columns: 10, drawSize: 6 };
+  const single = fakeHistory(10, dupla, seeded(2));
+  const twice = single.flatMap((draw) => [draw, { ...draw, numbers: fakeHistory(1, dupla, seeded(draw.contest))[0].numbers }]);
+  // Sorteio simples: chance 12% → intervalo 8,3 → 17. Dois por concurso: 22,6% → 4,4 → 9.
+  assert.equal(buildProfile(single, dupla, 5).lateThreshold, 17);
+  assert.equal(buildProfile(twice, dupla, 5).lateThreshold, 9);
+});

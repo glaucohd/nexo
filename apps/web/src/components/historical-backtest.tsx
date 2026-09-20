@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { BacktestReport, BacktestTicket } from "@/lib/historical-backtest";
 import type { LotterySlug } from "@/lib/lottery-generator";
@@ -10,6 +10,7 @@ import styles from "./historical-backtest.module.css";
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const integer = new Intl.NumberFormat("pt-BR");
 const formatMoney = (cents: number) => money.format(cents / 100);
+const share = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 });
 const formatDate = (value: string) => {
   const [year, month, day] = value.split("-");
   return `${day}/${month}/${year}`;
@@ -21,6 +22,14 @@ export function HistoricalBacktest({ slug, tickets, availableContests, pricePerT
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const reportRef = useRef<HTMLElement>(null);
+  const [allHits, setAllHits] = useState(false);
+
+  // Pontuações que aconteceram, das maiores para as menores; por padrão só as 5 maiores.
+  const hitRows = useMemo(() => report ? report.distribution.filter((entry) => entry.contests > 0).sort((left, right) => right.hits - left.hits) : [], [report]);
+  const shownHits = allHits ? hitRows : hitRows.slice(0, 5);
+  const maxHits = Math.max(1, ...shownHits.map((entry) => entry.contests));
+  const best = useMemo(() => report ? [...report.tickets].sort((left, right) => right.bestHits - left.bestHits || left.position - right.position)[0] : null, [report]);
+  const bestDraw = best?.bestContests[0];
 
   useEffect(() => {
     if (!report) return;
@@ -47,52 +56,74 @@ export function HistoricalBacktest({ slug, tickets, availableContests, pricePerT
   return <div className={styles.wrap}>
     {pricePerTicketCents !== undefined && <p className={styles.buyNow}>Custo de comprar {integer.format(tickets.length)} {tickets.length === 1 ? "jogo" : "jogos"} agora: <strong>{formatMoney(pricePerTicketCents * tickets.length)}</strong></p>}
     <div className={styles.controls}>
-      <div><strong>Como estes jogos teriam pontuado?</strong><small>Por padrão, compare com todos os concursos importados desta modalidade.</small></div>
+      <div><strong>Como estes jogos teriam ido no passado?</strong><small>Compara cada jogo com os concursos que já foram sorteados.</small></div>
       <label>Concursos<select value={sample} disabled={loading} onChange={(event) => { setSample(event.target.value === "all" ? "all" : 200); setReport(null); setError(null); }}><option value="all">Todo o histórico{availableContests ? ` (${integer.format(availableContests)})` : ""}</option><option value={200}>Últimos 200</option></select></label>
-      <button type="button" disabled={loading} onClick={checkHistory}>{loading ? "Conferindo…" : "Conferir jogos no histórico ↗"}</button>
+      <button type="button" disabled={loading} onClick={checkHistory}>{loading ? "Conferindo…" : "Conferir no histórico ↗"}</button>
     </div>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {report && <section ref={reportRef} className={styles.report} aria-live="polite">
-      <div className={styles.heading}><span className="eyebrow">Conferência histórica</span><h3>{integer.format(report.ticketCount)} cartelas × {integer.format(report.contests)} concursos</h3><p>Concursos {report.firstContest} a {report.lastContest}. É uma conferência retrospectiva das cartelas atuais, não um teste de previsão fora da amostra.</p></div>
-      {report.lotofacil && <div className={styles.lotofacilHits}><div><span>Concursos com 14+</span><strong>{integer.format(report.lotofacil.contestsWith14Plus)}</strong><small>ao menos uma cartela</small></div><div><span>Apostas simples de 14</span><strong>{integer.format(report.lotofacil.simple14Prizes)}</strong><small>inclui desdobramentos</small></div><div><span>Apostas simples de 15</span><strong>{integer.format(report.lotofacil.simple15Prizes)}</strong><small>em {integer.format(report.lotofacil.contestsWith15)} concursos</small></div></div>}
-      <div className={styles.summary}>
-        <div><span>Comparações</span><strong>{integer.format(report.ticketDrawComparisons)}</strong><small>cartela × concurso</small></div>
-        <div><span>Concursos com prêmio</span><strong>{integer.format(report.contestsWithPrize)}</strong><small>ao menos uma cartela premiada</small></div>
-        <div><span>Cartelas premiadas</span><strong>{integer.format(report.prizeDraws)}</strong><small>somadas nos concursos</small></div>
-        <div><span>Prêmios publicados</span><strong>{formatMoney(report.knownGrossCents)}</strong><small>valor bruto, sem descontar apostas</small></div>
+      <div className={styles.heading}>
+        <span className="eyebrow">Resultado da conferência</span>
+        <h3>{report.contestsWithPrize > 0
+          ? <>Algum jogo teria ganhado prêmio em <em>{integer.format(report.contestsWithPrize)} de {integer.format(report.contests)}</em> concursos ({share.format(report.contestsWithPrize / Math.max(1, report.contests))})</>
+          : <>Nenhum jogo teria ganhado prêmio nesses {integer.format(report.contests)} concursos</>}</h3>
+        <p>{integer.format(report.ticketCount)} {report.ticketCount === 1 ? "jogo comparado" : "jogos comparados"} com os concursos {report.firstContest} a {report.lastContest}. Olha só para o passado: não prevê o próximo sorteio.</p>
       </div>
-      {pricePerTicketCents !== undefined && <div className={styles.simulation}>
-        <strong>Simulação: e se você tivesse comprado esses mesmos jogos em todos os {integer.format(report.contests)} concursos?</strong>
-        <div>
-          <span>Gasto se repetisse sempre<b>{formatMoney(pricePerTicketCents * report.ticketCount * report.contests)}</b><small>{integer.format(report.ticketCount)} cartelas × {integer.format(report.contests)} concursos × {formatMoney(pricePerTicketCents)}</small></span>
-          <span>Saldo se repetisse sempre<b>{formatMoney(report.knownGrossCents - pricePerTicketCents * report.ticketCount * report.contests)}</b><small>prêmios publicados − gasto acima</small></span>
-        </div>
-        <p>Não é uma previsão nem o custo de jogar hoje — é só um &ldquo;e se&rdquo; retrospectivo. Prêmios sem valor publicado no histórico não entram na conta.</p>
-      </div>}
-      {report.unavailablePrizeUnits > 0 && <p className={styles.notice}>Há {integer.format(report.unavailablePrizeUnits)} premiação{report.unavailablePrizeUnits === 1 ? "" : "ões"} sem valor publicado no histórico. O total em dinheiro acima inclui apenas os valores conhecidos.</p>}
-      {report.skippedContests > 0 && <p className={styles.notice}>{integer.format(report.skippedContests)} concurso{report.skippedContests === 1 ? "" : "s"} sem dados complementares foi ignorado.</p>}
-      <div className={styles.distribution}><h4>{report.lotofacil ? "Acertos por cartela × concurso" : "Distribuição de acertos de todas as cartelas"}</h4><div>{report.distribution.map((entry) => <span key={entry.hits}><b>{entry.hits} {entry.hits === 1 ? "acerto" : "acertos"}</b><strong>{integer.format(entry.contests)}</strong></span>)}</div></div>
-      <div className={styles.rankingIntro}><h4>Ranking das cartelas</h4><small>Clique numa cartela para ver os detalhes.</small></div>
+
+      <div className={styles.summary}>
+        <div><span>Melhor pontuação</span><strong>{best ? `${best.bestHits} pts` : "—"}</strong><small>{best && bestDraw ? `Jogo ${best.position}, no concurso #${bestDraw.contest} (${formatDate(bestDraw.date)})` : "nenhum acerto"}</small></div>
+        <div><span>Concursos com prêmio</span><strong>{integer.format(report.contestsWithPrize)}</strong><small>de {integer.format(report.contests)} conferidos</small></div>
+        {report.lotofacil && <div><span>Com 14 ou mais pontos</span><strong>{integer.format(report.lotofacil.contestsWith14Plus)}</strong><small>{report.lotofacil.contestsWith15 > 0 ? `${integer.format(report.lotofacil.contestsWith15)} com 15 pontos` : "concursos, em qualquer jogo"}</small></div>}
+        <div><span>Prêmios somados</span><strong>{formatMoney(report.knownGrossCents)}</strong><small>valor bruto, sem descontar o que custou apostar</small></div>
+      </div>
+      {report.unavailablePrizeUnits > 0 && <p className={styles.notice}>Há {integer.format(report.unavailablePrizeUnits)} premiação{report.unavailablePrizeUnits === 1 ? "" : "ões"} sem valor publicado. O total em dinheiro inclui só os valores conhecidos.</p>}
+      {report.skippedContests > 0 && <p className={styles.notice}>{integer.format(report.skippedContests)} concurso{report.skippedContests === 1 ? "" : "s"} sem dados completos {report.skippedContests === 1 ? "foi ignorado" : "foram ignorados"}.</p>}
+
+      <div className={styles.distribution}>
+        <div className={styles.blockHead}><h4>Quantas vezes cada pontuação apareceu</h4><small>Cada jogo em cada concurso conta uma vez.</small></div>
+        <div className={styles.bars} role="list">{shownHits.map((entry) => <div role="listitem" key={entry.hits} className={styles.barRow}>
+          <span className={styles.barName}>{entry.hits} {entry.hits === 1 ? "ponto" : "pontos"}</span>
+          <span className={styles.barTrack}><i style={{ width: `${(entry.contests / maxHits) * 100}%` }} /></span>
+          <span className={styles.barValue}>{integer.format(entry.contests)}×</span>
+        </div>)}</div>
+        {hitRows.length > 5 && <button type="button" className={styles.link} onClick={() => setAllHits((current) => !current)}>{allHits ? "Mostrar só as maiores" : `Mostrar todas (${hitRows.length})`}</button>}
+      </div>
+
+      <div className={styles.rankingIntro}><h4>Ranking dos jogos</h4><small>Toque num jogo para ver os detalhes.</small></div>
       <div className={styles.ranking}>
-        <div className={styles.rankingHead} aria-hidden="true"><span>#</span><span>Cartela</span><span>Melhor</span><span>Média</span><span>Premiada</span><span>Prêmios</span><span /></div>
+        <div className={styles.rankingHead} aria-hidden="true"><span>#</span><span>Jogo</span><span>Melhor</span><span>Premiado em</span><span>Prêmios</span><span /></div>
         {report.tickets.map((ticket, rank) => <details key={ticket.position} className={`${styles.rankRow} ${rank === 0 ? styles.rankLeader : ""}`}>
           <summary>
             <span className={styles.rankBadge}>{rank + 1}</span>
             <strong className={styles.rankName}>Jogo {ticket.position}</strong>
             <span className={styles.rankBest} data-label="Melhor"><b>{ticket.bestHits}</b> pts</span>
-            <span data-label="Média">{ticket.averageHits.toFixed(1).replace(".", ",")}</span>
-            <span data-label="Premiada">{integer.format(ticket.prizeDraws)}×</span>
+            <span data-label="Premiado em">{integer.format(ticket.prizeDraws)} {ticket.prizeDraws === 1 ? "concurso" : "concursos"}</span>
             <span className={styles.rankMoney} data-label="Prêmios">{formatMoney(ticket.knownGrossCents)}</span>
             <i className={styles.chevron} aria-hidden="true" />
           </summary>
           <div className={styles.rankDetails}>
-            <div><strong>{report.lotofacil ? "Concursos por acerto" : "Distribuição de pontos"}</strong><div className={styles.ticketDistribution}>{ticket.distribution.map((entry) => <span key={entry.hits}>{entry.hits} pts <b>{integer.format(entry.contests)}×</b></span>)}</div></div>
+            <div><strong>Pontuações deste jogo (média {ticket.averageHits.toFixed(1).replace(".", ",")} pts)</strong><div className={styles.ticketDistribution}>{ticket.distribution.filter((entry) => entry.contests > 0).map((entry) => <span key={entry.hits}>{entry.hits} pts <b>{integer.format(entry.contests)}×</b></span>)}</div></div>
             <div><strong>Melhores concursos</strong><ul className={styles.bestList}>{ticket.bestContests.length ? ticket.bestContests.map((draw) => <li key={draw.contest}><span>#{draw.contest}</span><span>{formatDate(draw.date)}</span><b>{draw.hits} pts</b></li>) : <li>—</li>}</ul></div>
             {ticket.unavailablePrizeUnits > 0 && <small className={styles.unavailable}>{integer.format(ticket.unavailablePrizeUnits)} prêmio(s) sem valor publicado.</small>}
           </div>
         </details>)}
       </div>
-      <p className={styles.method}>A simulação repete cada cartela em todos os concursos da amostra e usa os valores por faixa registrados na base. {slug === "super-sete" ? "Na Super Sete, cada marcação múltipla é desdobrada nas apostas simples de suas sete colunas; a distribuição mostra o melhor acerto possível por cartela em cada concurso." : "Em apostas com dezenas extras, considera as combinações simples contidas na cartela."} Não desconta o custo das apostas; quando uma faixa ficou sem ganhadores, o valor hipotético não é estimado.</p>
+
+      {pricePerTicketCents !== undefined && <details className={styles.fold}>
+        <summary>E se eu tivesse jogado sempre esses jogos?</summary>
+        <div className={styles.simulation}>
+          <div>
+            <span>Gasto se repetisse em todos os concursos<b>{formatMoney(pricePerTicketCents * report.ticketCount * report.contests)}</b><small>{integer.format(report.ticketCount)} jogos × {integer.format(report.contests)} concursos × {formatMoney(pricePerTicketCents)}</small></span>
+            <span>Saldo (prêmios − gasto)<b>{formatMoney(report.knownGrossCents - pricePerTicketCents * report.ticketCount * report.contests)}</b><small>só com prêmios de valor conhecido</small></span>
+          </div>
+          <p>É um &ldquo;e se&rdquo; sobre o passado. Não é previsão nem o custo de jogar hoje.</p>
+        </div>
+      </details>}
+
+      <details className={styles.fold}>
+        <summary>Como a conferência é calculada</summary>
+        <p className={styles.method}>Cada jogo é comparado com cada concurso da amostra, e os prêmios usam os valores por faixa registrados na base. {slug === "super-sete" ? "Na Super Sete, cada marcação múltipla é desdobrada nas apostas simples das suas sete colunas, e a pontuação mostra o melhor acerto possível de cada jogo em cada concurso." : "Em apostas com dezenas extras, considera as combinações simples contidas no jogo."} Faixas que ficaram sem ganhadores não têm valor estimado. É uma conferência retrospectiva dos jogos atuais, e não um teste de previsão.{report.lotofacil ? ` Na Lotofácil, os desdobramentos rendem ${integer.format(report.lotofacil.simple14Prizes)} apostas simples de 14 pontos e ${integer.format(report.lotofacil.simple15Prizes)} de 15.` : ""}</p>
+      </details>
     </section>}
   </div>;
 }

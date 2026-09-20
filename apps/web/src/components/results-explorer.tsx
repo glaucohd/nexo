@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { LotteryPicker } from "@/components/lottery-picker";
 import { lotteryBoardNumber, lotteryBoardPosition } from "@/lib/lottery-generator";
 
+import { rememberLottery } from "@/lib/selected-lottery";
+
 import styles from "./results-explorer.module.css";
 
 export type LotteryHistory = {
@@ -35,8 +37,9 @@ function formatDate(value: string) {
   return `${day}/${month}/${year}`;
 }
 
-export function ResultsExplorer({ histories }: { histories: Record<string, LotteryHistory[]> }) {
-  const [slug, setSlug] = useState<string>("lotofacil");
+export function ResultsExplorer({ histories, initialSlug }: { histories: Record<string, LotteryHistory[]>; initialSlug?: string }) {
+  const [slug, setSlug] = useState<string>(games.some((entry) => entry.slug === initialSlug) ? initialSlug! : "lotofacil");
+  useEffect(() => { rememberLottery(slug); }, [slug]);
   const [index, setIndex] = useState(0);
   const [lotomaniaView, setLotomaniaView] = useState<"cross" | "blocks">("cross");
   const game = games.find((entry) => entry.slug === slug) ?? games[0];
