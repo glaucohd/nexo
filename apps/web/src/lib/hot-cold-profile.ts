@@ -24,14 +24,29 @@ export type Profile = {
   parity: { value: number; count: number }[];
   frameCounts: { value: number; count: number }[];
   averageComposition: Composition;
+  // "Na curva": os dois padrões mais comuns de pares e de moldura. Sorteio
+  // fora de um deles é "fora da curva".
+  parityCurve: number[];
+  frameCurve: number[];
+  // Padrões possíveis fora da curva, dos que já saíram na janela para os que não saíram.
+  outlierParity: number[];
+  outlierFrame: number[];
+  curve: { total: number; outsideParity: number; outsideFrame: number; outsideBoth: number; outsideAny: number };
+  // Sorteios da janela do mais antigo para o mais recente.
+  timeline: { contest: number; pairs: number; frame: number; outsideParity: boolean; outsideFrame: boolean }[];
+  compositionExtremes: { hotHeavy: Composition; coldHeavy: Composition };
 };
+
+export type TicketKind = "preferred" | "average" | "outlier";
 
 export type ProfileTicket = {
   numbers: number[];
-  preferred: boolean;
+  kind: TicketKind;
   composition: Composition;
   pairs: number;
   frame: number;
+  outsideParity: boolean;
+  outsideFrame: boolean;
   month?: number;
   trevos?: number[];
 };
@@ -69,6 +84,22 @@ export function preferredComposition(drawSize: number): Composition {
   return { hot, neutral: drawSize - hot - cold, cold };
 }
 
+// Passa até `amount` dezenas de um grupo para outro, sem passar dos limites.
+function shiftComposition(base: Composition, from: Temperature, to: Temperature, amount: number): Composition {
+  const moved = Math.min(amount, base[from]);
+  return { ...base, [from]: base[from] - moved, [to]: base[to] + moved };
+}
+
+// Valores fora da curva, os que já saíram na janela primeiro (mais frequentes
+// antes) e depois os que nunca saíram, do mais perto da curva para o mais longe.
+function outsideValues(counts: { value: number; count: number }[], curve: number[], feasible: (value: number) => boolean, max: number) {
+  const seen = new Map(counts.map((entry) => [entry.value, entry.count]));
+  const distance = (value: number) => Math.min(...curve.map((entry) => Math.abs(entry - value)));
+  return Array.from({ length: max + 1 }, (_, value) => value)
+    .filter((value) => !curve.includes(value) && feasible(value))
+    .sort((a, b) => (seen.get(b) ?? 0) - (seen.get(a) ?? 0) || distance(a) - distance(b) || a - b);
+}
+
 // `contests` conta concursos, não sorteios: a Dupla Sena tem dois sorteios por
 // concurso e os dois entram na janela. O histórico pode vir em qualquer ordem.
 export function buildProfile(history: readonly ProfileDraw[], game: ProfileGame, contests = 30): Profile {
@@ -103,8 +134,33 @@ export function buildProfile(history: readonly ProfileDraw[], game: ProfileGame,
   const frame = frameNumbers(game);
   const sums = { hot: 0, neutral: 0, cold: 0 };
   for (const draw of sample) for (const number of draw.numbers) if (temperature.has(number)) sums[temperature.get(number)!] += 1;
+  const compositionOf = (numbers: number[]): Composition => {
+    const counts = { hot: 0, neutral: 0, cold: 0 };
+    for (const number of numbers) if (temperature.has(number)) counts[temperature.get(number)!] += 1;
+    return counts;
+  };
   const mean = [sums.hot, sums.neutral, sums.cold].map((sum) => (sample.length ? (sum / sample.length) : 0));
-  const [meanHot, meanNeutral, meanCold] = sample.length ? roundToTotal(mean, game.drawSize) : Object.values(preferredComposition(game.drawSize));
+  const [meanHot, meanNeutral, meanCold] = sample.length ? roundToTotal(mean, game.drawSize) : [0, 0, 0];
+
+  const parity = metricDistribution(sample.map((draw) => draw.numbers.filter((number) => number % 2 === 0).length)).map(([value, count]) => ({ value, count }));
+  const frameCounts = metricDistribution(sample.map((draw) => draw.numbers.filter((number) => frame.has(number)).length)).map(([value, count]) => ({ value, count }));
+  const parityCurve = parity.slice(0, 2).map((entry) => entry.value);
+  const frameCurve = frameCounts.slice(0, 2).map((entry) => entry.value);
+  const evens = universe.filter((number) => number % 2 === 0).length;
+  const odds = game.total - evens;
+  const middle = game.total - frame.size;
+  const timeline = [...sample].reverse().map((draw) => {
+    const pairs = draw.numbers.filter((number) => number % 2 === 0).length;
+    const inFrame = draw.numbers.filter((number) => frame.has(number)).length;
+    return { contest: draw.contest, pairs, frame: inFrame, outsideParity: !parityCurve.includes(pairs), outsideFrame: !frameCurve.includes(inFrame) };
+  });
+  const average: Composition = sample.length ? { hot: meanHot, neutral: meanNeutral, cold: meanCold } : preferredComposition(game.drawSize);
+  // Extremos que já aconteceram na janela; se não houver diferença, empurra 2 dezenas.
+  const observed = sample.map((draw) => compositionOf(draw.numbers));
+  const byHot = [...observed].sort((a, b) => a.hot - b.hot || b.cold - a.cold);
+  const same = (a: Composition, b: Composition) => a.hot === b.hot && a.neutral === b.neutral && a.cold === b.cold;
+  const coldHeavy = byHot[0] && !same(byHot[0], average) ? byHot[0] : shiftComposition(average, "hot", "cold", 2);
+  const hotHeavy = byHot.at(-1) && !same(byHot.at(-1)!, average) ? byHot.at(-1)! : shiftComposition(average, "cold", "hot", 2);
 
   return {
     contests: Math.min(contests, rank.size),
@@ -117,9 +173,22 @@ export function buildProfile(history: readonly ProfileDraw[], game: ProfileGame,
     neutral,
     cold,
     frame,
-    parity: metricDistribution(sample.map((draw) => draw.numbers.filter((number) => number % 2 === 0).length)).map(([value, count]) => ({ value, count })),
-    frameCounts: metricDistribution(sample.map((draw) => draw.numbers.filter((number) => frame.has(number)).length)).map(([value, count]) => ({ value, count })),
-    averageComposition: { hot: meanHot, neutral: meanNeutral, cold: meanCold },
+    parity,
+    frameCounts,
+    averageComposition: average,
+    parityCurve,
+    frameCurve,
+    outlierParity: outsideValues(parity, parityCurve, (value) => value <= evens && game.drawSize - value <= odds, game.drawSize),
+    outlierFrame: outsideValues(frameCounts, frameCurve, (value) => value <= frame.size && game.drawSize - value <= middle, game.drawSize),
+    curve: {
+      total: timeline.length,
+      outsideParity: timeline.filter((entry) => entry.outsideParity).length,
+      outsideFrame: timeline.filter((entry) => entry.outsideFrame).length,
+      outsideBoth: timeline.filter((entry) => entry.outsideParity && entry.outsideFrame).length,
+      outsideAny: timeline.filter((entry) => entry.outsideParity || entry.outsideFrame).length,
+    },
+    timeline,
+    compositionExtremes: { hotHeavy, coldHeavy },
   };
 }
 
@@ -132,45 +201,57 @@ function shuffled<T>(values: readonly T[], random: () => number) {
   return copy;
 }
 
-// Monta `quantity` jogos distintos. Os primeiros `preferred` seguem a
-// composição preferencial (7Q·5N·3F na Lotofácil); os demais seguem a
-// composição média observada na janela. Todos tentam ficar num dos dois
-// padrões mais comuns de pares/ímpares e de moldura/miolo.
-export function generateProfileTickets({ profile, game, quantity = 10, preferred = 5, random = Math.random }: {
+// Monta jogos distintos em três grupos: `preferred` na composição preferencial
+// (7Q·5N·3F na Lotofácil), `average` na composição média da janela e
+// `outliers` fora da curva (pares ou moldura fora dos dois padrões mais
+// comuns, com composição extrema que já saiu na janela). Os dois primeiros
+// grupos tentam ficar na curva.
+export function generateProfileTickets({ profile, game, preferred = 4, average = 4, outliers = 2, random = Math.random }: {
   profile: Profile;
   game: ProfileGame;
-  quantity?: number;
   preferred?: number;
+  average?: number;
+  outliers?: number;
   random?: () => number;
 }): ProfileTicket[] {
   if (!profile.draws) throw new RangeError("Não há concursos suficientes para montar o perfil.");
-  const wanted = preferredComposition(game.drawSize);
   const groups: Record<Temperature, number[]> = { hot: profile.hot, neutral: profile.neutral, cold: profile.cold };
-  const parityTargets = profile.parity.slice(0, 2).map((entry) => entry.value);
-  const frameTargets = profile.frameCounts.slice(0, 2).map((entry) => entry.value);
+  const plan = [
+    ...Array.from({ length: preferred }, (_, slot) => ({ kind: "preferred" as const, slot })),
+    ...Array.from({ length: average }, (_, slot) => ({ kind: "average" as const, slot })),
+    ...Array.from({ length: outliers }, (_, slot) => ({ kind: "outlier" as const, slot })),
+  ];
   const tickets: ProfileTicket[] = [];
   const used = new Set<string>();
 
-  for (let index = 0; index < quantity; index += 1) {
-    const isPreferred = index < preferred;
-    const composition = isPreferred ? wanted : profile.averageComposition;
-    const parityTarget = parityTargets[index % parityTargets.length];
-    const frameTarget = frameTargets[Math.floor(index / parityTargets.length) % frameTargets.length];
+  for (const { kind, slot } of plan) {
+    const outlier = kind === "outlier";
+    const composition = kind === "preferred" ? preferredComposition(game.drawSize)
+      : kind === "average" ? profile.averageComposition
+        : slot % 2 === 0 ? profile.compositionExtremes.coldHeavy : profile.compositionExtremes.hotHeavy;
+    const parityList = outlier ? profile.outlierParity : profile.parityCurve;
+    const frameList = outlier ? profile.outlierFrame : profile.frameCurve;
+    const parityTarget = parityList.length ? parityList[slot % parityList.length] : NaN;
+    const frameTarget = frameList.length ? frameList[(outlier ? slot : Math.floor(slot / Math.max(1, parityList.length))) % frameList.length] : NaN;
     let ticket: ProfileTicket | null = null;
 
-    // Primeiro exige pares e moldura; depois só pares; por fim aceita qualquer.
-    for (const strictness of ["both", "parity", "none"] as const) {
+    // Fora da curva nunca cai no "aceita qualquer": o jogo precisa mesmo fugir do padrão.
+    for (const strictness of outlier ? ["both", "parity", "frame", "outside"] as const : ["both", "parity", "none"] as const) {
       for (let attempt = 0; attempt < 400 && !ticket; attempt += 1) {
         const numbers = (["hot", "neutral", "cold"] as const)
-          .flatMap((kind) => shuffled(groups[kind], random).slice(0, composition[kind]))
+          .flatMap((temperatureKind) => shuffled(groups[temperatureKind], random).slice(0, composition[temperatureKind]))
           .sort((a, b) => a - b);
         const key = numbers.join(",");
         if (numbers.length !== game.drawSize || used.has(key)) continue;
         const pairs = numbers.filter((number) => number % 2 === 0).length;
         const frame = numbers.filter((number) => profile.frame.has(number)).length;
-        if (strictness !== "none" && pairs !== parityTarget) continue;
-        if (strictness === "both" && frame !== frameTarget) continue;
-        ticket = { numbers, preferred: isPreferred, composition, pairs, frame };
+        const outsideParity = !profile.parityCurve.includes(pairs);
+        const outsideFrame = !profile.frameCurve.includes(frame);
+        if (strictness === "both" && (pairs !== parityTarget || frame !== frameTarget)) continue;
+        if (strictness === "parity" && pairs !== parityTarget) continue;
+        if (strictness === "frame" && frame !== frameTarget) continue;
+        if (strictness === "outside" && !outsideParity && !outsideFrame) continue;
+        ticket = { numbers, kind, composition, pairs, frame, outsideParity, outsideFrame };
       }
       if (ticket) break;
     }

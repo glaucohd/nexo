@@ -97,11 +97,12 @@ test("na Dupla Sena a janela conta concursos e inclui os dois sorteios", () => {
   assert.equal(profile.delays.get(7), 2);
 });
 
-test("gera 10 jogos distintos: 5 na composição preferencial e 5 na média da janela", () => {
+test("gera 10 jogos distintos em 4 + 4 + 2: preferenciais, perfil médio e fora da curva", () => {
   const history = fakeHistory(80, lotofacil, seeded(11));
   const profile = buildProfile(history, lotofacil, 30);
   const tickets = generateProfileTickets({ profile, game: lotofacil, random: seeded(3) });
   assert.equal(tickets.length, 10);
+  assert.deepEqual(tickets.map((ticket) => ticket.kind), [...Array(4).fill("preferred"), ...Array(4).fill("average"), ...Array(2).fill("outlier")]);
   assert.equal(new Set(tickets.map((ticket) => ticket.numbers.join(","))).size, 10);
   for (const ticket of tickets) {
     assert.equal(ticket.numbers.length, 15);
@@ -110,9 +111,41 @@ test("gera 10 jogos distintos: 5 na composição preferencial e 5 na média da j
     assert.deepEqual({ hot: count(profile.hot), neutral: count(profile.neutral), cold: count(profile.cold) }, ticket.composition);
     assert.equal(ticket.pairs, ticket.numbers.filter((number) => number % 2 === 0).length);
   }
-  assert.equal(tickets.filter((ticket) => ticket.preferred).length, 5);
-  for (const ticket of tickets.filter((entry) => entry.preferred)) assert.deepEqual(ticket.composition, { hot: 7, neutral: 5, cold: 3 });
-  for (const ticket of tickets.filter((entry) => !entry.preferred)) assert.deepEqual(ticket.composition, profile.averageComposition);
+  for (const ticket of tickets.filter((entry) => entry.kind === "preferred")) assert.deepEqual(ticket.composition, { hot: 7, neutral: 5, cold: 3 });
+  for (const ticket of tickets.filter((entry) => entry.kind === "average")) assert.deepEqual(ticket.composition, profile.averageComposition);
+  assert.deepEqual(tickets.filter((entry) => entry.kind === "outlier").map((ticket) => ticket.composition), [profile.compositionExtremes.coldHeavy, profile.compositionExtremes.hotHeavy]);
+});
+
+test("os jogos fora da curva fogem mesmo do padrão e os demais ficam nele", () => {
+  for (const seed of [1, 2, 3, 4, 5]) {
+    const history = fakeHistory(80, lotofacil, seeded(seed));
+    const profile = buildProfile(history, lotofacil, 30);
+    const tickets = generateProfileTickets({ profile, game: lotofacil, random: seeded(seed + 10) });
+    for (const ticket of tickets) {
+      const outside = !profile.parityCurve.includes(ticket.pairs) || !profile.frameCurve.includes(ticket.frame);
+      assert.equal(ticket.outsideParity, !profile.parityCurve.includes(ticket.pairs));
+      assert.equal(ticket.outsideFrame, !profile.frameCurve.includes(ticket.frame));
+      if (ticket.kind === "outlier") assert.ok(outside, `seed ${seed}: jogo fora da curva ficou na curva`);
+      else assert.ok(!outside, `seed ${seed}: jogo ${ticket.kind} saiu da curva`);
+    }
+  }
+});
+
+test("a análise da curva conta os sorteios fora dela e mantém a ordem do mais antigo ao mais recente", () => {
+  const history = fakeHistory(80, lotofacil, seeded(21));
+  const profile = buildProfile(history, lotofacil, 30);
+  const { curve, timeline } = profile;
+  assert.equal(curve.total, 30);
+  assert.equal(timeline.length, 30);
+  assert.deepEqual(timeline.map((entry) => entry.contest), [...timeline.map((entry) => entry.contest)].sort((a, b) => a - b));
+  assert.equal(curve.outsideParity, timeline.filter((entry) => entry.outsideParity).length);
+  assert.equal(curve.outsideAny, timeline.filter((entry) => entry.outsideParity || entry.outsideFrame).length);
+  assert.ok(curve.outsideBoth <= Math.min(curve.outsideParity, curve.outsideFrame));
+  assert.ok(profile.outlierParity.every((value) => !profile.parityCurve.includes(value)));
+  assert.ok(profile.outlierFrame.every((value) => !profile.frameCurve.includes(value)));
+  // Sem repetir a curva: quem está na curva é exatamente o complemento do que está fora.
+  const inside = timeline.filter((entry) => !entry.outsideParity && !entry.outsideFrame).length;
+  assert.equal(inside + curve.outsideAny, 30);
 });
 
 test("os jogos ficam nos padrões mais comuns de pares e moldura", () => {
@@ -121,7 +154,7 @@ test("os jogos ficam nos padrões mais comuns de pares e moldura", () => {
   const parityOk = new Set(profile.parity.slice(0, 2).map((entry) => entry.value));
   const frameOk = new Set(profile.frameCounts.slice(0, 2).map((entry) => entry.value));
   const tickets = generateProfileTickets({ profile, game: lotofacil, random: seeded(9) });
-  for (const ticket of tickets) {
+  for (const ticket of tickets.filter((entry) => entry.kind !== "outlier")) {
     assert.ok(parityOk.has(ticket.pairs), `pares ${ticket.pairs}`);
     assert.ok(frameOk.has(ticket.frame), `moldura ${ticket.frame}`);
   }

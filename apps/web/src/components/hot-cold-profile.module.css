@@ -5,6 +5,10 @@
   --hot: color-mix(in oklab, #c8461f, white var(--lift));
   --neutral: color-mix(in oklab, #6b6880, white var(--lift));
   --cold: color-mix(in oklab, #2168b4, white var(--lift));
+  --in: color-mix(in srgb, var(--analysis-accent) 45%, var(--surface-3));
+  --out-parity: color-mix(in oklab, #c07a10, white var(--lift));
+  --out-frame: color-mix(in oklab, #a8479a, white var(--lift));
+  --out-both: color-mix(in oklab, #b3243f, white var(--lift));
   display: grid;
   gap: var(--gen-gap);
 }
@@ -85,4 +89,30 @@
 @media (max-width: 600px) {
   .panel { padding: 14px; }
   .distRow { grid-template-columns: minmax(96px, 128px) minmax(0, 1fr) 68px; gap: 8px; font-size: .74rem; }
+}
+
+/* Fora da curva: os quatro estados usam cor e, na legenda e na dica, texto e número. */
+.segIn { background: var(--in); }
+.segParity { background: var(--out-parity); }
+.segFrame { background: var(--out-frame); }
+.segBoth { background: var(--out-both); }
+.curveStats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.curveStats > div { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-md); }
+.curveStats strong { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 500; letter-spacing: -.03em; }
+.curveStats span { color: var(--muted); font-size: .74rem; line-height: 1.4; }
+.stacked { display: flex; height: 26px; overflow: hidden; border-radius: 6px; }
+.stacked span { display: grid; min-width: 4px; place-items: center; color: #fff; font-family: var(--font-mono); font-size: .68rem; font-weight: 600; }
+.stacked .segIn { color: var(--ink); }
+.stackedLegend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0 16px; list-style: none; color: var(--muted); font-size: .76rem; }
+.stackedLegend li { display: inline-flex; align-items: center; gap: 6px; }
+.stackedLegend i { width: 11px; height: 11px; border-radius: 3px; }
+.stackedLegend b { color: var(--ink); font-family: var(--font-mono); font-weight: 600; }
+.timeline { display: flex; flex-wrap: wrap; gap: 3px; }
+.timeline span { width: 14px; height: 22px; border-radius: 3px; }
+.distName em { margin-left: 8px; color: var(--out-parity); font-size: .62rem; font-style: normal; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.distOut .distTrack i { background: color-mix(in srgb, var(--out-parity) 55%, var(--surface-3)); }
+.tickets li.outlier { border-color: color-mix(in srgb, var(--out-parity) 55%, var(--line)); background: color-mix(in srgb, var(--out-parity) 6%, var(--surface)); }
+.badgeOut { padding: 3px 9px; border-radius: 999px; color: #fff; background: var(--out-parity); font-family: var(--font-mono); font-size: .62rem; letter-spacing: .04em; text-transform: uppercase; }
+@media (max-width: 720px) {
+  .curveStats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
