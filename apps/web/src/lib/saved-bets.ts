@@ -2,8 +2,9 @@ import { and, eq, inArray, max, ne } from "drizzle-orm";
 
 import { db } from "@/db";
 import { draws, lotteries, prizeTiers } from "@/db/schema";
-import type { BacktestDraw, BacktestTicket } from "@/lib/historical-backtest";
+import { backtestTickets, type BacktestDraw, type BacktestTicket } from "@/lib/historical-backtest";
 import { drawSourceSlugs, type LotterySlug } from "@/lib/lottery-generator";
+import type { PortfolioResult } from "@/lib/saved-bets-groups";
 
 // Último concurso já registrado da modalidade (na Dupla Sena, o maior entre os
 // dois sorteios). A aposta salva agora concorre no concurso seguinte.
@@ -48,4 +49,14 @@ export function ticketFromRow(numbers: number[], extras: Record<string, unknown>
   if (Array.isArray(extras?.trevos)) ticket.trevos = extras.trevos as number[];
   if (Array.isArray(extras?.columns)) ticket.columns = extras.columns as number[][];
   return ticket;
+}
+
+/** Confere os jogos de uma carteira contra o(s) sorteio(s) do concurso-alvo: acertos e prêmio de cada jogo. */
+export function conferPortfolio(slug: LotterySlug, contestDraws: BacktestDraw[], rows: { numbers: number[]; extras: Record<string, unknown> | null }[]): PortfolioResult {
+  const report = backtestTickets(slug, rows.map((row) => ticketFromRow(row.numbers, row.extras)), contestDraws);
+  return {
+    totalCents: report.knownGrossCents,
+    unavailablePrizeUnits: report.unavailablePrizeUnits,
+    tickets: [...report.tickets].sort((a, b) => a.position - b.position).map((ticket) => ({ position: ticket.position, hits: ticket.bestHits, prizeCents: ticket.knownGrossCents, prizeDraws: ticket.prizeDraws })),
+  };
 }
