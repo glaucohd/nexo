@@ -10,10 +10,12 @@ import {
 } from "@/lib/lottery-analysis";
 
 import { LotteryPicker } from "@/components/lottery-picker";
+import { HotColdProfile } from "@/components/hot-cold-profile";
 import { StrategyLab } from "@/components/strategy-lab";
 
 import styles from "./analysis-explorer.module.css";
 import { validSuperSeteDraw } from "@/lib/super-sete";
+import type { LotterySlug } from "@/lib/lottery-generator";
 
 const games = [
   { slug: "lotofacil", name: "Lotofácil", total: 25, start: 1, color: "#91278f" },
@@ -27,8 +29,11 @@ const games = [
   { slug: "timemania", name: "Timemania", total: 80, start: 1, color: "#00854a" },
 ] as const;
 
-type View = "matrix" | "cycles" | "strategies";
+type View = "matrix" | "profile" | "cycles" | "strategies";
 type WindowSize = 15 | 30 | 50 | 100 | "all";
+
+// Modalidades com perfil de quentes, neutras e frias (dezenas de 1 a N e volante em colunas).
+const profileSlugs = new Set<string>(["lotofacil", "mega-sena", "quina", "mais-milionaria", "dia-de-sorte", "dupla-sena"]);
 
 const numberLabel = (number: number) => String(number).padStart(2, "0");
 
@@ -92,7 +97,8 @@ export function AnalysisExplorer({ histories, initialSlug }: { histories: Record
   // Com 100 dezenas e 20 sorteadas, a matriz da Lotomania vira um borrão sem
   // leitura útil; ela abre direto nos parâmetros.
   const hasMatrix = game.slug !== "lotomania";
-  const activeView: View = hasMatrix ? view : "cycles";
+  const hasProfile = profileSlugs.has(game.slug);
+  const activeView: View = !hasMatrix ? "cycles" : view === "profile" && !hasProfile ? "matrix" : view;
 
   // Em tela cheia, Esc fecha a matriz expandida.
   useEffect(() => {
@@ -113,10 +119,12 @@ export function AnalysisExplorer({ histories, initialSlug }: { histories: Record
     {game.slug === "super-sete" ? <><SuperSeteAnalysis draws={draws} windowSize={windowSize} setWindowSize={setWindowSize} /><StrategyLab key={game.slug} slug={game.slug} gameName={game.name} /></> : draws.length ? <>
       <div className={styles.summary}><div><span>Concursos na base</span><strong>{draws.length}</strong><small>Até o concurso {draws[0].contest}</small></div><div><span>Repetição média</span><strong>{analysis.repeatMean?.toFixed(1).replace(".", ",") ?? "—"}</strong><small>com o concurso anterior</small></div><div><span>Mais frequente</span><strong>{numberLabel(frequencyRank[0])}</strong><small>{analysis.frequencies[frequencyRank[0]]} vezes em {analysis.sample.length}</small></div><div><span>Maior atraso atual</span><strong>{numberLabel(delayRank[0])}</strong><small>{analysis.delays[delayRank[0]]} concursos sem sair</small></div></div>
 
-      <div className={styles.tabBar} role="tablist" aria-label="Tipos de análise">{([ ["matrix", "Matriz dos concursos"], ["cycles", "Ciclos"], ["strategies", "Estratégias"] ] as const).filter(([id]) => hasMatrix || id !== "matrix").map(([id, label]) => <button role="tab" aria-selected={activeView === id} className={activeView === id ? styles.activeTab : ""} key={id} type="button" onClick={() => setView(id)}>{label}</button>)}</div>
+      <div className={styles.tabBar} role="tablist" aria-label="Tipos de análise">{([ ["matrix", "Matriz dos concursos"], ["profile", "Quentes e frias"], ["cycles", "Ciclos"], ["strategies", "Estratégias"] ] as const).filter(([id]) => (hasMatrix || id !== "matrix") && (hasProfile || id !== "profile")).map(([id, label]) => <button role="tab" aria-selected={activeView === id} className={activeView === id ? styles.activeTab : ""} key={id} type="button" onClick={() => setView(id)}>{label}</button>)}</div>
 
       {activeView === "matrix" && <section className={`${styles.panel} ${matrixExpanded ? styles.panelExpanded : ""}`}><div className={styles.sectionLead}><div><span className="eyebrow">Concurso × dezena</span><h2>Matriz de resultados</h2><p>Coluna = dezena. Linha = concurso. Uma célula preenchida indica que a dezena saiu naquele sorteio.</p></div><span className={styles.latestChip}>Último: {draws[0].contest}</span></div><div className={styles.rangeBar}><span>Janela:</span>{([15, 30, 50, 100, "all"] as const).map((size) => <button key={size} className={windowSize === size ? styles.rangeActive : ""} type="button" onClick={() => setWindowSize(size)}>{size === "all" ? `Todos (${draws.length})` : size}</button>)}<button type="button" className={styles.expandButton} aria-pressed={matrixExpanded} onClick={() => setMatrixExpanded((current) => !current)}>{matrixExpanded ? "Fechar tela cheia ✕" : "Expandir matriz ⤢"}</button></div><Matrix draws={analysis.sample} allDraws={draws} total={game.total} start={game.start} frequencies={analysis.frequencies} /><div className={styles.matrixFooter}><span><i className={styles.legendHit} /> Dezena sorteada</span><span>Σ soma</span><span>P pares</span><span>R repetidas do anterior</span></div><p className={styles.methodNote}>As linhas “Vezes” e “%” consideram apenas os {analysis.sample.length} concursos selecionados. Frequência e atraso descrevem o passado; não mudam a chance de cada dezena no próximo sorteio.</p></section>}
 
+
+      {activeView === "profile" && <HotColdProfile key={game.slug} slug={game.slug as LotterySlug} history={draws} />}
 
       {activeView === "strategies" && <StrategyLab key={game.slug} slug={game.slug} gameName={game.name} />}
 
