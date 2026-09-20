@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 
 import { MilionariaGenerator } from "@/components/milionaria-generator";
 import { SuperSeteGenerator } from "@/components/super-sete-generator";
+import { LotteryPicker } from "@/components/lottery-picker";
 import { LotofacilWheelGenerator } from "@/components/lotofacil-wheel-generator";
 import { DiaDeSorteWheelGenerator } from "@/components/dia-de-sorte-wheel-generator";
 import { NumberWheelGenerator } from "@/components/number-wheel-generator";
@@ -38,6 +39,7 @@ import {
 import styles from "./lottery-generator.module.css";
 
 const slugs = Object.keys(lotteryGames) as LotterySlug[];
+const pickerGames = slugs.map((entry) => ({ slug: entry, name: lotteryGames[entry].name, color: lotteryGames[entry].color }));
 const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const pad = (number: number) => String(number).padStart(2, "0");
 const integer = new Intl.NumberFormat("pt-BR");
@@ -102,7 +104,7 @@ export function LotteryGenerator({ histories, initialSlug }: { histories: Record
   const [slug, setSlug] = useState<LotterySlug>(slugs.includes(initialSlug as LotterySlug) ? initialSlug as LotterySlug : "lotofacil");
   const [tool, setTool] = useState<"generator" | "wheel">("generator");
   return <div className={styles.hub} style={{ "--generator-accent": lotteryGames[slug].color } as CSSProperties}>
-    <nav className={styles.games} aria-label="Modalidade">{slugs.map((entry) => <button type="button" key={entry} aria-pressed={slug === entry} className={styles.gameChip} style={{ "--chip": lotteryGames[entry].color } as CSSProperties} onClick={() => { setSlug(entry); setTool("generator"); }}><i aria-hidden="true" />{lotteryGames[entry].name}</button>)}</nav>
+    <LotteryPicker games={pickerGames} value={slug} onChange={(next) => { setSlug(next as LotterySlug); setTool("generator"); }} />
     {wheelSlugs.has(slug) && <div className={styles.toolTabs} role="group" aria-label="Ferramenta"><button type="button" aria-pressed={tool === "generator"} onClick={() => setTool("generator")}>Gerador</button><button type="button" aria-pressed={tool === "wheel"} onClick={() => setTool("wheel")}>{wheelLabels[slug]}</button></div>}
     {slug === "mais-milionaria" && tool === "wheel" ? <MilionariaWheelGenerator history={histories[slug] ?? []} />
       : slug === "mais-milionaria" ? <MilionariaGenerator history={histories[slug] ?? []} />
@@ -263,7 +265,7 @@ function StandardGenerator({ slug, history }: { slug: LotterySlug; history: Draw
   }
 
   return <main className={styles.page}>
-    <header className={styles.header}><div><span className="eyebrow">Gerador de jogos</span><h1>Monte sua <em>{game.name}</em>.</h1><p>{slug === "dupla-sena" ? "Cada cartela concorre nos dois sorteios do concurso pelo mesmo preço — uma aposta, duas chances. A conferência histórica avalia os dois sorteios." : "Leia as dezenas, marque seus palpites e confira cada cartela no formato do volante."}</p></div><span className={styles.badge}>{game.total} números · {game.min} a {game.max} por jogo · {history.length} concursos na base</span></header>
+    <header className={styles.header}><div><span className="eyebrow">Gerador de jogos</span><h1>Monte sua <em>{game.name.replace("-", "\u2011")}</em>.</h1><p>{slug === "dupla-sena" ? "Cada cartela concorre nos dois sorteios do concurso pelo mesmo preço — uma aposta, duas chances. A conferência histórica avalia os dois sorteios." : "Leia as dezenas, marque seus palpites e confira cada cartela no formato do volante."}</p></div><span className={styles.badge}>{game.total} números · {game.min} a {game.max} por jogo · {history.length} concursos na base</span></header>
 
     <div className={styles.layout}>
       <div className={styles.controls}>

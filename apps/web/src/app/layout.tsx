@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/inter/opsz.css";
 import "@fontsource-variable/jetbrains-mono/wght.css";
-import "@fontsource-variable/newsreader/opsz.css";
-import "@fontsource-variable/newsreader/opsz-italic.css";
+import "@fontsource-variable/plus-jakarta-sans/wght.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

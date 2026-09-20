@@ -9,8 +9,8 @@
   padding-bottom: 54px;
 }
 .header { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin: 18px 0 10px; }
-.header h1 { margin: 12px 0 10px; font-family: var(--font-serif); font-size: clamp(2.3rem, 4vw, 3.5rem); font-weight: 480; line-height: 1.02; letter-spacing: -.03em; }
-.header h1 em { color: var(--acc); font-weight: 450; }
+.header h1 { margin: 12px 0 10px; font-family: var(--font-serif); font-size: clamp(2.3rem, 4vw, 3.5rem); font-weight: 700; line-height: 1.02; letter-spacing: -.015em; }
+.header h1 em { color: var(--acc); }
 .header p { max-width: 670px; color: var(--muted); font-size: .94rem; line-height: 1.6; }
 .gameBadge { flex: none; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r-md); color: var(--muted); background: var(--surface); font-family: var(--font-mono); font-size: .7rem; }
 
@@ -109,7 +109,7 @@
 .error { padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent); border-radius: var(--gen-radius-control); color: var(--danger); background: var(--danger-soft); font-size: .82rem; font-weight: 550; }
 
 .resultsHeading { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
-.resultsHeading h2 { margin: 10px 0 4px; font-family: var(--font-serif); font-size: 2rem; font-weight: 480; letter-spacing: -.025em; }
+.resultsHeading h2 { margin: 10px 0 4px; font-family: var(--font-serif); font-size: 2rem; font-weight: 700; letter-spacing: -.015em; }
 .resultsHeading p { color: var(--muted); font-size: .78rem; }
 .resultsHeading > .resultsActions > button { flex: none; min-height: 38px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: var(--gen-radius-control); color: var(--ink); background: var(--surface); font-size: .82rem; font-weight: 600; cursor: pointer; }
 .resultsHeading > .resultsActions > button:hover { border-color: var(--ring); }

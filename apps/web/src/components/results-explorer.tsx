@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { LotteryPicker } from "@/components/lottery-picker";
 import { lotteryBoardNumber, lotteryBoardPosition } from "@/lib/lottery-generator";
 
 import styles from "./results-explorer.module.css";
@@ -82,9 +83,7 @@ export function ResultsExplorer({ histories }: { histories: Record<string, Lotte
 
   return (
     <section className={styles.page} style={{ "--result-accent": game.color, "--result-columns": game.columns } as React.CSSProperties}>
-      <nav className={styles.games} aria-label="Modalidade">
-        {games.map((entry) => <button type="button" key={entry.slug} aria-pressed={slug === entry.slug} className={styles.gameChip} style={{ "--chip": entry.color } as React.CSSProperties} onClick={() => { setSlug(entry.slug); setIndex(0); }}><i aria-hidden="true" />{entry.name}</button>)}
-      </nav>
+      <LotteryPicker games={games} value={slug} onChange={(next) => { setSlug(next as typeof slug); setIndex(0); }} />
       <header className={styles.header}>
         <div>
           <span className="eyebrow">Histórico de sorteios</span>

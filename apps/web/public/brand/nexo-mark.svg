@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="g" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8a5cff"/><stop offset="1" stop-color="#4a1fc0"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#g)"/>
+  <circle cx="12.5" cy="12.5" r="5.4" fill="#fff"/>
+  <circle cx="25.5" cy="12.5" r="2.1" fill="#fff" fill-opacity=".38"/>
+  <circle cx="38.5" cy="12.5" r="2.1" fill="#fff" fill-opacity=".38"/>
+  <circle cx="51.5" cy="12.5" r="5.4" fill="#f5b23c"/>
+  <circle cx="12.5" cy="25.5" r="5.4" fill="#fff"/>
+  <circle cx="25.5" cy="25.5" r="5.4" fill="#fff"/>
+  <circle cx="38.5" cy="25.5" r="2.1" fill="#fff" fill-opacity=".38"/>
+  <circle cx="51.5" cy="25.5" r="5.4" fill="#fff"/>
+  <circle cx="12.5" cy="38.5" r="5.4" fill="#fff"/>
+  <circle cx="25.5" cy="38.5" r="2.1" fill="#fff" fill-opacity=".38"/>
+  <circle cx="38.5" cy="38.5" r="5.4" fill="#fff"/>
+  <circle cx="51.5" cy="38.5" r="5.4" fill="#fff"/>
+  <circle cx="12.5" cy="51.5" r="5.4" fill="#fff"/>
+  <circle cx="25.5" cy="51.5" r="2.1" fill="#fff" fill-opacity=".38"/>
+  <circle cx="38.5" cy="51.5" r="2.1" fill="#fff" fill-opacity=".38"/>
+  <circle cx="51.5" cy="51.5" r="5.4" fill="#fff"/>
+</svg>

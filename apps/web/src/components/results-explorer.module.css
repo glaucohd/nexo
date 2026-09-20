@@ -7,8 +7,8 @@
   padding-bottom: 40px;
 }
 .header { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin: 18px 0 10px; }
-.header h1 { margin: 12px 0 10px; font-family: var(--font-serif); font-size: clamp(2.3rem, 4vw, 3.5rem); font-weight: 480; line-height: 1.02; letter-spacing: -.03em; }
-.header h1 em { color: var(--acc); font-weight: 450; }
+.header h1 { margin: 12px 0 10px; font-family: var(--font-serif); font-size: clamp(2.3rem, 4vw, 3.5rem); font-weight: 700; line-height: 1.02; letter-spacing: -.015em; }
+.header h1 em { color: var(--acc); }
 .header p { max-width: 650px; color: var(--muted); line-height: 1.55; }
 .content { display: grid; gap: var(--gen-gap); }
 
@@ -22,7 +22,7 @@
 .navigator button small { font-size: .84rem; }
 .contest { display: grid; justify-items: center; gap: 2px; text-align: center; }
 .counter { color: var(--faint); font-family: var(--font-mono); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; }
-.contest strong { font-family: var(--font-serif); font-size: 2rem; font-weight: 480; letter-spacing: -.02em; }
+.contest strong { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; letter-spacing: -.015em; }
 .contest > span:last-of-type { color: var(--muted); font-family: var(--font-mono); font-size: .72rem; }
 .navigator .latestButton { width: auto; min-height: 0; margin-top: 4px; padding: 0; border: 0; color: var(--acc); background: transparent; font-size: .74rem; font-weight: 600; }
 .navigator .latestButton:hover { background: transparent; text-decoration: underline; text-underline-offset: 3px; }
@@ -113,14 +113,5 @@
 }
 
 /* Modalidades como chips, iguais aos do gerador. */
-.games { display: flex; flex-wrap: wrap; gap: 6px; }
-.gameChip { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 13px 0 11px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--surface); font-size: .82rem; font-weight: 550; white-space: nowrap; cursor: pointer; transition: border-color .15s, color .15s, background-color .15s; }
-.gameChip i { width: 7px; height: 7px; border-radius: 50%; background: var(--chip); }
-.gameChip:hover { border-color: var(--line-strong); color: var(--ink); }
-.gameChip[aria-pressed="true"] { border-color: color-mix(in srgb, var(--chip) 55%, transparent); color: var(--ink); background: color-mix(in srgb, var(--chip) 9%, var(--surface)); font-weight: 620; }
-.gameChip[aria-pressed="true"] i { box-shadow: 0 0 0 3px color-mix(in srgb, var(--chip) 22%, transparent); }
-.gameChip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 @media (max-width: 720px) {
-  .games { flex-wrap: nowrap; overflow-x: auto; margin-inline: -16px; padding: 2px 16px 4px; scrollbar-width: none; }
-  .games::-webkit-scrollbar { display: none; }
 }

@@ -9,6 +9,7 @@ import {
   type AnalysisDraw,
 } from "@/lib/lottery-analysis";
 
+import { LotteryPicker } from "@/components/lottery-picker";
 import { StrategyLab } from "@/components/strategy-lab";
 
 import styles from "./analysis-explorer.module.css";
@@ -106,7 +107,7 @@ export function AnalysisExplorer({ histories, initialSlug }: { histories: Record
   const delayRank = Array.from({ length: game.total }, (_, index) => index + game.start).sort((a, b) => analysis.delays[b] - analysis.delays[a] || a - b);
 
   return <div className={styles.page} style={{ "--analysis-accent": game.color } as React.CSSProperties}>
-    <nav className={styles.games} aria-label="Modalidade">{games.map((entry) => <button type="button" key={entry.slug} aria-pressed={slug === entry.slug} className={styles.gameChip} style={{ "--chip": entry.color } as React.CSSProperties} onClick={() => { setSlug(entry.slug); setWindowSize(15); }}><i aria-hidden="true" />{entry.name}</button>)}</nav>
+    <LotteryPicker games={games} value={slug} onChange={(next) => { setSlug(next as typeof slug); setWindowSize(15); }} />
     <header className={styles.header}><div><span className="eyebrow">Análises históricas</span><h1>Enxergue os concursos de <em>outro jeito</em>.</h1><p>Matriz e ciclos calculados a partir dos resultados que estão na base do Nexo.</p></div></header>
 
     {game.slug === "super-sete" ? <><SuperSeteAnalysis draws={draws} windowSize={windowSize} setWindowSize={setWindowSize} /><StrategyLab key={game.slug} slug={game.slug} gameName={game.name} /></> : draws.length ? <>

@@ -1,7 +1,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { AppNav } from "@/components/app-nav";
+import { AccountSheet } from "@/components/account-sheet";
+import { AppNav, TabBar } from "@/components/app-nav";
 import { Brand } from "@/components/brand";
 import { SignOutButton } from "@/components/sign-out-button";
 import { SyncCaixaButton } from "@/components/sync-caixa-button";
@@ -57,26 +58,39 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const initials = session.user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
 
+  const games = [
+    ["lotofacil", "Lotofácil"], ["mega", "Mega-Sena"], ["quina", "Quina"], ["milionaria", "+Milionária"], ["dia", "Dia de Sorte"],
+    ["lotomania", "Lotomania"], ["super-sete", "Super Sete"], ["dupla-sena", "Dupla Sena"], ["timemania", "Timemania"],
+  ];
+
   return (
     <div className="app-shell">
+      <header className="topbar">
+        <Brand />
+        <div className="topbar-actions">
+          <SyncCaixaButton iconOnly />
+          <AccountSheet initials={initials} name={session.user.name} email={session.user.email}>
+            <ThemeToggle labels />
+            <div className="sheet-actions">
+              <SyncCaixaButton />
+              <SignOutButton />
+            </div>
+          </AccountSheet>
+        </div>
+      </header>
+
       <aside className="sidebar">
         <div className="sidebar-top">
           <Brand />
-          <ThemeToggle />
         </div>
         <p className="sidebar-label">Meu Nexo</p>
         <AppNav />
-        <div className="sidebar-games" aria-label="Modalidades disponíveis">
-          <span className="game-dot lotofacil" title="Lotofácil" />
-          <span className="game-dot mega" title="Mega-Sena" />
-          <span className="game-dot quina" title="Quina" />
-          <span className="game-dot milionaria" title="+Milionária" />
-          <span className="game-dot dia" title="Dia de Sorte" />
-          <span className="game-dot lotomania" title="Lotomania" />
-          <span className="game-dot super-sete" title="Super Sete" />
-          <span className="game-dot dupla-sena" title="Dupla Sena" />
-          <span className="game-dot timemania" title="Timemania" />
-        </div>
+        <p className="sidebar-label games-label">Modalidades</p>
+        <ul className="sidebar-games" aria-label="Modalidades disponíveis">
+          {games.map(([key, label]) => (
+            <li key={key}><span className={`game-dot ${key}`} />{label}</li>
+          ))}
+        </ul>
         <div className="sidebar-footer">
           <div className="sidebar-user">
             <span className="sidebar-avatar" aria-hidden="true">{initials || "?"}</span>
@@ -85,13 +99,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <span>{session.user.email}</span>
             </div>
           </div>
+          <ThemeToggle labels />
           <div className="sidebar-actions">
             <SyncCaixaButton />
             <SignOutButton />
           </div>
         </div>
       </aside>
+
       <main className="app-content">{children}</main>
+      <TabBar />
     </div>
   );
 }
