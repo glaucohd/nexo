@@ -4,6 +4,13 @@
 .header h1 em { color: var(--brand); }
 .header p { max-width: 640px; color: var(--muted); font-size: .94rem; line-height: 1.6; }
 .header :global(.button) { flex: none; }
+.headerActions { display: grid; justify-items: stretch; gap: 7px; flex: none; }
+.headerActions > p { max-width: 220px; color: var(--danger); font-size: .76rem; text-align: center; }
+.deleteAll, .clearConfirm button { min-height: 38px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: var(--r-md); color: var(--muted); background: var(--surface); font-size: .8rem; font-weight: 600; cursor: pointer; }
+.deleteAll:hover { border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); color: var(--danger); }
+.clearConfirm { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+.clearConfirm .deleteAllConfirm { border-color: transparent; color: #fff; background: var(--danger); }
+.clearConfirm button:disabled { opacity: .6; cursor: wait; }
 
 .empty { display: grid; justify-items: start; gap: 12px; padding: 36px; border: 1px dashed var(--line-strong); border-radius: var(--r-lg); background: var(--surface); }
 .empty h2 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; }
@@ -87,6 +94,27 @@
 
 .strategy { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; color: var(--ink); font-size: .8rem; line-height: 1.45; }
 .strategy span { padding: 2px 8px; border-radius: 999px; color: var(--acc); background: color-mix(in srgb, var(--game) 10%, transparent); font-family: var(--font-mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; }
+.poolLine { display: grid; gap: 11px; padding: 13px 14px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); }
+.poolLineHead { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.poolLineHead > div { display: flex; align-items: baseline; gap: 8px; }
+.poolLineHead strong { font-size: .84rem; font-weight: 650; }
+.poolLineHead span { color: var(--faint); font-family: var(--font-mono); font-size: .66rem; }
+.poolLineHead p { color: var(--muted); font-size: .76rem; white-space: nowrap; }
+.poolLineHead p b { color: var(--acc); font-family: var(--font-mono); font-size: .9rem; }
+.poolBalls { flex-wrap: nowrap; gap: 5px; overflow-x: auto; padding-bottom: 3px; scrollbar-width: thin; }
+.poolBalls b { width: 30px; height: 30px; flex: 0 0 30px; border: 1px solid var(--line); background: var(--surface); }
+.poolLegend { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 16px; color: var(--faint); font-size: .7rem; }
+.poolLegend > span:first-child { display: inline-flex; align-items: center; gap: 5px; }
+.poolLegend i { width: 8px; height: 8px; border-radius: 50%; background: var(--game); }
+.poolLegend b { color: var(--muted); font-family: var(--font-mono); font-weight: 550; }
+.poolLegend strong { color: var(--success); font-weight: 650; }
+.poolLegend small { margin-left: auto; font-size: inherit; }
+.ticketHeading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-top: 3px; }
+.ticketHeading > div { display: flex; align-items: baseline; gap: 8px; }
+.ticketHeading span { font-size: .88rem; font-weight: 650; }
+.ticketHeading strong { color: var(--faint); font-family: var(--font-mono); font-size: .68rem; font-weight: 500; }
+.ticketHeading p { color: var(--faint); font-size: .72rem; }
+.ticketHeading p b { color: var(--ink); font-weight: 650; }
 .note { color: var(--faint); font-size: .74rem; }
 .error { color: var(--danger); font-size: .82rem; }
 .rowActions { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -116,6 +144,7 @@
 @media (max-width: 760px) {
   .header { align-items: start; flex-direction: column; gap: 14px; }
   .header :global(.button) { width: 100%; }
+  .headerActions { width: 100%; }
   .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .summary > div { padding: 13px 14px; }
   .summary > div:nth-child(3) { border-left: 0; }
@@ -134,6 +163,10 @@
   .waitBar { margin-inline: 14px; }
   .rowHead { padding: 10px 14px; }
   .rowBody { padding: 4px 14px 14px; }
+  .poolLineHead { align-items: start; flex-direction: column; gap: 3px; }
+  .poolLineHead p { white-space: normal; }
+  .poolLegend small { width: 100%; margin-left: 0; }
+  .ticketHeading { align-items: start; flex-direction: column; gap: 3px; }
   .tickets li { grid-template-columns: 1fr auto; padding: 10px 12px; }
   .ticketLabel { grid-column: 1 / -1; }
 }

@@ -36,6 +36,7 @@ export function BetsBoard({ portfolios }: { portfolios: SavedPortfolio[] }) {
   const games = [...new Map(portfolios.map((portfolio) => [portfolio.slug, portfolio])).values()];
   const router = useRouter();
   const [check, setCheck] = useState<"idle" | "checking" | "found" | "none" | "error">("idle");
+  const [clearState, setClearState] = useState<"idle" | "confirming" | "deleting" | "error">("idle");
   const pendingSlugs = useMemo(() => [...new Set(portfolios.filter((portfolio) => portfolio.draws.length === 0).map((portfolio) => portfolio.slug))], [portfolios]);
   const pendingKey = pendingSlugs.join(",");
   const checking = useRef(false);
@@ -84,6 +85,17 @@ export function BetsBoard({ portfolios }: { portfolios: SavedPortfolio[] }) {
   const cost = settled.reduce((sum, group) => sum + group.costCents, 0);
   const balance = prize - cost;
 
+  async function clearAll() {
+    setClearState("deleting");
+    try {
+      const response = await fetch("/api/apostas", { method: "DELETE" });
+      if (!response.ok) throw new Error("Falha ao apagar apostas");
+      router.refresh();
+    } catch {
+      setClearState("error");
+    }
+  }
+
   return <main className={styles.page}>
     <header className={styles.header}>
       <div>
@@ -91,7 +103,16 @@ export function BetsBoard({ portfolios }: { portfolios: SavedPortfolio[] }) {
         <h1>Seus jogos <em>salvos</em>.</h1>
         <p>Salvar não registra aposta na CAIXA: é só para acompanhar. Cada carteira fica guardada para o concurso seguinte ao dia em que foi salva e, quando o sorteio entra na base, o resultado aparece aqui sozinho.</p>
       </div>
-      <Link className="button button-primary" href="/app/gerador">Gerar novos jogos <span aria-hidden="true">→</span></Link>
+      <div className={styles.headerActions}>
+        <Link className="button button-primary" href="/app/gerador">Gerar novos jogos <span aria-hidden="true">→</span></Link>
+        {portfolios.length > 0 && (clearState === "confirming" || clearState === "deleting"
+          ? <div className={styles.clearConfirm} role="group" aria-label="Confirmar exclusão de todas as apostas">
+            <button type="button" className={styles.deleteAllConfirm} disabled={clearState === "deleting"} onClick={() => void clearAll()}>{clearState === "deleting" ? "Apagando…" : `Apagar ${pluralize(portfolios.length, "carteira", "carteiras")}`}</button>
+            <button type="button" disabled={clearState === "deleting"} onClick={() => setClearState("idle")}>Cancelar</button>
+          </div>
+          : <button type="button" className={styles.deleteAll} onClick={() => setClearState("confirming")}>Apagar todas</button>)}
+        {clearState === "error" && <><p className={styles.error} role="alert">Não foi possível apagar as apostas.</p><button type="button" className={styles.deleteAll} onClick={() => setClearState("confirming")}>Tentar novamente</button></>}
+      </div>
     </header>
 
     {portfolios.length === 0 ? <section className={styles.empty}>

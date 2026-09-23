@@ -69,15 +69,6 @@
 .segment button:hover { color: var(--ink); }
 .segment .active { color: var(--ink); background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .1); font-weight: 620; }
 
-.modeGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.modeGrid button { position: relative; display: grid; gap: 4px; padding: 13px 14px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); color: var(--ink); background: var(--surface); text-align: left; cursor: pointer; transition: border-color .15s, background-color .15s; }
-.modeGrid button:first-child { grid-column: 1 / -1; }
-.modeGrid button:hover:not(:disabled) { border-color: var(--line-strong); }
-.modeGrid .modeActive, .modeGrid .modeActive:hover:not(:disabled) { border-color: var(--gen-ring); background: var(--gen-tint); box-shadow: inset 0 0 0 1px var(--gen-ring); }
-.modeGrid button:disabled { opacity: .45; cursor: not-allowed; }
-.modeGrid strong { font-size: .86rem; font-weight: 620; }
-.modeGrid small { color: var(--muted); font-size: .72rem; line-height: 1.45; }
-
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 13px; }
 .tabs button, .ruleGroup button { min-height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); background: var(--surface); font: inherit; font-size: .76rem; font-weight: 550; cursor: pointer; transition: border-color .15s, background-color .15s, color .15s; }
 .tabs button:hover, .ruleGroup button:hover:not(:disabled) { border-color: var(--line-strong); }
@@ -137,8 +128,6 @@
 .actionBox button { min-height: 48px; border: 0; border-radius: var(--gen-radius-control); color: #fff; background: var(--generator-accent); font: inherit; font-size: .92rem; font-weight: 620; cursor: pointer; transition: filter .15s, transform .15s; }
 .actionBox button:hover { filter: brightness(1.1); }
 .actionBox button:active { transform: translateY(1px); }
-.actionBox .suggestion { min-height: 42px; border: 1px solid var(--line-strong); color: var(--ink); background: var(--surface); font-size: .84rem; font-weight: 550; }
-.actionBox .suggestion:hover { border-color: var(--gen-ring); filter: none; }
 .actionBox small { color: var(--faint); font-size: .72rem; line-height: 1.5; }
 
 .error { padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent); border-radius: var(--gen-radius-control); color: var(--danger); background: var(--danger-soft); font-size: .82rem; font-weight: 550; }
@@ -173,16 +162,6 @@
 .hub button:focus-visible, .hub select:focus-visible { outline: 2px solid var(--gen-ring); outline-offset: 2px; }
 
 /* Frequência histórica de dezenas repetidas. */
-.repeatChart { display: grid; gap: 12px; margin-top: 16px; padding: 16px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); background: var(--surface-2); }
-.repeatChart > strong { color: var(--faint); font-family: var(--font-mono); font-size: .66rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
-.repeatChart > div { display: flex; align-items: flex-end; gap: 6px; }
-.repeatChart button { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; min-width: 0; padding: 0; border: 0; background: none; cursor: pointer; }
-.repeatChart button span { display: block; width: 100%; max-width: 32px; border-radius: 4px 4px 2px 2px; background: color-mix(in srgb, var(--generator-accent) 28%, var(--surface-2)); transition: background-color .15s; }
-.repeatChart button:hover span { background: color-mix(in srgb, var(--generator-accent) 55%, var(--surface-2)); }
-.repeatChart .repeatBarActive span { background: var(--generator-accent); }
-.repeatChart button b { color: var(--faint); font-family: var(--font-mono); font-size: .68rem; font-weight: 500; }
-.repeatChart .repeatBarActive b { color: var(--gen-accent); font-weight: 600; }
-.repeatChart > small { color: var(--muted); font-size: .74rem; line-height: 1.55; }
 
 @media (max-width: 1000px) {
   .layout { grid-template-columns: 1fr; }
@@ -197,8 +176,7 @@
 @media (max-width: 480px) { .randomBlocks > div { grid-template-columns: 1fr; } }
 @media (max-width: 430px) {
   .card, .results, .actionBox { padding: 16px; }
-  .fields, .modeGrid { grid-template-columns: 1fr; }
-  .modeGrid button:first-child { grid-column: auto; }
+  .fields { grid-template-columns: 1fr; }
   .resultsHeader { align-items: start; flex-direction: column; }
 }
 

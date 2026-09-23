@@ -49,3 +49,16 @@ export async function POST(request: Request) {
     return Response.json({ error: "Não foi possível salvar agora. Tente novamente." }, { status: 503 });
   }
 }
+
+// Remove somente as carteiras da conta autenticada. Os bilhetes associados
+// são apagados pelo cascade do banco; concursos e resultados são preservados.
+export async function DELETE() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return Response.json({ error: "Entre na sua conta." }, { status: 401 });
+
+  const deleted = await db.delete(portfolios)
+    .where(eq(portfolios.userId, session.user.id))
+    .returning({ id: portfolios.id });
+
+  return Response.json({ ok: true, deleted: deleted.length });
+}

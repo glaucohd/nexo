@@ -102,8 +102,6 @@
 .rulesList small { color: var(--acc); font-family: var(--font-mono); font-size: .64rem; white-space: nowrap; }
 .generateButton { width: 100%; min-height: 48px; border: 0; border-radius: var(--gen-radius-control); color: #fff; background: var(--accent); font: inherit; font-size: .92rem; font-weight: 620; cursor: pointer; transition: filter .15s; }
 .generateButton:hover { filter: brightness(1.12); }
-.suggestionButton { width: 100%; min-height: 42px; margin-top: 8px; border: 1px solid var(--line-strong); border-radius: var(--gen-radius-control); color: var(--ink); background: var(--surface); font-size: .84rem; font-weight: 550; cursor: pointer; }
-.suggestionButton:hover { border-color: var(--ring); }
 .actionBox p { margin-top: 10px; color: var(--faint); font-size: .72rem; line-height: 1.45; }
 
 .error { padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent); border-radius: var(--gen-radius-control); color: var(--danger); background: var(--danger-soft); font-size: .82rem; font-weight: 550; }

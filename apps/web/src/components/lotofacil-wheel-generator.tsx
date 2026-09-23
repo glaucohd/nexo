@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 
 import { HistoricalBacktest } from "@/components/historical-backtest";
-import { GuaranteeSummary, ReductionOptions, mostFrequentPrize } from "@/components/reduction-guide";
+import { GuaranteeSummary } from "@/components/reduction-guide";
 import { SaveBetsButton } from "@/components/save-bets-button";
 import type { DrawNumbers } from "@/lib/lottery-generator";
-import { lotofacilWheel, lotofacilWheel14, lotofacilWheel20, lotofacilWheel20x13, type LotofacilWheelTicket } from "@/lib/lotofacil-wheel";
+import { lotofacilWheel, type LotofacilWheelTicket } from "@/lib/lotofacil-wheel";
 
 import { reductionGuarantees } from "@/lib/reduction-stats";
 
@@ -34,19 +34,12 @@ function shuffled<T>(values: readonly T[]) {
   return result;
 }
 
-type TierId = "18x13" | "18x14" | "20x12" | "20x13";
-type Tier = { id: TierId; pool: 18 | 20; guarantee: number; games: number; build: (available: readonly number[]) => LotofacilWheelTicket[] };
+type Tier = { id: "18x13"; pool: 18; guarantee: number; games: number; build: (available: readonly number[]) => LotofacilWheelTicket[] };
 type Round = { id: number; excluded: number[]; tickets: LotofacilWheelTicket[]; copied: boolean; tier: Tier };
 
-const tiers: Tier[] = [
-  { id: "18x13", pool: 18, guarantee: 13, games: 6, build: lotofacilWheel },
-  { id: "18x14", pool: 18, guarantee: 14, games: 24, build: lotofacilWheel14 },
-  { id: "20x12", pool: 20, guarantee: 12, games: 4, build: lotofacilWheel20 },
-  { id: "20x13", pool: 20, guarantee: 13, games: 34, build: lotofacilWheel20x13 },
-];
+const tier: Tier = { id: "18x13", pool: 18, guarantee: 13, games: 6, build: lotofacilWheel };
 
 export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] }) {
-  const [tier, setTier] = useState<Tier>(tiers[0]);
   const [excluded, setExcluded] = useState<number[]>([]);
   const [rounds, setRounds] = useState<Round[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -54,13 +47,6 @@ export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] })
   const excludedSet = new Set(excluded);
   const available = board.filter((number) => !excludedSet.has(number));
   const excludeCount = 25 - tier.pool;
-
-  function chooseTier(next: Tier) {
-    setTier(next);
-    // Ao trocar de 18 para 20 dezenas, sobram exclusões: mantém as primeiras.
-    setExcluded((current) => current.slice(0, 25 - next.pool));
-    setError(null);
-  }
 
   useEffect(() => {
     if (rounds.length) resultsRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
@@ -118,17 +104,10 @@ export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] })
     <div className={styles.layout}>
       <div className={styles.controls}>
         <section className={styles.card}>
-          <h2>01 · Escolha a redução</h2>
-          <ReductionOptions selected={tier.id} onSelect={(id) => chooseTier(tiers.find((entry) => entry.id === id) ?? tiers[0])} options={tiers.map((entry) => ({
-            id: entry.id,
-            title: `${entry.pool} dezenas · garante ${entry.guarantee} pontos`,
-            games: entry.games,
-            costCents: entry.games * TICKET_PRICE_CENTS,
-            foot: mostFrequentPrize(reductionGuarantees[`lotofacil:${entry.id}`] ?? [], { total: 25, drawSize: 15, pool: entry.pool }),
-          }))} />
+          <h2>01 · Fechamento recomendado</h2>
           <GuaranteeSummary pool={tier.pool} games={tier.games} costCents={tier.games * TICKET_PRICE_CENTS} ticketSize={15} drawSize={15} total={25}
             rows={reductionGuarantees[`lotofacil:${tier.id}`] ?? [{ inPool: 15, hits: tier.guarantee }]} hitName={(hits) => `${hits} pontos`}
-            note={`Você escolhe o grupo excluindo ${excludeCount} dezenas. Garantir 15 pontos exigiria todos os ${tier.pool === 20 ? "15.504" : "816"} jogos possíveis dentro do grupo (${currency.format((tier.pool === 20 ? 15504 : 816) * TICKET_PRICE_CENTS / 100)}). Garantias provadas por força bruta; fora da condição os jogos concorrem normalmente.`} />
+            note={`Você escolhe o grupo excluindo ${excludeCount} dezenas. Garantir 15 pontos exigiria todos os 816 jogos possíveis dentro do grupo (${currency.format(816 * TICKET_PRICE_CENTS / 100)}). Garantias provadas por força bruta; fora da condição os jogos concorrem normalmente.`} />
         </section>
         <section className={styles.card}>
           <h2>{rounds.length ? `Redução ${rounds.length + 1} · escolha ${excludeCount} dezenas` : `02 · Escolha ${excludeCount} dezenas para excluir`}</h2>

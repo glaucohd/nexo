@@ -63,3 +63,18 @@ test("guarantees at least 4 points on a 12-number pool, well under full coverage
   assert.ok(worstBestHits(wheel, pool) >= 4);
   assert.ok(wheel.length < 792, `expected fewer than the full 792 combinations, got ${wheel.length}`);
 });
+
+test("uses the verified compact covering sizes for every offered option", () => {
+  const expected = {
+    4: { 8: 5, 9: 6, 10: 10, 11: 17, 12: 24, 13: 30, 14: 44 },
+    5: { 8: 6, 9: 9, 10: 20, 11: 34, 12: 59, 13: 78 },
+  };
+  for (const [guarantee, sizes] of Object.entries(expected)) {
+    for (const [poolSize, games] of Object.entries(sizes)) {
+      const pool = Array.from({ length: Number(poolSize) }, (_, index) => index + 1);
+      const wheel = diaDeSorteWheel(pool, Number(guarantee));
+      assert.equal(wheel.length, games, `${guarantee} pontos com ${poolSize} dezenas`);
+      assert.ok(worstBestHits(wheel, pool) >= Number(guarantee));
+    }
+  }
+});

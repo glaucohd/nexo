@@ -8,6 +8,7 @@ export const ticketSchema = z.object({
   columns: z.array(z.array(z.number().int().min(0).max(9)).max(3)).length(7).optional(),
   month: z.number().int().min(1).max(12).optional(),
   trevos: z.array(z.number().int().min(1).max(6)).optional(),
+  team: z.string().trim().min(1).max(100).optional(),
 }).strict();
 
 export type ValidatedTicket = z.infer<typeof ticketSchema>;

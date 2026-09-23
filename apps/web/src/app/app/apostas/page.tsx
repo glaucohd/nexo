@@ -1,10 +1,9 @@
 import { asc, desc, eq, inArray, max } from "drizzle-orm";
-import { headers } from "next/headers";
 
 import { BetsBoard } from "@/components/bets-board";
 import { db } from "@/db";
 import { draws, lotteries, portfolios, tickets } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { getAppSession } from "@/lib/app-session";
 import { lotteryGames, uiSlugFor, type LotterySlug } from "@/lib/lottery-generator";
 import { conferPortfolio, drawsForContest } from "@/lib/saved-bets";
 import { portfolioCostCents, type SavedPortfolio } from "@/lib/saved-bets-groups";
@@ -12,8 +11,9 @@ import { portfolioCostCents, type SavedPortfolio } from "@/lib/saved-bets-groups
 export const dynamic = "force-dynamic";
 
 export default async function BetsPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return null;
+  const authResult = await getAppSession();
+  if (authResult.status !== "authenticated") return null;
+  const { session } = authResult;
 
   const rows = await db.select({
     id: portfolios.id, name: portfolios.name, mode: portfolios.mode, target: portfolios.targetContest,

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { HistoricalBacktest } from "@/components/historical-backtest";
-import { GuaranteeSummary, ReductionOptions, mostFrequentPrize } from "@/components/reduction-guide";
+import { GuaranteeSummary } from "@/components/reduction-guide";
 import { SaveBetsButton } from "@/components/save-bets-button";
 import { lotteryGames, standardTicketPriceCents, type DrawNumbers, type LotterySlug } from "@/lib/lottery-generator";
 import { cyclicWheel, type CyclicWheelTicket } from "@/lib/cyclic-wheel";
@@ -21,30 +21,21 @@ type Preset = { id: string; label: string; poolSize: number; groups: number[]; g
 const presetsBySlug: Partial<Record<LotterySlug, Preset[]>> = {
   "mega-sena": [
     { id: "quina8", label: "8 dezenas · 4 jogos · garante quina", poolSize: 8, groups: [4, 4], games: 4, guarantee: 5 },
-    { id: "quadra9", label: "9 dezenas · 3 jogos · garante quadra", poolSize: 9, groups: [3, 3, 3], games: 3, guarantee: 4 },
-    { id: "sena7", label: "7 dezenas · 7 jogos · garante a sena", poolSize: 7, groups: [7], games: 7, guarantee: 6 },
   ],
   quina: [
     { id: "quadra7", label: "7 dezenas · 4 jogos · garante quadra", poolSize: 7, groups: [4, 3], games: 4, guarantee: 4 },
-    { id: "terno8", label: "8 dezenas · 3 jogos · garante terno", poolSize: 8, groups: [3, 3, 2], games: 3, guarantee: 3 },
-    { id: "quina6", label: "6 dezenas · 6 jogos · garante a quina", poolSize: 6, groups: [6], games: 6, guarantee: 5 },
   ],
   // A Dupla Sena sorteia 6 dezenas como a Mega-Sena, então o mesmo fechamento
   // vale — e cada jogo concorre nos dois sorteios do concurso.
   "dupla-sena": [
     { id: "quina8", label: "8 dezenas · 4 jogos · garante 5 acertos", poolSize: 8, groups: [4, 4], games: 4, guarantee: 5 },
-    { id: "quadra9", label: "9 dezenas · 3 jogos · garante quadra", poolSize: 9, groups: [3, 3, 3], games: 3, guarantee: 4 },
-    { id: "sena7", label: "7 dezenas · 7 jogos · garante a sena", poolSize: 7, groups: [7], games: 7, guarantee: 6 },
   ],
   // A aposta da Timemania tem 10 dezenas e o sorteio só 7, então o jogo já
   // cobre boa parte do pool — dá para garantir muito ponto com poucos jogos.
   timemania: [
     // 10 pares: cada jogo leva uma dezena de cada par, então as sorteadas que
     // caem no pool se dividem entre os 2 jogos e um deles fica com a metade.
-    { id: "quatro20", label: "20 dezenas · 2 jogos · garante 4 acertos", poolSize: 20, groups: [2, 2, 2, 2, 2, 2, 2, 2, 2, 2], games: 2, guarantee: 4 },
     { id: "cinco15", label: "15 dezenas · 3 jogos · garante 5 acertos", poolSize: 15, groups: [3, 3, 3, 3, 3], games: 3, guarantee: 5 },
-    { id: "seis13", label: "13 dezenas · 5 jogos · garante 6 acertos", poolSize: 13, groups: [5, 4, 4], games: 5, guarantee: 6 },
-    { id: "sete11", label: "11 dezenas · 11 jogos · garante os 7 acertos", poolSize: 11, groups: [11], games: 11, guarantee: 7 },
   ],
 };
 
@@ -64,7 +55,7 @@ function shuffled<T>(values: readonly T[]) {
   return result;
 }
 
-type Round = { id: number; pool: number[]; preset: Preset; tickets: CyclicWheelTicket[]; copied: boolean };
+type Round = { id: number; pool: number[]; team?: string; preset: Preset; tickets: CyclicWheelTicket[]; copied: boolean };
 
 export function NumberWheelGenerator({ slug, history }: { slug: "mega-sena" | "quina" | "dupla-sena" | "timemania"; history: DrawNumbers[] }) {
   const game = lotteryGames[slug];
@@ -72,9 +63,9 @@ export function NumberWheelGenerator({ slug, history }: { slug: "mega-sena" | "q
   const draws = slug === "dupla-sena" ? 2 : 1;
   const presets = presetsBySlug[slug] ?? [];
   const board = Array.from({ length: game.total }, (_, index) => index + game.start);
-  const [presetId, setPresetId] = useState(presets[0].id);
-  const preset = presets.find((entry) => entry.id === presetId) ?? presets[0];
+  const preset = presets[0];
   const [pool, setPool] = useState<number[]>([]);
+  const [team, setTeam] = useState("");
   const [rounds, setRounds] = useState<Round[]>([]);
   const [error, setError] = useState<string | null>(null);
   const resultsRef = useRef<HTMLElement>(null);
@@ -84,12 +75,6 @@ export function NumberWheelGenerator({ slug, history }: { slug: "mega-sena" | "q
   useEffect(() => {
     if (rounds.length) resultsRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
   }, [rounds.length]);
-
-  function choosePreset(next: Preset) {
-    setPresetId(next.id);
-    setPool([]);
-    setError(null);
-  }
 
   function toggle(number: number) {
     if (poolSet.has(number)) { setPool((current) => current.filter((entry) => entry !== number)); setError(null); return; }
@@ -113,8 +98,9 @@ export function NumberWheelGenerator({ slug, history }: { slug: "mega-sena" | "q
 
   function generate() {
     try {
+      if (slug === "timemania" && !team.trim()) { setError("Informe o Time do Coração antes de gerar."); return; }
       const tickets = cyclicWheel(pool, preset.groups);
-      setRounds((current) => [{ id: Date.now(), pool: [...pool].sort((a, b) => a - b), preset, tickets, copied: false }, ...current]);
+      setRounds((current) => [{ id: Date.now(), pool: [...pool].sort((a, b) => a - b), ...(slug === "timemania" ? { team: team.trim() } : {}), preset, tickets, copied: false }, ...current]);
       setPool([]);
       setError(null);
     } catch (cause) {
@@ -129,7 +115,7 @@ export function NumberWheelGenerator({ slug, history }: { slug: "mega-sena" | "q
   async function copyRound(id: number) {
     const round = rounds.find((entry) => entry.id === id);
     if (!round) return;
-    const content = round.tickets.map((ticket, index) => `Jogo ${index + 1}: ${ticket.numbers.map(pad).join(" ")}`).join("\n");
+    const content = round.tickets.map((ticket, index) => `Jogo ${index + 1}: ${ticket.numbers.map(pad).join(" ")}${round.team ? ` | Time do Coração: ${round.team}` : ""}`).join("\n");
     try {
       await navigator.clipboard.writeText(content);
       setRounds((current) => current.map((entry) => entry.id === id ? { ...entry, copied: true } : entry));
@@ -144,14 +130,7 @@ export function NumberWheelGenerator({ slug, history }: { slug: "mega-sena" | "q
     <div className={styles.layout}>
       <div className={styles.controls}>
         <section className={styles.card}>
-          <h2>01 · Escolha a redução</h2>
-          <ReductionOptions selected={preset.id} onSelect={(id) => choosePreset(presets.find((entry) => entry.id === id) ?? presets[0])} options={presets.map((entry) => ({
-            id: entry.id,
-            title: `${entry.poolSize} dezenas · garante ${hitName(entry.guarantee)}`,
-            games: entry.games,
-            costCents: entry.games * ticketPrice,
-            foot: mostFrequentPrize(reductionGuarantees[`${slug}:${entry.id}`] ?? [], { total: game.total, drawSize: game.drawSize, pool: entry.poolSize, draws }),
-          }))} />
+          <h2>01 · Fechamento recomendado</h2>
           <GuaranteeSummary pool={preset.poolSize} games={preset.games} costCents={preset.games * ticketPrice} ticketSize={game.min} drawSize={game.drawSize} total={game.total} draws={draws}
             rows={reductionGuarantees[`${slug}:${preset.id}`] ?? [{ inPool: game.drawSize, hits: preset.guarantee }]} hitName={hitName}
             note={slug === "dupla-sena" ? "Cada jogo concorre nos dois sorteios do concurso pelo mesmo preço; basta um deles cumprir a condição. Garantia provada por força bruta; fora da condição os jogos concorrem normalmente." : undefined} />
@@ -166,30 +145,37 @@ export function NumberWheelGenerator({ slug, history }: { slug: "mega-sena" | "q
           </div>
           <div className={styles.board} style={{ "--columns": game.columns } as CSSProperties}>{board.map((number) => <button type="button" key={number} aria-pressed={poolSet.has(number)} className={poolSet.has(number) ? styles.selected : ""} onClick={() => toggle(number)}>{pad(number)}</button>)}</div>
         </section>
-        <button className={styles.generate} type="button" disabled={pool.length !== preset.poolSize} onClick={generate}>Gerar os {preset.games} jogos ↗</button>
+        {slug === "timemania" && <section className={styles.card}>
+          <h2>03 · Escolha o Time do Coração</h2>
+          <p>Digite o nome como aparece no volante oficial. Ele será salvo e conferido separadamente das dezenas.</p>
+          <label className={styles.field}>Time do Coração
+            <input value={team} maxLength={100} placeholder="Ex.: SANTOS /SP" onChange={(event) => { setTeam(event.target.value); setError(null); }} />
+          </label>
+        </section>}
+        <button className={styles.generate} type="button" disabled={pool.length !== preset.poolSize || slug === "timemania" && !team.trim()} onClick={generate}>Gerar os {preset.games} jogos ↗</button>
         <p className={styles.priceNote}>Custo estimado: <strong>{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(preset.games * ticketPrice / 100)}</strong> ({preset.games} × aposta simples de {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(ticketPrice / 100)}). Confira o valor atualizado na CAIXA.</p>
         {error && <p role="alert" className={styles.error}>{error}</p>}
       </div>
       <aside className={styles.preview}>
         <span className="eyebrow">Pool atual</span>
         <h2>{pool.length} de {preset.poolSize}</h2>
-        <p>{pool.length === preset.poolSize ? "Pronto para gerar." : `Faltam ${preset.poolSize - pool.length} dezenas.`}</p>
+        <p>{pool.length === preset.poolSize ? "Dezenas prontas." : `Faltam ${preset.poolSize - pool.length} dezenas.`} {slug === "timemania" ? team.trim() ? "Time do Coração pronto." : "Falta o Time do Coração." : ""}</p>
         {rounds.length > 0 && <p>{rounds.length} {rounds.length === 1 ? "redução gerada" : "reduções geradas"} nesta sessão.</p>}
       </aside>
     </div>
     {rounds.length > 0 && <section ref={resultsRef} className={styles.roundList}>
       {rounds.map((round, position) => <section className={styles.results} key={round.id}>
         <div className={styles.resultHeading}>
-          <div><span className="eyebrow">Redução {rounds.length - position}</span><h2>{round.tickets.length} jogos · garante {round.preset.guarantee} pontos · pool {round.pool.map(pad).join(", ")}</h2></div>
+          <div><span className="eyebrow">Redução {rounds.length - position}</span><h2>{round.tickets.length} jogos · garante {round.preset.guarantee} pontos{round.team ? ` · ${round.team}` : ""} · pool {round.pool.map(pad).join(", ")}</h2></div>
           <div className={styles.roundActions}>
-            <SaveBetsButton slug={slug} strategy={`Redução ${round.preset.poolSize} dezenas · ${round.preset.games} jogos · garante ${hitName(round.preset.guarantee)}`} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers }))} name={`${game.name} · redução ${round.preset.poolSize} dezenas · garante ${round.preset.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
+            <SaveBetsButton slug={slug} strategy={`Redução ${round.preset.poolSize} dezenas · ${round.preset.games} jogos · garante ${hitName(round.preset.guarantee)}${round.team ? ` · ${round.team}` : ""}`} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers, ...(round.team ? { team: round.team } : {}) }))} name={`${game.name} · redução ${round.preset.poolSize} dezenas · garante ${round.preset.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
             <button type="button" className={styles.remove} onClick={() => removeRound(round.id)}>Remover</button>
           </div>
         </div>
-        <HistoricalBacktest key={JSON.stringify(round.tickets)} slug={slug} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers }))} availableContests={history.length} pricePerTicketCents={ticketPrice} />
+        <HistoricalBacktest key={`${JSON.stringify(round.tickets)}-${round.team ?? ""}`} slug={slug} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers, ...(round.team ? { team: round.team } : {}) }))} availableContests={history.length} pricePerTicketCents={ticketPrice} />
         <div className={styles.ticketGrid}>{round.tickets.map((ticket, index) => <article className={styles.ticket} key={index}>
           <div><strong>Jogo {index + 1}</strong></div>
-          <p>{ticket.numbers.map(pad).join(" · ")}</p>
+          <p>{ticket.numbers.map(pad).join(" · ")}{round.team && <><br />Time: {round.team}</>}</p>
         </article>)}</div>
       </section>)}
     </section>}

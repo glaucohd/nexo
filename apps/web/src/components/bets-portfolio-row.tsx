@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { formatDate, formatMoney, padNumber, pluralize } from "@/lib/format";
-import { portfolioBestHits, type SavedPortfolio } from "@/lib/saved-bets-groups";
+import { portfolioBestHits, reductionPoolPerformance, type SavedPortfolio } from "@/lib/saved-bets-groups";
 
 import styles from "./bets-board.module.css";
 
@@ -35,6 +35,8 @@ export function PortfolioRow({ portfolio }: { portfolio: SavedPortfolio }) {
   const { result } = portfolio;
   const drawnNumbers = new Set(portfolio.draws.flatMap((draw) => draw.numbers));
   const bestHits = portfolioBestHits(portfolio);
+  const poolPerformance = reductionPoolPerformance(portfolio);
+  const poolDrawnNumbers = new Set(poolPerformance ? portfolio.draws[poolPerformance.drawIndex]?.numbers ?? [] : []);
   const won = (result?.totalCents ?? 0) > 0;
 
   async function remove() {
@@ -60,12 +62,33 @@ export function PortfolioRow({ portfolio }: { portfolio: SavedPortfolio }) {
 
     {open && <div className={styles.rowBody}>
       <p className={styles.strategy}><span>Estratégia</span>{strategyLabel(portfolio)}</p>
+      {poolPerformance && <section className={styles.poolLine}>
+        <div className={styles.poolLineHead}>
+          <div><strong>Grupo escolhido</strong><span>{poolPerformance.numbers.length} dezenas</span></div>
+          <p><b>{poolPerformance.hits}</b> de {poolPerformance.drawSize} sorteadas no grupo</p>
+        </div>
+        <div className={`${styles.balls} ${styles.poolBalls}`} aria-label={`Grupo escolhido: ${poolPerformance.numbers.join(", ")}. ${poolPerformance.hits} dezenas sorteadas destacadas.`}>
+          {poolPerformance.numbers.map((number) => <b key={number} className={poolDrawnNumbers.has(number) ? styles.hit : ""}>{padNumber(number)}</b>)}
+        </div>
+        <div className={styles.poolLegend}>
+          <span><i aria-hidden="true" />Dezenas sorteadas</span>
+          {poolPerformance.missedDrawNumbers.length > 0
+            ? <span>Fora do grupo: <b>{poolPerformance.missedDrawNumbers.map(padNumber).join(" · ")}</b></span>
+            : <strong>Todas as sorteadas estavam no grupo</strong>}
+          {portfolio.draws.length > 1 && <small>{poolPerformance.drawIndex + 1}º sorteio</small>}
+        </div>
+      </section>}
+      <div className={styles.ticketHeading}>
+        <div><span>Minhas apostas</span><strong>{pluralize(portfolio.tickets.length, "jogo", "jogos")}</strong></div>
+        {result && <p>Melhor resultado: <b>{pluralize(bestHits, "acerto", "acertos")}</b></p>}
+      </div>
       <ol className={styles.tickets}>
         {portfolio.tickets.map((ticket, index) => {
           const outcome = result?.tickets.find((entry) => entry.position === index + 1);
           const columns = Array.isArray(ticket.extras?.columns) ? ticket.extras.columns as number[][] : null;
           const trevos = Array.isArray(ticket.extras?.trevos) ? ticket.extras.trevos as number[] : null;
           const month = typeof ticket.extras?.month === "number" ? ticket.extras.month : null;
+          const team = typeof ticket.extras?.team === "string" ? ticket.extras.team : null;
           return <li key={index} className={outcome && outcome.prizeDraws > 0 ? styles.winner : ""}>
             <span className={styles.ticketLabel}>Jogo {index + 1}</span>
             <div className={styles.balls}>
@@ -74,6 +97,7 @@ export function PortfolioRow({ portfolio }: { portfolio: SavedPortfolio }) {
                 : ticket.numbers.map((number) => <b key={number} className={drawnNumbers.has(number) ? styles.hit : ""}>{padNumber(number)}</b>)}
               {trevos && <span className={styles.extra}>trevos {trevos.join(" · ")}</span>}
               {month && <span className={styles.extra}>{months[month - 1]}</span>}
+              {team && <span className={styles.extra}>Time: {team}</span>}
             </div>
             {outcome && <span className={styles.score}><b>{outcome.hits}</b> {outcome.hits === 1 ? "acerto" : "acertos"}{outcome.prizeCents > 0 ? <em>{formatMoney(outcome.prizeCents)}</em> : null}</span>}
           </li>;

@@ -1,7 +1,7 @@
 import { lotteryGames, type LotterySlug } from "./lottery-generator.ts";
 import { superSeteHitDistribution, validSuperSeteDraw } from "./super-sete.ts";
 
-export type BacktestTicket = { numbers: number[]; month?: number; trevos?: number[]; columns?: number[][] };
+export type BacktestTicket = { numbers: number[]; month?: number; trevos?: number[]; team?: string; columns?: number[][] };
 export type BacktestPrize = { label: string; hits: number; extraHits: number | null; winners: number; prize: number | null };
 export type BacktestDraw = { contest: number; date: string; numbers: number[]; extras: Record<string, unknown> | null; prizes: BacktestPrize[] };
 export type BacktestTicketResult = {
@@ -64,6 +64,10 @@ function drawnTrevos(extras: Record<string, unknown> | null) {
     ? extras.trevos as number[] : null;
 }
 
+function normalizedTeam(value: unknown) {
+  return typeof value === "string" ? value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase() : "";
+}
+
 function isVerifiable(slug: LotterySlug, draw: BacktestDraw) {
   if (slug === "super-sete") return validSuperSeteDraw(draw.numbers);
   return slug === "dia-de-sorte" ? (drawnMonth(draw.extras) ?? 0) > 0
@@ -72,10 +76,6 @@ function isVerifiable(slug: LotterySlug, draw: BacktestDraw) {
 }
 
 function prizeApplies(slug: LotterySlug, prize: BacktestPrize, trevoHits: number) {
-  // O prêmio "Time do Coração" da Timemania não depende das dezenas, e o
-  // gerador ainda não escolhe um time — não há como avaliá-lo, então ele
-  // fica de fora da conferência (nunca soma prêmio, nunca soma "sem valor").
-  if (slug === "timemania") return !prize.label.toLocaleLowerCase("pt-BR").includes("time do coração");
   if (slug !== "mais-milionaria") return true;
   if (prize.extraHits === 2) return trevoHits === 2;
   if (prize.extraHits === 1) return trevoHits === 1;
@@ -91,7 +91,10 @@ function awardForDraw(slug: LotterySlug, ticket: BacktestTicket, draw: BacktestD
   let prizeUnits = 0;
   for (const prize of draw.prizes) {
     const monthTier = slug === "dia-de-sorte" && prize.label.toLocaleLowerCase("pt-BR").includes("mês da sorte");
-    const units = monthTier
+    const teamTier = slug === "timemania" && prize.label.toLocaleLowerCase("pt-BR").includes("time do coração");
+    const units = teamTier
+      ? (normalizedTeam(ticket.team) !== "" && normalizedTeam(ticket.team) === normalizedTeam(draw.extras?.timeCoracao) ? 1 : 0)
+      : monthTier
       ? (ticket.month === drawnMonth(draw.extras) ? combinations(ticket.numbers.length, baseSize) : 0)
       : prizeApplies(slug, prize, trevoHits)
         ? combinations(hits, prize.hits) * combinations(ticket.numbers.length - hits, baseSize - prize.hits)

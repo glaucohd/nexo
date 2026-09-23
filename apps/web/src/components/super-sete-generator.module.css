@@ -117,11 +117,6 @@
   appearance: none;
   cursor: pointer;
 }
-.modes { display: flex; flex-wrap: wrap; gap: 6px; }
-.modes button { min-height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); background: var(--surface); font: inherit; font-size: .8rem; font-weight: 550; cursor: pointer; }
-.modes button:hover:not(:disabled) { border-color: var(--line-strong); }
-.modes button[aria-pressed="true"] { border-color: transparent; color: #fff; background: var(--generator-accent); }
-.modes button:disabled { opacity: .45; cursor: not-allowed; }
 .board { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; width: min(100%, 380px); margin: 14px auto 4px; }
 .boardColumn { display: grid; gap: 3px; min-width: 0; }
 .boardColumn strong { padding: 4px 0; color: var(--gen-accent); font-family: var(--font-mono); font-size: .66rem; font-weight: 600; text-align: center; }

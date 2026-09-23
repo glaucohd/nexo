@@ -10,6 +10,7 @@ import { generateLotteryTickets, lotteryGames, standardTicketCost, standardTicke
 import { generateMilionariaTickets } from "./milionaria-generator.ts";
 import { lotomaniaWheel70 } from "./partition-wheels.ts";
 import { generateSuperSeteTickets, superSeteCombinations } from "./super-sete.ts";
+import { balancedTrevoPairs } from "./trevo-coverage.ts";
 
 export type LabStrategy = {
   id: string;
@@ -102,15 +103,15 @@ function reductionStrategies(slug: LotterySlug): LabStrategy[] {
     case "timemania":
       return [cyclic("quatro20", "Redução 20 dezenas · 2 jogos", 20, Array(10).fill(2))];
     case "dia-de-sorte":
-      return [{ id: "reducao:any4-10", label: "Redução 10 dezenas · 12 jogos", kind: "reducao", detail: "garante 4 se 4 caírem no grupo", build: (_h, random) => diaDeSorteWheel(pool(10, random), 4) }];
+      return [{ id: "reducao:any4-10", label: "Redução 10 dezenas · 10 jogos", kind: "reducao", detail: "garante 4 se 4 caírem no grupo", build: (_h, random) => diaDeSorteWheel(pool(10, random), 4).map((ticket) => ({ ...ticket, month: Math.floor(random() * 12) + 1 })) }];
     case "lotomania":
       return [{ id: "reducao:70", label: "Redução 70 dezenas · 21 jogos", kind: "reducao", detail: "garante 15 se as 20 caírem no grupo", build: (_h, random) => lotomaniaWheel70(pool(70, random)) }];
     case "mais-milionaria":
       return [{
         id: "reducao:quina8", label: "Redução 8 dezenas · 4 jogos", kind: "reducao", detail: "8 dezenas e 2 trevos sorteados por concurso",
         build: (_h, random) => {
-          const trevos = randomPool(2, 6, 1, random);
-          return cyclicWheel(pool(8, random), [4, 4]).map((ticket) => ({ numbers: ticket.numbers, trevos }));
+          const trevoPairs = balancedTrevoPairs(4);
+          return cyclicWheel(pool(8, random), [4, 4]).map((ticket, index) => ({ numbers: ticket.numbers, trevos: trevoPairs[index] }));
         },
       }];
     default:

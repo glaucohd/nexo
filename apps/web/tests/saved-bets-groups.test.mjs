@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { groupByContest, portfolioBestHits } from "../src/lib/saved-bets-groups.ts";
+import { groupByContest, portfolioBestHits, reductionPoolPerformance } from "../src/lib/saved-bets-groups.ts";
 
 const draw = { date: "2026-09-18", numbers: [1, 2, 3], extras: null };
 function portfolio(id, slug, target, overrides = {}) {
@@ -53,4 +53,35 @@ test("o concurso é premiado quando algum jogo ganhou, mesmo sem o valor do prê
   ]);
   const prized = (slug) => groups.find((group) => group.slug === slug).prized;
   assert.deepEqual([prized("lotofacil"), prized("quina"), prized("mega-sena"), prized("lotomania")], [false, true, true, false]);
+});
+
+test("mede o resultado do grupo-base de uma redução pela união dos jogos", () => {
+  const reduction = portfolio("a", "lotofacil", 3783, {
+    mode: "Redução 18 dezenas · 6 jogos",
+    tickets: [
+      { numbers: [1, 2, 3, 4], extras: null },
+      { numbers: [3, 4, 5, 6], extras: null },
+    ],
+    draws: [{ date: "2026-09-18", numbers: [1, 2, 5, 9], extras: null }],
+  });
+  assert.deepEqual(reductionPoolPerformance(reduction), {
+    numbers: [1, 2, 3, 4, 5, 6], hits: 3, drawSize: 4, drawIndex: 0, missedDrawNumbers: [9],
+  });
+});
+
+test("em concurso com dois sorteios, usa o melhor sem juntar os resultados", () => {
+  const reduction = portfolio("a", "dupla-sena", 1, {
+    name: "Dupla Sena · reducao 8 dezenas",
+    tickets: [{ numbers: [1, 2, 3, 4], extras: null }, { numbers: [5, 6, 7, 8], extras: null }],
+    draws: [
+      { date: "2026-09-18", numbers: [1, 2, 20], extras: null },
+      { date: "2026-09-18", numbers: [5, 6, 7], extras: null },
+    ],
+  });
+  assert.equal(reductionPoolPerformance(reduction).hits, 3);
+  assert.equal(reductionPoolPerformance(reduction).drawIndex, 1);
+});
+
+test("não mostra desempenho de grupo em carteiras do gerador", () => {
+  assert.equal(reductionPoolPerformance(portfolio("a", "lotofacil", 3783, won(2, 0))), null);
 });

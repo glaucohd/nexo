@@ -96,15 +96,24 @@ test("historical results rank best points first, then average, preserving game n
   assert.deepEqual(tickets.map((ticket) => ticket.position), [1, 2, 3]);
 });
 
-test("Timemania scores by hits on a 10-number bet and ignores the team prize", () => {
+test("Timemania scores by hits on a 10-number bet and skips the team prize when no team was saved", () => {
   const ticket = { numbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] };
   const report = backtestTickets("timemania", [ticket], [
     draw(100, [1, 2, 3, 4, 5, 6, 7], [prize(7, 1000), prize(3, 5), { ...prize(0, 8.5), label: "Time do Coração" }], { timeCoracao: "FLAMENGO /RJ" }),
   ]);
   // 7 das 10 dezenas do bilhete estão no sorteio: acerto máximo é 7.
   assert.deepEqual(report.distribution, [{ hits: 7, contests: 1 }]);
-  // Só a faixa de 7 acertos paga; "Time do Coração" fica de fora da conta.
+  // Só a faixa de 7 acertos paga; sem um time salvo não há como conferir a faixa extra.
   assert.equal(report.knownGrossCents, 100000);
+});
+
+test("Timemania checks a saved Time do Coração independently of the numbers", () => {
+  const ticket = { numbers: [1, 2, 3, 50, 51, 52, 53, 54, 55, 56], team: "São Paulo /SP" };
+  const report = backtestTickets("timemania", [ticket], [
+    draw(102, [10, 11, 12, 20, 21, 22, 23], [{ ...prize(0, 8.5), label: "Time do Coração" }], { timeCoracao: "SAO PAULO/SP" }),
+  ]);
+  assert.equal(report.knownGrossCents, 850);
+  assert.equal(report.prizeDraws, 1);
 });
 
 test("Timemania counts partial hits without inflating with the team tier", () => {

@@ -60,6 +60,39 @@ export const portfolioCostCents = (slug: LotterySlug, tickets: SavedTicket[]) =>
 
 export const portfolioBestHits = (portfolio: SavedPortfolio) => Math.max(0, ...(portfolio.result?.tickets.map((ticket) => ticket.hits) ?? []));
 
+export type ReductionPoolPerformance = {
+  numbers: number[];
+  hits: number;
+  drawSize: number;
+  drawIndex: number;
+  missedDrawNumbers: number[];
+};
+
+function isReduction(portfolio: SavedPortfolio) {
+  const description = `${portfolio.mode} ${portfolio.name}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return description.includes("reducao");
+}
+
+/**
+ * Recupera o grupo-base de um fechamento pela união das dezenas dos jogos e
+ * mede quantas dezenas de um único sorteio caíram nele. Na Dupla Sena, usa o
+ * melhor dos dois sorteios, sem somar dezenas de resultados diferentes.
+ */
+export function reductionPoolPerformance(portfolio: SavedPortfolio): ReductionPoolPerformance | null {
+  if (!isReduction(portfolio) || portfolio.draws.length === 0) return null;
+  const numbers = [...new Set(portfolio.tickets.flatMap((ticket) => ticket.numbers))].sort((a, b) => a - b);
+  if (numbers.length === 0) return null;
+  const pool = new Set(numbers);
+  const performances = portfolio.draws.map((draw, drawIndex) => ({
+    numbers,
+    hits: draw.numbers.filter((number) => pool.has(number)).length,
+    drawSize: draw.numbers.length,
+    drawIndex,
+    missedDrawNumbers: draw.numbers.filter((number) => !pool.has(number)).sort((a, b) => a - b),
+  }));
+  return performances.reduce((best, current) => current.hits > best.hits ? current : best);
+}
+
 /**
  * Agrupa as carteiras por concurso (modalidade + concurso-alvo). Sorteados: do mais recente para o mais antigo;
  * aguardando: do mais próximo para o mais distante. Dentro do grupo, a carteira mais nova primeiro.

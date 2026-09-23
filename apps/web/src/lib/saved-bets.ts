@@ -34,11 +34,12 @@ export async function drawsForContest(slug: LotterySlug, contest: number): Promi
   }));
 }
 
-// Os extras (mês, trevos, colunas) vão para a coluna jsonb `extras`.
+// Os extras (mês, trevos, time e colunas) vão para a coluna jsonb `extras`.
 export function ticketExtras(ticket: BacktestTicket) {
   const extras: Record<string, unknown> = {};
   if (ticket.month !== undefined) extras.month = ticket.month;
   if (ticket.trevos !== undefined) extras.trevos = ticket.trevos;
+  if (ticket.team !== undefined) extras.team = ticket.team;
   if (ticket.columns !== undefined) extras.columns = ticket.columns;
   return Object.keys(extras).length ? extras : null;
 }
@@ -47,6 +48,7 @@ export function ticketFromRow(numbers: number[], extras: Record<string, unknown>
   const ticket: BacktestTicket = { numbers };
   if (typeof extras?.month === "number") ticket.month = extras.month;
   if (Array.isArray(extras?.trevos)) ticket.trevos = extras.trevos as number[];
+  if (typeof extras?.team === "string") ticket.team = extras.team;
   if (Array.isArray(extras?.columns)) ticket.columns = extras.columns as number[][];
   return ticket;
 }

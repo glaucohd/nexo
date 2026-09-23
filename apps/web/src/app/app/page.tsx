@@ -1,11 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { desc, eq } from "drizzle-orm";
-import { headers } from "next/headers";
 
 import { db } from "@/db";
 import { draws, lotteries, portfolios } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { getAppSession } from "@/lib/app-session";
 import { uiSlugFor } from "@/lib/lottery-generator";
 
 const formatDate = (date: Date) => date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
@@ -23,7 +22,9 @@ const games = [
 ];
 
 export default async function DashboardPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const authResult = await getAppSession();
+  if (authResult.status !== "authenticated") return null;
+  const { session } = authResult;
   // Último concurso de cada loteria (na Dupla Sena, o maior entre os dois sorteios).
   const latestRows = await db.selectDistinctOn([lotteries.slug], { source: lotteries.slug, contest: draws.contestNumber, date: draws.drawnAt })
     .from(draws).innerJoin(lotteries, eq(draws.lotteryId, lotteries.id))
