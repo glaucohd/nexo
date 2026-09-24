@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { HistoricalBacktest } from "@/components/historical-backtest";
 import { GuaranteeSummary } from "@/components/reduction-guide";
 import { SaveBetsButton } from "@/components/save-bets-button";
-import type { DrawNumbers } from "@/lib/lottery-generator";
+import { coordinatedSelections } from "@/lib/coordinated-pools";
+import { buildProfile } from "@/lib/hot-cold-profile";
+import { lotteryGames, type DrawNumbers } from "@/lib/lottery-generator";
 import { diaDeSorteWheel, type DiaDeSorteWheelTicket } from "@/lib/dia-de-sorte-wheel";
 
 import { reductionGuarantees } from "@/lib/reduction-stats";
@@ -36,7 +38,7 @@ function shuffled<T>(values: readonly T[]) {
 }
 
 type Mode = { id: "any5"; guarantee: 5; title: string };
-type Round = { id: number; pool: number[]; month: number; mode: Mode; tickets: DiaDeSorteWheelTicket[]; copied: boolean };
+type Round = { id: number; pool: number[]; month: number; mode: Mode; tickets: DiaDeSorteWheelTicket[]; copied: boolean; coordinated?: boolean };
 
 const mode: Mode = { id: "any5", guarantee: 5, title: "Garantir 5 pontos" };
 const option = { pool: 8, games: 6 } as const;
@@ -89,6 +91,18 @@ export function DiaDeSorteWheelGenerator({ history }: { history: DrawNumbers[] }
     } finally { setBusy(false); }
   }
 
+  function generateCoordinated() {
+    const profile = buildProfile(history, lotteryGames["dia-de-sorte"], 30);
+    const pools = coordinatedSelections({ universe: board, size: poolSize, count: 3, strata: [profile.hot, profile.neutral, profile.cold] });
+    const now = Date.now();
+    setRounds(pools.map((roundPool, index) => {
+      const roundMonth = (month + index - 1) % 12 + 1;
+      return { id: now + index, pool: roundPool, month: roundMonth, mode, tickets: diaDeSorteWheel(roundPool, mode.guarantee), copied: false, coordinated: true };
+    }));
+    setPool([]);
+    setError(null);
+  }
+
   function removeRound(id: number) {
     setRounds((current) => current.filter((round) => round.id !== id));
   }
@@ -114,9 +128,11 @@ export function DiaDeSorteWheelGenerator({ history }: { history: DrawNumbers[] }
           <h2>01 · Fechamento recomendado</h2>
           <GuaranteeSummary pool={option.pool} games={option.games} costCents={option.games * TICKET_PRICE_CENTS} ticketSize={7} drawSize={7} total={31}
             rows={guaranteeRows(mode, option.pool)} hitName={(hits) => `${hits} pontos`} />
+          <button className={styles.generate} type="button" onClick={generateCoordinated}>Preparar 3 reduções coordenadas · 18 jogos ↗</button>
+          <p>Os três grupos cobrem 24 dezenas diferentes, equilibradas entre quentes, neutras e frias. Os meses também são alternados a partir do mês escolhido. Custo total estimado: <strong>{currency.format(3 * option.games * TICKET_PRICE_CENTS / 100)}</strong>.</p>
         </section>
         <section className={styles.card}>
-          <h2>{rounds.length ? `Redução ${rounds.length + 1} · escolha ${poolSize} dezenas` : `02 · Escolha as ${poolSize} dezenas do grupo`}</h2>
+          <h2>{rounds.length ? `Nova redução manual · escolha ${poolSize} dezenas` : `02 · Escolha as ${poolSize} dezenas do grupo`}</h2>
           <p>{pool.length}/{poolSize} escolhidas. Clique nas dezenas pra montar manualmente, ou use o preenchimento automático.</p>
           <div className={styles.autoFill}>
             <button type="button" disabled={!history.length} onClick={fillFromLastDraw}>Sortear com base no último concurso{history[0] ? ` (#${history[0].contest})` : ""}</button>
@@ -147,9 +163,9 @@ export function DiaDeSorteWheelGenerator({ history }: { history: DrawNumbers[] }
     {rounds.length > 0 && <section ref={resultsRef} className={styles.roundList}>
       {rounds.map((round, position) => <section className={styles.results} key={round.id}>
         <div className={styles.resultHeading}>
-          <div><span className="eyebrow">Redução {rounds.length - position}</span><h2>{round.tickets.length} jogos · garante {round.mode.guarantee} pontos se {round.mode.guarantee} caírem no grupo · {months[round.month - 1]}</h2></div>
+          <div><span className="eyebrow">{round.coordinated ? `Carteira coordenada · grupo ${position + 1}` : `Redução ${rounds.length - position}`}</span><h2>{round.tickets.length} jogos · garante {round.mode.guarantee} pontos se {round.mode.guarantee} caírem no grupo · {months[round.month - 1]}</h2></div>
           <div className={styles.roundActions}>
-            <SaveBetsButton slug="dia-de-sorte" strategy={`Redução ${round.pool.length} dezenas · ${round.mode.title} · ${months[round.month - 1]}`} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers, month: round.month }))} name={`Dia de Sorte · redução ${round.pool.length} dezenas · garante ${round.mode.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
+            <SaveBetsButton slug="dia-de-sorte" strategy={`Redução ${round.pool.length} dezenas · ${round.mode.title}${round.coordinated ? " · carteira coordenada" : ""} · ${months[round.month - 1]}`} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers, month: round.month }))} name={`Dia de Sorte · redução ${round.pool.length} dezenas · garante ${round.mode.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
             <button type="button" className={styles.remove} onClick={() => removeRound(round.id)}>Remover</button>
           </div>
         </div>

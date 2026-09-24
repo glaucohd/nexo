@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { HistoricalBacktest } from "@/components/historical-backtest";
 import { GuaranteeSummary } from "@/components/reduction-guide";
 import { SaveBetsButton } from "@/components/save-bets-button";
-import type { DrawNumbers } from "@/lib/lottery-generator";
+import { coordinatedSelections } from "@/lib/coordinated-pools";
+import { buildProfile } from "@/lib/hot-cold-profile";
+import { lotteryGames, type DrawNumbers } from "@/lib/lottery-generator";
 import { lotofacilWheel, type LotofacilWheelTicket } from "@/lib/lotofacil-wheel";
 
 import { reductionGuarantees } from "@/lib/reduction-stats";
@@ -35,7 +37,7 @@ function shuffled<T>(values: readonly T[]) {
 }
 
 type Tier = { id: "18x13"; pool: 18; guarantee: number; games: number; build: (available: readonly number[]) => LotofacilWheelTicket[] };
-type Round = { id: number; excluded: number[]; tickets: LotofacilWheelTicket[]; copied: boolean; tier: Tier };
+type Round = { id: number; excluded: number[]; tickets: LotofacilWheelTicket[]; copied: boolean; tier: Tier; coordinated?: boolean };
 
 const tier: Tier = { id: "18x13", pool: 18, guarantee: 13, games: 6, build: lotofacilWheel };
 
@@ -82,6 +84,18 @@ export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] })
     }
   }
 
+  function generateCoordinated() {
+    const profile = buildProfile(history, lotteryGames.lotofacil, 30);
+    const exclusions = coordinatedSelections({ universe: board, size: excludeCount, count: 3, strata: [profile.hot, profile.neutral, profile.cold] });
+    const now = Date.now();
+    setRounds(exclusions.map((roundExcluded, index) => {
+      const excludedNumbers = [...roundExcluded].sort((a, b) => a - b);
+      return { id: now + index, excluded: excludedNumbers, tickets: tier.build(board.filter((number) => !excludedNumbers.includes(number))), copied: false, tier, coordinated: true };
+    }));
+    setExcluded([]);
+    setError(null);
+  }
+
   function removeRound(id: number) {
     setRounds((current) => current.filter((round) => round.id !== id));
   }
@@ -108,9 +122,11 @@ export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] })
           <GuaranteeSummary pool={tier.pool} games={tier.games} costCents={tier.games * TICKET_PRICE_CENTS} ticketSize={15} drawSize={15} total={25}
             rows={reductionGuarantees[`lotofacil:${tier.id}`] ?? [{ inPool: 15, hits: tier.guarantee }]} hitName={(hits) => `${hits} pontos`}
             note={`Você escolhe o grupo excluindo ${excludeCount} dezenas. Garantir 15 pontos exigiria todos os 816 jogos possíveis dentro do grupo (${currency.format(816 * TICKET_PRICE_CENTS / 100)}). Garantias provadas por força bruta; fora da condição os jogos concorrem normalmente.`} />
+          <button className={styles.generate} type="button" onClick={generateCoordinated}>Preparar 3 reduções coordenadas · 18 jogos ↗</button>
+          <p>Recomendado para jogar três grupos: as 21 exclusões não se repetem, e quentes, neutras e frias são distribuídas entre eles. Assim, nenhuma dezena fica fora de todas as reduções. Custo total estimado: <strong>{currency.format(3 * tier.games * TICKET_PRICE_CENTS / 100)}</strong>.</p>
         </section>
         <section className={styles.card}>
-          <h2>{rounds.length ? `Redução ${rounds.length + 1} · escolha ${excludeCount} dezenas` : `02 · Escolha ${excludeCount} dezenas para excluir`}</h2>
+          <h2>{rounds.length ? `Nova redução manual · escolha ${excludeCount} dezenas` : `02 · Ou escolha ${excludeCount} dezenas manualmente`}</h2>
           <p>{excluded.length}/{excludeCount} escolhidas. As demais {available.length} entram na redução. Clique nas dezenas pra montar manualmente, ou use o preenchimento automático.</p>
           <div className={styles.autoFill}>
             <button type="button" disabled={!history.length} onClick={fillFromLastDraw}>Sortear {excludeCount} dezenas do último concurso{history[0] ? ` (#${history[0].contest})` : ""}</button>
@@ -133,9 +149,9 @@ export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] })
     {rounds.length > 0 && <section ref={resultsRef} className={styles.roundList}>
       {rounds.map((round, position) => <section className={styles.results} key={round.id}>
         <div className={styles.resultHeading}>
-          <div><span className="eyebrow">Redução {rounds.length - position}</span><h2>{round.tickets.length} jogos · garante {round.tier.guarantee} pontos · excluiu {round.excluded.map(pad).join(", ")}</h2></div>
+          <div><span className="eyebrow">{round.coordinated ? `Carteira coordenada · grupo ${position + 1}` : `Redução ${rounds.length - position}`}</span><h2>{round.tickets.length} jogos · garante {round.tier.guarantee} pontos · excluiu {round.excluded.map(pad).join(", ")}</h2></div>
           <div className={styles.roundActions}>
-            <SaveBetsButton slug="lotofacil" strategy={`Redução ${round.tier.pool} dezenas · ${round.tier.games} jogos · garante ${round.tier.guarantee} pontos · excluiu ${round.excluded.map(pad).join(", ")}`} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers }))} name={`Lotofácil · redução ${round.tier.pool} dezenas · garante ${round.tier.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
+            <SaveBetsButton slug="lotofacil" strategy={`Redução ${round.tier.pool} dezenas · ${round.tier.games} jogos · garante ${round.tier.guarantee} pontos${round.coordinated ? " · carteira coordenada" : ""} · excluiu ${round.excluded.map(pad).join(", ")}`} tickets={round.tickets.map((ticket) => ({ numbers: ticket.numbers }))} name={`Lotofácil · redução ${round.tier.pool} dezenas · garante ${round.tier.guarantee}`} /><button type="button" onClick={() => copyRound(round.id)}>{round.copied ? "Copiado ✓" : "Copiar jogos"}</button>
             <button type="button" className={styles.remove} onClick={() => removeRound(round.id)}>Remover</button>
           </div>
         </div>
