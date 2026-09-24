@@ -290,9 +290,9 @@ test("each mirror pair has its own five fixed numbers and covers all 25", () => 
 });
 
 test("standardTicketCost scales with embedded simple bets, and Lotomania stays flat", () => {
-  assert.equal(standardTicketCost("lotofacil", 15, 1), 300);
-  assert.equal(standardTicketCost("lotofacil", 16, 1), 300 * lotofacilSimpleBetCount(16));
-  assert.equal(standardTicketCost("lotofacil", 15, 4), 300 * 4);
+  assert.equal(standardTicketCost("lotofacil", 15, 1), 350);
+  assert.equal(standardTicketCost("lotofacil", 16, 1), 350 * lotofacilSimpleBetCount(16));
+  assert.equal(standardTicketCost("lotofacil", 15, 4), 350 * 4);
   assert.equal(standardTicketCost("mega-sena", 6, 3), 600 * 3);
   assert.equal(standardTicketCost("mega-sena", 7, 1), 600 * 7);
   assert.equal(standardTicketCost("quina", 5, 2), 250 * 2);

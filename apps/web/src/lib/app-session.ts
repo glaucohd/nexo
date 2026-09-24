@@ -23,6 +23,32 @@ function errorCode(error: unknown) {
   return "SESSION_LOOKUP_FAILED";
 }
 
+function localDevelopmentSession(): NonNullable<Session> {
+  const now = new Date();
+  return {
+    session: {
+      id: "local-development-session",
+      token: "local-development-token",
+      userId: "local-development-user",
+      expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1_000),
+      createdAt: now,
+      updatedAt: now,
+      ipAddress: null,
+      userAgent: "Nexo local offline",
+    },
+    user: {
+      id: "local-development-user",
+      name: "Nexo local",
+      email: "local@nexo.test",
+      emailVerified: false,
+      image: null,
+      createdAt: now,
+      updatedAt: now,
+      role: "user",
+    },
+  } as NonNullable<Session>;
+}
+
 // Layout e páginas podem precisar da sessão no mesmo render. O cache do React
 // compartilha uma única consulta por requisição, e o retry absorve falhas curtas
 // de DNS/conexão do pool sem transformar a navegação em erro não tratado.
@@ -42,5 +68,9 @@ export const getAppSession = cache(async (): Promise<AppSessionResult> => {
 
   const code = errorCode(lastError);
   console.warn("Consulta de sessão indisponível após novas tentativas:", code);
+  // O modo local precisa continuar útil quando o Supabase ou o DNS cai. Este
+  // usuário sintético nunca é criado em produção e não libera as APIs, que
+  // continuam validando a sessão real antes de salvar ou excluir dados.
+  if (process.env.NODE_ENV === "development") return { status: "authenticated", session: localDevelopmentSession() };
   return { status: "unavailable", code };
 });

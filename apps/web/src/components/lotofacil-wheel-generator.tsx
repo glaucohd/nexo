@@ -8,7 +8,8 @@ import { SaveBetsButton } from "@/components/save-bets-button";
 import { coordinatedSelections } from "@/lib/coordinated-pools";
 import { buildProfile } from "@/lib/hot-cold-profile";
 import { lotteryGames, type DrawNumbers } from "@/lib/lottery-generator";
-import { lotofacilWheel, type LotofacilWheelTicket } from "@/lib/lotofacil-wheel";
+import { lotofacilWheel, lotofacilWheel20, lotofacilWheel20x13, type LotofacilWheelTicket } from "@/lib/lotofacil-wheel";
+import { suggestLotofacilPool, type LotofacilPoolSuggestion } from "@/lib/lotofacil-pool-suggestion";
 
 import { reductionGuarantees } from "@/lib/reduction-stats";
 
@@ -16,6 +17,7 @@ import styles from "./lotofacil-wheel-generator.module.css";
 
 const pad = (number: number) => String(number).padStart(2, "0");
 const board = Array.from({ length: 25 }, (_, index) => index + 1);
+const integer = new Intl.NumberFormat("pt-BR");
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 function MiniVolante({ numbers }: { numbers: readonly number[] }) {
@@ -25,52 +27,51 @@ function MiniVolante({ numbers }: { numbers: readonly number[] }) {
   </div>;
 }
 // Aposta simples de 15 dezenas; confira o valor atualizado na CAIXA.
-const TICKET_PRICE_CENTS = 300;
+const TICKET_PRICE_CENTS = 350;
 
-function shuffled<T>(values: readonly T[]) {
-  const result = [...values];
-  for (let index = result.length - 1; index > 0; index -= 1) {
-    const swap = Math.floor(Math.random() * (index + 1));
-    [result[index], result[swap]] = [result[swap], result[index]];
-  }
-  return result;
-}
-
-type Tier = { id: "18x13"; pool: 18; guarantee: number; games: number; build: (available: readonly number[]) => LotofacilWheelTicket[] };
+type Tier = { id: "18x13" | "20x12" | "20x13"; label: string; detail: string; pool: 18 | 20; guarantee: number; games: number; build: (available: readonly number[]) => LotofacilWheelTicket[] };
 type Round = { id: number; excluded: number[]; tickets: LotofacilWheelTicket[]; copied: boolean; tier: Tier; coordinated?: boolean };
 
-const tier: Tier = { id: "18x13", pool: 18, guarantee: 13, games: 6, build: lotofacilWheel };
+const tiers: Tier[] = [
+  { id: "18x13", label: "18 dezenas · Equilibrado", detail: "6 jogos · garante 13 pontos", pool: 18, guarantee: 13, games: 6, build: lotofacilWheel },
+  { id: "20x12", label: "20 dezenas · Econômico", detail: "4 jogos · garante 12 pontos", pool: 20, guarantee: 12, games: 4, build: lotofacilWheel20 },
+  { id: "20x13", label: "20 dezenas · Reforçado", detail: "34 jogos · garante 13 pontos", pool: 20, guarantee: 13, games: 34, build: lotofacilWheel20x13 },
+];
 
 export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] }) {
+  const [tierId, setTierId] = useState<Tier["id"]>("18x13");
   const [excluded, setExcluded] = useState<number[]>([]);
+  const [suggestion, setSuggestion] = useState<LotofacilPoolSuggestion | null>(null);
   const [rounds, setRounds] = useState<Round[]>([]);
   const [error, setError] = useState<string | null>(null);
   const resultsRef = useRef<HTMLElement>(null);
+  const tier = tiers.find((entry) => entry.id === tierId) ?? tiers[0];
   const excludedSet = new Set(excluded);
   const available = board.filter((number) => !excludedSet.has(number));
   const excludeCount = 25 - tier.pool;
+  const fullCombinationCount = tier.pool === 18 ? 816 : 15_504;
 
   useEffect(() => {
     if (rounds.length) resultsRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
   }, [rounds.length]);
 
   function toggle(number: number) {
+    setSuggestion(null);
     if (excludedSet.has(number)) { setExcluded((current) => current.filter((entry) => entry !== number)); setError(null); return; }
     if (excluded.length >= excludeCount) { setError(`Você já escolheu ${excludeCount} dezenas para excluir. Remova uma antes de trocar.`); return; }
     setExcluded((current) => [...current, number]);
     setError(null);
   }
 
-  function fillFromLastDraw() {
-    const latest = history[0];
-    if (!latest) { setError("Ainda não há concursos no histórico para usar esta opção."); return; }
-    setExcluded(shuffled(latest.numbers).slice(0, excludeCount).sort((a, b) => a - b));
-    setError(null);
-  }
-
-  function fillRandom() {
-    setExcluded(shuffled(board).slice(0, excludeCount).sort((a, b) => a - b));
-    setError(null);
+  function fillFromAnalysis() {
+    try {
+      const next = suggestLotofacilPool({ history, size: tier.pool });
+      setExcluded(next.excluded);
+      setSuggestion(next);
+      setError(null);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível sugerir um grupo equilibrado.");
+    }
   }
 
   function generate() {
@@ -78,6 +79,7 @@ export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] })
       const tickets = tier.build(available);
       setRounds((current) => [{ id: Date.now(), excluded: [...excluded].sort((a, b) => a - b), tickets, copied: false, tier }, ...current]);
       setExcluded([]);
+      setSuggestion(null);
       setError(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível montar a redução.");
@@ -86,13 +88,15 @@ export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] })
 
   function generateCoordinated() {
     const profile = buildProfile(history, lotteryGames.lotofacil, 30);
-    const exclusions = coordinatedSelections({ universe: board, size: excludeCount, count: 3, strata: [profile.hot, profile.neutral, profile.cold] });
+    const groupCount = tier.pool === 20 ? 5 : 3;
+    const exclusions = coordinatedSelections({ universe: board, size: 25 - tier.pool, count: groupCount, strata: [profile.hot, profile.neutral, profile.cold] });
     const now = Date.now();
     setRounds(exclusions.map((roundExcluded, index) => {
       const excludedNumbers = [...roundExcluded].sort((a, b) => a - b);
       return { id: now + index, excluded: excludedNumbers, tickets: tier.build(board.filter((number) => !excludedNumbers.includes(number))), copied: false, tier, coordinated: true };
     }));
     setExcluded([]);
+    setSuggestion(null);
     setError(null);
   }
 
@@ -118,21 +122,28 @@ export function LotofacilWheelGenerator({ history }: { history: DrawNumbers[] })
     <div className={styles.layout}>
       <div className={styles.controls}>
         <section className={styles.card}>
-          <h2>01 · Fechamento recomendado</h2>
+          <h2>01 · Escolha o fechamento</h2>
+          <div className={styles.segment} role="group" aria-label="Tipo de fechamento da Lotofácil">
+            {tiers.map((entry) => <button type="button" key={entry.id} aria-pressed={tier.id === entry.id} className={tier.id === entry.id ? styles.active : ""} onClick={() => { setTierId(entry.id); setExcluded([]); setSuggestion(null); setError(null); }}><strong>{entry.label}</strong><small>{entry.detail}</small></button>)}
+          </div>
           <GuaranteeSummary pool={tier.pool} games={tier.games} costCents={tier.games * TICKET_PRICE_CENTS} ticketSize={15} drawSize={15} total={25}
             rows={reductionGuarantees[`lotofacil:${tier.id}`] ?? [{ inPool: 15, hits: tier.guarantee }]} hitName={(hits) => `${hits} pontos`}
-            note={`Você escolhe o grupo excluindo ${excludeCount} dezenas. Garantir 15 pontos exigiria todos os 816 jogos possíveis dentro do grupo (${currency.format(816 * TICKET_PRICE_CENTS / 100)}). Garantias provadas por força bruta; fora da condição os jogos concorrem normalmente.`} />
-          <button className={styles.generate} type="button" onClick={generateCoordinated}>Preparar 3 reduções coordenadas · 18 jogos ↗</button>
-          <p>Recomendado para jogar três grupos: as 21 exclusões não se repetem, e quentes, neutras e frias são distribuídas entre eles. Assim, nenhuma dezena fica fora de todas as reduções. Custo total estimado: <strong>{currency.format(3 * tier.games * TICKET_PRICE_CENTS / 100)}</strong>.</p>
+            note={`Você escolhe o grupo excluindo ${excludeCount} dezenas. Garantir 15 pontos exigiria todos os ${integer.format(fullCombinationCount)} jogos possíveis dentro do grupo (${currency.format(fullCombinationCount * TICKET_PRICE_CENTS / 100)}). Garantias provadas por força bruta; fora da condição os jogos concorrem normalmente.`} />
+          {tier.pool === 18
+            ? <><button className={styles.generate} type="button" onClick={generateCoordinated}>Preparar 3 reduções coordenadas · 18 jogos ↗</button>
+              <p>As 21 exclusões não se repetem, e quentes, neutras e frias são distribuídas entre os grupos. Nenhuma dezena fica fora de todas as reduções. Custo total estimado: <strong>{currency.format(3 * tier.games * TICKET_PRICE_CENTS / 100)}</strong>.</p></>
+            : <><button className={styles.generate} type="button" onClick={generateCoordinated}>Preparar 5 fechamentos coordenados · {5 * tier.games} jogos ↗</button>
+              <p>As 25 dezenas são divididas em cinco blocos de exclusão sem repetição: cada dezena fica fora de um grupo e participa dos outros quatro. Custo total estimado: <strong>{currency.format(5 * tier.games * TICKET_PRICE_CENTS / 100)}</strong>. Isso amplia a cobertura, mas não garante 15 pontos.</p></>}
         </section>
         <section className={styles.card}>
           <h2>{rounds.length ? `Nova redução manual · escolha ${excludeCount} dezenas` : `02 · Ou escolha ${excludeCount} dezenas manualmente`}</h2>
           <p>{excluded.length}/{excludeCount} escolhidas. As demais {available.length} entram na redução. Clique nas dezenas pra montar manualmente, ou use o preenchimento automático.</p>
           <div className={styles.autoFill}>
-            <button type="button" disabled={!history.length} onClick={fillFromLastDraw}>Sortear {excludeCount} dezenas do último concurso{history[0] ? ` (#${history[0].contest})` : ""}</button>
-            <button type="button" onClick={fillRandom}>Sortear {excludeCount} dezenas aleatórias</button>
-            {excluded.length > 0 && <button type="button" className={styles.clear} onClick={() => { setExcluded([]); setError(null); }}>Limpar seleção</button>}
+            <button type="button" onClick={fillFromAnalysis}>{history.length ? "Sugerir grupo pela análise" : "Sortear grupo aleatório"}</button>
+            {suggestion && <button type="button" onClick={fillFromAnalysis}>Variar sugestão</button>}
+            {excluded.length > 0 && <button type="button" className={styles.clear} onClick={() => { setExcluded([]); setSuggestion(null); setError(null); }}>Limpar seleção</button>}
           </div>
+          {suggestion && suggestion.contests > 0 && <p className={styles.suggestionNote}><strong>Sugestão equilibrada em {suggestion.contests} concursos:</strong> {suggestion.metrics.hot} quentes · {suggestion.metrics.neutral} neutras · {suggestion.metrics.cold} frias · {suggestion.metrics.late} atrasadas · {suggestion.metrics.repeated} do último concurso · {suggestion.metrics.pairs} pares · {suggestion.metrics.frame} na moldura. O histórico organiza o palpite, mas não prevê o sorteio.</p>}
           <div className={styles.board}>{board.map((number) => <button type="button" key={number} aria-pressed={excludedSet.has(number)} className={excludedSet.has(number) ? styles.excluded : ""} onClick={() => toggle(number)}>{pad(number)}</button>)}</div>
         </section>
         <button className={styles.generate} type="button" disabled={excluded.length !== excludeCount} onClick={generate}>Gerar os {tier.games} jogos ↗</button>

@@ -32,6 +32,15 @@ test("temperature strata stay distributed across coordinated selections", () => 
   });
 });
 
+test("five 20-number Lotofácil groups partition all 25 exclusions", () => {
+  const universe = Array.from({ length: 25 }, (_, index) => index + 1);
+  const strata = [universe.slice(0, 8), universe.slice(8, 17), universe.slice(17)];
+  const exclusions = coordinatedSelections({ universe, size: 5, count: 5, strata, random: seededRandom(20) });
+  assert.deepEqual(exclusions.map((selection) => selection.length), [5, 5, 5, 5, 5]);
+  assert.deepEqual(exclusions.flat().sort((a, b) => a - b), universe);
+  for (const number of universe) assert.equal(exclusions.filter((selection) => selection.includes(number)).length, 1);
+});
+
 test("rejects a portfolio larger than the available universe", () => {
   assert.throws(() => coordinatedSelections({ universe: [1, 2, 3], size: 2, count: 2 }), /dezenas suficientes/);
 });

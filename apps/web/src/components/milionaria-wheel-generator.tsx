@@ -132,7 +132,7 @@ export function MilionariaWheelGenerator({ history }: { history: DrawNumbers[] }
             <button type="button" onClick={fillRandom}>Sortear {preset.poolSize} dezenas aleatórias</button>
             {pool.length > 0 && <button type="button" className={styles.clear} onClick={() => { setPool([]); setError(null); }}>Limpar seleção</button>}
           </div>
-          <div className={styles.board} style={{ "--columns": 5 } as CSSProperties}>{board.map((number) => <button type="button" key={number} aria-pressed={poolSet.has(number)} className={poolSet.has(number) ? styles.selected : ""} onClick={() => toggle(number)}>{pad(number)}</button>)}</div>
+          <div className={`${styles.board} ${styles.numberBoard}`}>{board.map((number) => <button type="button" key={number} aria-pressed={poolSet.has(number)} className={poolSet.has(number) ? styles.selected : ""} onClick={() => toggle(number)}>{pad(number)}</button>)}</div>
         </section>
         <section className={styles.card}>
           <h2>03 · Como usar os trevos?</h2>
@@ -142,7 +142,7 @@ export function MilionariaWheelGenerator({ history }: { history: DrawNumbers[] }
           </div>
           {trevoMode === "coverage"
             ? <p>Nos três primeiros jogos, os seis trevos aparecem uma vez; no quarto, a distribuição continua equilibrada.</p>
-            : <><p>{trevos.length}/2 escolhidos.</p><div className={styles.board} style={{ "--columns": 6 } as CSSProperties}>{trevoBoard.map((number) => <button type="button" key={number} aria-pressed={trevoSet.has(number)} className={trevoSet.has(number) ? styles.selected : ""} onClick={() => toggleTrevo(number)}>{pad(number)}</button>)}</div></>}
+            : <><p>{trevos.length}/2 escolhidos.</p><div className={`${styles.board} ${styles.trevoBoard}`}>{trevoBoard.map((number) => <button type="button" key={number} aria-pressed={trevoSet.has(number)} className={trevoSet.has(number) ? styles.selected : ""} onClick={() => toggleTrevo(number)}>{pad(number)}</button>)}</div></>}
         </section>
         <button className={styles.generate} type="button" disabled={pool.length !== preset.poolSize || trevoMode === "fixed" && trevos.length !== 2} onClick={generate}>Gerar os {preset.games} jogos ↗</button>
         <p className={styles.priceNote}>Custo estimado: <strong>{currency.format(preset.games * ticketPrice / 100)}</strong> ({preset.games} × aposta simples de {currency.format(ticketPrice / 100)}). Confira o valor atualizado na CAIXA.</p>

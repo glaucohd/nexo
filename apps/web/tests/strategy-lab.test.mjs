@@ -32,7 +32,7 @@ test("the same seed reproduces the same comparison", () => {
 test("cost is games × price and every strategy plays every evaluated contest", () => {
   const report = runStrategyLab({ slug: "lotofacil", draws: syntheticDraws(60), contests: 20, ticketsPerContest: 2, seed: 3 });
   for (const result of report.results) {
-    assert.equal(result.costCents, result.games * 300, result.label);
+    assert.equal(result.costCents, result.games * 350, result.label);
     assert.ok(result.contestsWithPrize <= 20);
   }
   const generator = report.results.filter((result) => result.kind === "gerador");

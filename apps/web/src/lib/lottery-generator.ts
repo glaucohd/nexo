@@ -184,7 +184,7 @@ export function lotofacilSimpleBetCount(size: number) {
 // Preço da aposta simples (em centavos); confira o valor atualizado na CAIXA.
 // A Lotomania não tem aposta múltipla (sempre 50 dezenas fixas).
 export const standardTicketPriceCents: Record<LotterySlug, number> = {
-  lotofacil: 300,
+  lotofacil: 350,
   "mega-sena": 600,
   quina: 250,
   "mais-milionaria": 600,

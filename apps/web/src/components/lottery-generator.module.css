@@ -5,12 +5,21 @@
 .hub {
   --generator-accent: #91278f;
   --gen-accent: color-mix(in oklab, var(--generator-accent), white var(--lift));
+  --gen-fill: var(--generator-accent);
+  --gen-fill-ink: #fff;
   --gen-tint: color-mix(in srgb, var(--generator-accent) 7%, var(--surface));
   --gen-tint-strong: color-mix(in srgb, var(--generator-accent) 14%, var(--surface));
   --gen-ring: color-mix(in srgb, var(--gen-accent) 45%, transparent);
   display: grid;
   gap: var(--gen-gap);
   padding-bottom: 56px;
+}
+
+:global([data-theme="dark"]) .hub {
+  --gen-fill: var(--gen-accent);
+  --gen-fill-ink: #111018;
+  --gen-tint: color-mix(in srgb, var(--generator-accent) 14%, var(--surface));
+  --gen-tint-strong: color-mix(in srgb, var(--generator-accent) 24%, var(--surface));
 }
 
 .toolTabs { display: flex; gap: 22px; margin-top: 4px; border-bottom: 1px solid var(--line); }
@@ -25,7 +34,7 @@
   cursor: pointer;
 }
 .toolTabs button:hover { color: var(--ink); }
-.toolTabs button[aria-pressed="true"] { color: var(--ink); font-weight: 620; }
+.toolTabs button[aria-pressed="true"] { color: var(--gen-accent); font-weight: 650; }
 .toolTabs button[aria-pressed="true"]::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; border-radius: 2px; background: var(--gen-accent); content: ""; }
 
 .page { display: grid; gap: var(--gen-gap); }
@@ -67,12 +76,12 @@
 .segment { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px; margin-top: 14px; padding: 3px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); background: var(--surface-2); }
 .segment button { min-height: 36px; border: 0; border-radius: var(--r-sm); color: var(--muted); background: transparent; font: inherit; font-size: .82rem; font-weight: 550; cursor: pointer; transition: background-color .15s, color .15s; }
 .segment button:hover { color: var(--ink); }
-.segment .active { color: var(--ink); background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .1); font-weight: 620; }
+.segment .active { color: var(--gen-accent); background: var(--gen-tint-strong); box-shadow: inset 0 0 0 1px var(--gen-ring); font-weight: 650; }
 
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 13px; }
 .tabs button, .ruleGroup button { min-height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); background: var(--surface); font: inherit; font-size: .76rem; font-weight: 550; cursor: pointer; transition: border-color .15s, background-color .15s, color .15s; }
 .tabs button:hover, .ruleGroup button:hover:not(:disabled) { border-color: var(--line-strong); }
-.tabs .tabActive, .tabs .tabActive:hover { border-color: transparent; color: #fff; background: var(--generator-accent); }
+.tabs .tabActive, .tabs .tabActive:hover { border-color: transparent; color: var(--gen-fill-ink); background: var(--gen-fill); }
 
 .ruleGroup { margin-top: 18px; }
 .ruleGroup > strong { color: var(--faint); font-family: var(--font-mono); font-size: .66rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
@@ -84,7 +93,7 @@
 .randomBlocks { margin-top: 18px; padding: 16px; border: 1px dashed var(--line-strong); border-radius: var(--gen-radius-control); }
 .randomBlocks > strong { font-size: .86rem; font-weight: 620; }
 .randomBlocks > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; margin-top: 8px; }
-.randomBlocks > div button { min-height: 42px; padding: 0 16px; border: 0; border-radius: var(--gen-radius-control); color: #fff; background: var(--generator-accent); font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; }
+.randomBlocks > div button { min-height: 42px; padding: 0 16px; border: 0; border-radius: var(--gen-radius-control); color: var(--gen-fill-ink); background: var(--gen-fill); font: inherit; font-size: .82rem; font-weight: 650; cursor: pointer; }
 .randomBlocks > div button:disabled { opacity: .45; cursor: not-allowed; }
 .ruleGroup .blockRuleGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
 .blockRuleGrid button { min-width: 0; min-height: 52px; padding: 5px 3px; }
@@ -98,7 +107,7 @@
 .fixedGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; margin-top: 12px; }
 .fixedGrid button { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 50%; color: var(--ink); background: var(--surface-2); font-family: var(--font-mono); font-size: .82rem; font-weight: 550; cursor: pointer; transition: transform .12s, border-color .12s; }
 .fixedGrid button:hover { border-color: var(--gen-accent); }
-.fixedGrid .fixedActive { border-color: transparent; color: #fff; background: var(--generator-accent); }
+.fixedGrid .fixedActive { border-color: transparent; color: var(--gen-fill-ink); background: var(--gen-fill); }
 
 /* Volante: dezenas redondas em mono, marcadas na cor da loteria. */
 .board { position: relative; display: grid; width: min(100%, 520px); grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); gap: 5px; margin: 16px auto; padding: 12px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); background: var(--surface-2); }
@@ -111,7 +120,7 @@
 .boardBlockExcluded { background: var(--surface-3); }
 .boardBlock .cell { font-size: clamp(.5rem, .78vw, .68rem); }
 .cell { display: grid; aspect-ratio: 1; place-items: center; border-radius: 50%; color: var(--faint); background: var(--surface); font-family: var(--font-mono); font-size: clamp(.56rem, .9vw, .76rem); font-weight: 500; }
-.cell.selected { color: #fff; background: var(--generator-accent); font-weight: 600; }
+.cell.selected { color: var(--gen-fill-ink); background: var(--gen-fill); font-weight: 650; }
 .cell.fixed { box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 3.5px var(--gen-accent); }
 .cell.excluded { color: var(--faint); background: transparent; text-decoration: line-through; opacity: .45; }
 
@@ -119,13 +128,13 @@
 .actionBox { position: sticky; top: 20px; display: grid; gap: 12px; }
 .previewSwitch { display: flex; gap: 3px; margin-top: 12px; padding: 3px; border: 1px solid var(--line); border-radius: var(--gen-radius-control); background: var(--surface-2); }
 .previewSwitch button { flex: 1; min-height: 34px; padding: 0 9px; border: 0; border-radius: var(--r-sm); color: var(--muted); background: transparent; font: inherit; font-size: .8rem; font-weight: 550; cursor: pointer; }
-.previewSwitch button[aria-pressed="true"] { color: var(--ink); background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .1); }
+.previewSwitch button[aria-pressed="true"] { color: var(--gen-accent); background: var(--gen-tint-strong); box-shadow: inset 0 0 0 1px var(--gen-ring); font-weight: 650; }
 .actionBox > strong { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; line-height: 1.15; letter-spacing: -.015em; }
 .actionBox p { color: var(--muted); font-size: .76rem; line-height: 1.6; }
 .actionBox .priceNote { padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); }
 .actionBox .priceNote strong { color: var(--ink); font-family: var(--font-mono); font-size: .92rem; font-weight: 600; }
 .actionBox .priceNote a { color: var(--gen-accent); font-weight: 600; }
-.actionBox button { min-height: 48px; border: 0; border-radius: var(--gen-radius-control); color: #fff; background: var(--generator-accent); font: inherit; font-size: .92rem; font-weight: 620; cursor: pointer; transition: filter .15s, transform .15s; }
+.actionBox button { min-height: 48px; border: 0; border-radius: var(--gen-radius-control); color: var(--gen-fill-ink); background: var(--gen-fill); font: inherit; font-size: .92rem; font-weight: 650; cursor: pointer; transition: filter .15s, transform .15s; }
 .actionBox button:hover { filter: brightness(1.1); }
 .actionBox button:active { transform: translateY(1px); }
 .actionBox small { color: var(--faint); font-size: .72rem; line-height: 1.5; }

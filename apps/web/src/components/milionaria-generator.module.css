@@ -48,11 +48,11 @@
 .scopeSwitch { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin: 18px 0 12px; padding: 3px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); }
 .scopeSwitch button { min-height: 36px; padding: 0 9px; border: 0; border-radius: var(--r-sm); color: var(--muted); background: transparent; font-size: .82rem; font-weight: 550; cursor: pointer; }
 .scopeSwitch button:hover { color: var(--ink); }
-.scopeSwitch .active { color: var(--ink); background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .1); font-weight: 620; }
+.scopeSwitch .active { color: var(--acc); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); box-shadow: inset 0 0 0 1px var(--ring); font-weight: 650; }
 .scopeSwitch button:disabled { opacity: .5; cursor: not-allowed; }
 .gameTabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .gameTabs button { min-height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--muted); background: var(--surface); font-size: .74rem; font-weight: 550; cursor: pointer; }
-.gameTabs .currentGame { border-color: transparent; color: #fff; background: var(--accent); }
+.gameTabs .currentGame { border-color: transparent; color: var(--gen-fill-ink, #fff); background: var(--gen-fill, var(--accent)); }
 .scopeNote { margin-bottom: 16px; color: var(--muted); font-size: .76rem; }
 
 .groups { display: grid; gap: 18px; }
@@ -66,6 +66,7 @@
 .option strong { font-size: .74rem; font-weight: 600; line-height: 1.1; }
 .option small { overflow: hidden; color: var(--faint); font-family: var(--font-mono); font-size: .58rem; text-overflow: ellipsis; white-space: nowrap; }
 .excludedOption { border-color: var(--ring); color: var(--acc); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+:global([data-theme="dark"]) .excludedOption { background: color-mix(in srgb, var(--accent) 20%, var(--surface)); }
 .excludedOption strong { text-decoration: line-through; text-decoration-thickness: 1px; }
 .option:disabled { cursor: not-allowed; opacity: .7; }
 .clearButton { margin-top: 16px; padding: 0; border: 0; color: var(--muted); background: none; font-size: .78rem; font-weight: 550; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; cursor: pointer; }
@@ -100,7 +101,7 @@
 .rulesList b { font-weight: 600; white-space: nowrap; }
 .rulesList span { overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
 .rulesList small { color: var(--acc); font-family: var(--font-mono); font-size: .64rem; white-space: nowrap; }
-.generateButton { width: 100%; min-height: 48px; border: 0; border-radius: var(--gen-radius-control); color: #fff; background: var(--accent); font: inherit; font-size: .92rem; font-weight: 620; cursor: pointer; transition: filter .15s; }
+.generateButton { width: 100%; min-height: 48px; border: 0; border-radius: var(--gen-radius-control); color: var(--gen-fill-ink, #fff); background: var(--gen-fill, var(--accent)); font: inherit; font-size: .92rem; font-weight: 650; cursor: pointer; transition: filter .15s; }
 .generateButton:hover { filter: brightness(1.12); }
 .actionBox p { margin-top: 10px; color: var(--faint); font-size: .72rem; line-height: 1.45; }
 
@@ -119,7 +120,7 @@
 .ticket > div:first-child small { color: var(--faint); font-family: var(--font-mono); font-size: .66rem; }
 .ticketBoard { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; width: min(100%, 220px); margin: 12px auto; padding: 7px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2); }
 .ticketBoard span { display: grid; aspect-ratio: 1; place-items: center; border-radius: 50%; color: var(--faint); background: var(--surface); font-family: var(--font-mono); font-size: .58rem; }
-.ticketBoard .ticketHit { color: #fff; background: var(--accent); font-weight: 600; }
+.ticketBoard .ticketHit { color: var(--gen-fill-ink, #fff); background: var(--gen-fill, var(--accent)); font-weight: 650; }
 .ticketBoard .ticketFixed { box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 3px #15803d; }
 .ticketBoard .ticketExcluded { color: var(--faint); background: transparent; text-decoration: line-through; opacity: .5; }
 .ticket > p { padding-top: 9px; border-top: 1px solid var(--line); color: var(--muted); font-family: var(--font-mono); font-size: .72rem; }
